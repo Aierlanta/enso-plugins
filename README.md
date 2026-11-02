@@ -24,9 +24,11 @@ out/v1/                          本地构建产物，不提交
 | 插件 | id | 版本 | 来源 | 介绍 |
 | --- | --- | --- | --- | --- |
 | [BCE Prompt Enhance](https://github.com/linqiu919/dsh-bce) | `dsh.bce` | 0.1.2 | 社区 · [`linqiu919/dsh-bce`](https://github.com/linqiu919/dsh-bce) | Composer wand that incrementally indexes the current project through the configured bce-tool MCP and rewrites the draft. Same interaction as dsh-bce, hosted by EnsoCode. |
+| Context Window | `enso.context` | 0.1.0 | 官方 | 侧栏里看当前会话的上下文窗口：各部分占多少、还剩多少、提示词缓存命中率。 |
 | Notes | `enso.example.notes` | 1.0.0 | 官方 | 侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。 |
 | Word Stats | `enso.example.wordstats` | 1.0.0 | 官方 | 统计项目里文本文件的字数、行数与高频词，结果以卡片展示；提供条形图代码块。 |
 | 红果短剧 | `enso.hongguo` | 0.2.5 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
+| Kanban | `enso.kanban` | 1.0.0 | 官方 | 项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。 |
 | Scheduler | `enso.scheduler` | 1.0.0 | 官方 | 定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。 |
 <!-- plugins:end -->
 

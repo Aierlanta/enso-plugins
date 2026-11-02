@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.context",
+  "name": "Context Window",
+  "version": "0.1.0",
+  "description": "侧栏里看当前会话的上下文窗口：各部分占多少、还剩多少、提示词缓存命中率。",
+  "engines": { "enso": ">=0.2.0" },
+  "main": "main.mjs",
+  "permissions": ["ui.view", "agent.observe"],
+  "contributes": {
+    "views": [{ "id": "context", "title": "上下文", "entry": "context.html" }],
+    "events": [{ "event": "context_usage" }]
+  }
+}
