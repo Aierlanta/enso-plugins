@@ -58,6 +58,48 @@ test('索引、包和非法路径', async () => {
   assert.deepEqual(keys.filter((key) => key.includes('..')), []);
 });
 
+test('配置源站时：索引成对取自源站并写回 R2；包缺失时回源写入；源站不可用回落 R2', async () => {
+  const original = globalThis.fetch;
+  const origin = new Map([
+    ['https://o.example/v1/index.json', 'NEW'],
+    ['https://o.example/v1/index.json.sig', 'NEWSIG'],
+    ['https://o.example/v1/packages/enso.a/1.0.0.zip', 'PKA'],
+  ]);
+  const put = new Map();
+  const waits = [];
+  const c = { waitUntil: (p) => waits.push(p) };
+  const env = {
+    ORIGIN: 'https://o.example/',
+    BUCKET: {
+      async get(key) {
+        const body = put.get(key) ?? (key === 'v1/index.json' ? 'OLD' : null);
+        return body ? { body, size: body.length } : null;
+      },
+      async put(key, value) {
+        put.set(key, Buffer.from(value).toString());
+      },
+    },
+  };
+  try {
+    globalThis.fetch = async (url) => {
+      const body = origin.get(String(url));
+      return body ? new Response(body) : new Response('no', { status: 404 });
+    };
+    assert.equal(await (await handle(new Request('https://p/v1/index.json'), env, c)).text(), 'NEW');
+    assert.equal(await (await handle(new Request('https://p/v1/packages/enso.a/1.0.0.zip'), env, c)).text(), 'PKA');
+    await Promise.all(waits);
+    assert.equal(put.get('v1/index.json.sig'), 'NEWSIG');
+    assert.equal(put.get('v1/packages/enso.a/1.0.0.zip'), 'PKA');
+    globalThis.fetch = async () => {
+      throw new Error('down');
+    };
+    assert.equal(await (await handle(new Request('https://p/v1/index.json'), env, c)).text(), 'NEW');
+    assert.equal((await handle(new Request('https://p/v1/packages/enso.b/1.0.0.zip'), env, c)).status, 404);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
 test('图标代理不转发请求头，并按状态缓存', async () => {
   const original = globalThis.fetch;
   const seen = [];

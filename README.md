@@ -1,6 +1,6 @@
 # Enso 插件仓库
 
-官方插件市场的源。社区用 Pull Request 提交插件；合并到 `main` 后，CI 打包、签名，并把同一份目录发到 `dist` 分支和 Cloudflare R2。客户端不信任任何一个分发节点，只验 Ed25519 签名和 zip 的 sha256。
+官方插件市场的源。社区用 Pull Request 提交插件；合并到 `main` 后，CI 打包、签名，并把同一份目录发到 `dist` 分支；Cloudflare Worker（`enso-plugins.j3.do`）回源 `dist` 并缓存到 R2。客户端不信任任何一个分发节点，只验 Ed25519 签名和 zip 的 sha256。
 
 索引由客户端解析（`schemaVersion: 1`）。`path` 相对 `v1/`，例如 `packages/<id>/<version>.zip`。`sequence` 每次发布加 1，用来拒绝回滚。
 
@@ -63,8 +63,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 
 1. 若已有 `dist` 分支，先取出其中的 `v1/`（保留历史 zip 和索引）。
 2. `build` + `sign`。
-3. 把 `out/v1` 提交并推到 `dist`（与 R2 相同的目录：`v1/index.json`、`v1/index.json.sig`、`v1/packages/<id>/<version>.zip`）。
-4. 用 `wrangler r2 object put` 上传到 R2。
+3. 把 `out/v1` 提交并推到 `dist`（`v1/index.json`、`v1/index.json.sig`、`v1/packages/<id>/<version>.zip`）。
 
 客户端内置公钥，源可以是 Worker、jsDelivr 或 GitHub raw，内容必须对得上同一份签名。
 
@@ -73,9 +72,6 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 | 名称 | 用途 |
 | --- | --- |
 | `ENSO_MARKET_PRIVATE_KEY` | Ed25519 PKCS8 PEM，只放在 GitHub Actions |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账号 |
-| `CLOUDFLARE_API_TOKEN` | 具备目标 R2 桶写权限的 token |
-| `R2_BUCKET` | 桶名，需与 `worker/wrangler.toml` 里的 `bucket_name` 一致 |
 
 推送 `dist` 用工作流自带的 `GITHUB_TOKEN`（`contents: write`）。
 
@@ -83,7 +79,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 
 ## Worker
 
-`worker/` 只读，从 R2 绑定 `BUCKET` 取对象。
+`worker/` 只读。索引与签名成对回源 `ORIGIN`（`dist` 分支 raw，边缘缓存 5 分钟）并写回 R2，源站不可用时用 R2 里的上一份；包先读 R2，缺失时回源一次写入 R2。CI 不需要 Cloudflare 凭据。部署：`cd worker && npx wrangler deploy`。
 
 | 路由 | 行为 |
 | --- | --- |

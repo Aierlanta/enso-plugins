@@ -29,6 +29,38 @@ async function fromBucket(env, key, cacheControl, contentType) {
   return new Response(object.body, { headers });
 }
 
+async function fromOrigin(env, key, ttl) {
+  if (!env.ORIGIN) return null;
+  try {
+    const response = await fetch(new URL(key, env.ORIGIN), { cf: { cacheEverything: true, cacheTtl: ttl } });
+    return response.ok ? new Uint8Array(await response.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 索引与签名成对取自源站（dist 分支），成功则写回 R2；源站不可用时用 R2 里的上一份 */
+async function indexFile(env, ctx, key, contentType) {
+  const [index, sig] = await Promise.all([fromOrigin(env, 'v1/index.json', 300), fromOrigin(env, 'v1/index.json.sig', 300)]);
+  if (index && sig && env.BUCKET) {
+    ctx?.waitUntil(Promise.all([env.BUCKET.put('v1/index.json', index), env.BUCKET.put('v1/index.json.sig', sig)]).catch(() => {}));
+  }
+  const body = key === 'v1/index.json' ? index : sig;
+  if (index && sig) return new Response(body, { headers: { 'content-type': contentType, 'cache-control': 'public, max-age=300' } });
+  return fromBucket(env, key, 'public, max-age=300', contentType);
+}
+
+/** 包不可变：R2 没有时从源站取一次并写入 R2 */
+async function packageFile(env, ctx, key) {
+  const cacheControl = 'public, max-age=31536000, immutable';
+  const cached = await fromBucket(env, key, cacheControl, 'application/zip');
+  if (cached.status !== 404) return cached;
+  const bytes = await fromOrigin(env, key, 86400);
+  if (!bytes) return cached;
+  if (env.BUCKET) ctx?.waitUntil(env.BUCKET.put(key, bytes).catch(() => {}));
+  return new Response(bytes, { headers: { 'content-type': 'application/zip', 'cache-control': cacheControl } });
+}
+
 function allowedIconUrl(url) {
   if (url.protocol !== 'https:' || url.username || url.password) return false;
   const host = url.hostname.toLowerCase().replace(/\.$/, '').replace(/^\[|\]$/g, '');
@@ -142,13 +174,13 @@ export async function handle(request, env, ctx) {
   if (request.method !== 'GET') return text(404, 'not found');
   const url = new URL(request.url);
   if (url.pathname === '/v1/index.json') {
-    return fromBucket(env, 'v1/index.json', 'public, max-age=300', 'application/json; charset=utf-8');
+    return indexFile(env, ctx, 'v1/index.json', 'application/json; charset=utf-8');
   }
   if (url.pathname === '/v1/index.json.sig') {
-    return fromBucket(env, 'v1/index.json.sig', 'public, max-age=300', 'text/plain; charset=utf-8');
+    return indexFile(env, ctx, 'v1/index.json.sig', 'text/plain; charset=utf-8');
   }
   const key = packageKey(url.pathname);
-  if (key) return fromBucket(env, key, 'public, max-age=31536000, immutable', 'application/zip');
+  if (key) return packageFile(env, ctx, key);
   if (url.pathname === '/v1/icon') return proxyIcon(url, ctx);
   return text(404, 'not found');
 }
