@@ -346,6 +346,53 @@ function tierOf(meta) {
   return meta?.tier === 'official' ? 'official' : 'community';
 }
 
+const CATALOG_START = '<!-- plugins:start -->';
+const CATALOG_END = '<!-- plugins:end -->';
+
+function cell(value) {
+  return String(value ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+}
+
+export function catalogMarkdown(packages, externals = {}) {
+  const rows = packages
+    .filter((plugin) => !plugin.id.startsWith('local.'))
+    .sort((a, b) => (a.id < b.id ? -1 : 1));
+  const lines = ['| 插件 | id | 版本 | 来源 | 介绍 |', '| --- | --- | --- | --- | --- |'];
+  for (const plugin of rows) {
+    const manifest = plugin.manifest;
+    const tier = tierOf(plugin.meta) === 'official' ? '官方' : '社区';
+    const external = externals[plugin.id];
+    const href = plugin.meta?.homepage || (external ? `https://github.com/${external.repo}` : '');
+    const name = href ? `[${manifest.name}](${href})` : manifest.name;
+    const source = external ? `${tier} · [\`${external.repo}\`](https://github.com/${external.repo})` : tier;
+    lines.push(`| ${cell(name)} | \`${plugin.id}\` | ${cell(manifest.version)} | ${source} | ${cell(manifest.description || '')} |`);
+  }
+  return `${lines.join('\n')}\n`;
+}
+
+export async function readExternals(root) {
+  const dir = join(root, 'registry', 'external');
+  const map = {};
+  if (!existsSync(dir)) return map;
+  for (const name of await readdir(dir)) {
+    if (!name.endsWith('.json')) continue;
+    try {
+      map[name.slice(0, -5)] = JSON.parse(await readFile(join(dir, name), 'utf8'));
+    } catch {
+      map[name.slice(0, -5)] = {};
+    }
+  }
+  return map;
+}
+
+export function readmeWithCatalog(readme, catalog) {
+  const block = `${CATALOG_START}\n${catalog}${CATALOG_END}`;
+  if (readme.includes(CATALOG_START) && readme.includes(CATALOG_END)) {
+    return readme.replace(new RegExp(`${CATALOG_START}[\\s\\S]*?${CATALOG_END}`), block);
+  }
+  return `${readme.trimEnd()}\n\n## 插件\n\n${block}\n`;
+}
+
 function readBasePackages(root, ref, errors) {
   const listed = git(root, ['ls-tree', '-d', '--name-only', `${ref}:packages`]);
   if (listed.status !== 0) return {};
@@ -376,6 +423,12 @@ function readBaseTier(root, ref, id) {
 export async function validateRepo(root, options = {}) {
   installPackageDeps(root);
   const { packages, errors } = await readPackages(root);
+  const readmePath = join(root, 'README.md');
+  if (existsSync(readmePath) && packages.length && options.catalog !== false) {
+    const readme = await readFile(readmePath, 'utf8');
+    const next = readmeWithCatalog(readme, catalogMarkdown(packages, await readExternals(root)));
+    if (next !== readme) errors.push('README 插件索引过期，运行 node scripts/catalog.mjs');
+  }
   const community = options.community ?? isCommunity();
   const explicit = options.base ?? process.env.BASE_REF ?? '';
   const baseRef = resolveBase(root, options.base);

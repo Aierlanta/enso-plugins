@@ -16,9 +16,22 @@ out/v1/                          本地构建产物，不提交
 
 仓库里先放了两个示例：`enso.example.notes`、`enso.example.wordstats`（来自 EnsoCode `examples/plugins`），`tier` 为 `official`。
 
+## 插件
+
+在 EnsoCode 里打开设置 → 插件 → 市场安装。网页目录：<https://enso-plugins.j3.do/>。
+
+<!-- plugins:start -->
+| 插件 | id | 版本 | 来源 | 介绍 |
+| --- | --- | --- | --- | --- |
+| [BCE Prompt Enhance](https://github.com/linqiu919/dsh-bce) | `dsh.bce` | 0.1.2 | 社区 · [`linqiu919/dsh-bce`](https://github.com/linqiu919/dsh-bce) | Composer wand that incrementally indexes the current project through the configured bce-tool MCP and rewrites the draft. Same interaction as dsh-bce, hosted by EnsoCode. |
+| Notes | `enso.example.notes` | 1.0.0 | 官方 | 侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。 |
+| Word Stats | `enso.example.wordstats` | 1.0.0 | 官方 | 统计项目里文本文件的字数、行数与高频词，结果以卡片展示；提供条形图代码块。 |
+| 红果短剧 | `enso.hongguo` | 0.2.5 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
+<!-- plugins:end -->
+
 ## 贡献插件
 
-1. 在 `packages/<id>/` 放入带 `enso-plugin.json` 的目录。依赖必须已经打进目录里（安装时不会 `npm install`）。
+1. 在 `packages/<id>/` 放入带 `enso-plugin.json` 的目录。有 `package-lock.json` 时打包前会 `npm ci`；否则依赖要放在目录里。安装时不会 `npm install`。改完后运行 `node scripts/catalog.mjs` 更新插件索引。
 2. 可选：加 `registry/meta/<id>.json`。
 
 ```json
