@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.scheduler",
+  "name": "Scheduler",
+  "version": "1.0.0",
+  "description": "定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。",
+  "main": "main.mjs",
+  "permissions": ["ui.view", "process.background", "agent.inject", "ui.notify"],
+  "contributes": {
+    "views": [{ "id": "scheduler", "title": "定时任务", "entry": "scheduler.html" }],
+    "schedules": [{ "id": "tick", "intervalSeconds": 60, "timeoutMs": 90000 }]
+  }
+}

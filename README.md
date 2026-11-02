@@ -27,6 +27,7 @@ out/v1/                          本地构建产物，不提交
 | Notes | `enso.example.notes` | 1.0.0 | 官方 | 侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。 |
 | Word Stats | `enso.example.wordstats` | 1.0.0 | 官方 | 统计项目里文本文件的字数、行数与高频词，结果以卡片展示；提供条形图代码块。 |
 | 红果短剧 | `enso.hongguo` | 0.2.5 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
+| Scheduler | `enso.scheduler` | 1.0.0 | 官方 | 定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。 |
 <!-- plugins:end -->
 
 ## 贡献插件
