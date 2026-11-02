@@ -1,4 +1,5 @@
 {
   "tier": "official",
-  "tags": ["ui", "tools"]
+  "tags": ["ui", "tools"],
+  "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.example.wordstats.svg"
 }

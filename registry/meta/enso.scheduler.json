@@ -1,4 +1,5 @@
 {
   "tier": "official",
-  "tags": ["ui", "automation"]
+  "tags": ["ui", "automation"],
+  "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.scheduler.svg"
 }
