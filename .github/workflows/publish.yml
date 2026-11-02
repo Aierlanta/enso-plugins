@@ -30,13 +30,29 @@ jobs:
           fi
       - name: Fetch external plugins
         run: node scripts/external.mjs
+      - name: Update plugin index
+        id: catalog
+        run: |
+          set -euo pipefail
+          node scripts/catalog.mjs
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' -c commit.gpgsign=false commit -m "更新插件索引"
+            git push origin HEAD:main
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build
+        if: steps.catalog.outputs.changed != 'true'
         run: node scripts/build.mjs
       - name: Sign
+        if: steps.catalog.outputs.changed != 'true'
         env:
           ENSO_MARKET_PRIVATE_KEY: ${{ secrets.ENSO_MARKET_PRIVATE_KEY }}
         run: node scripts/sign.mjs
       - name: Push dist
+        if: steps.catalog.outputs.changed != 'true'
         run: |
           set -euo pipefail
           tmp=$(mktemp -d)

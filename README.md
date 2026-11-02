@@ -31,7 +31,7 @@ out/v1/                          本地构建产物，不提交
 
 ## 贡献插件
 
-1. 在 `packages/<id>/` 放入带 `enso-plugin.json` 的目录。有 `package-lock.json` 时打包前会 `npm ci`；否则依赖要放在目录里。安装时不会 `npm install`。改完后运行 `node scripts/catalog.mjs` 更新插件索引。
+1. 在 `packages/<id>/` 放入带 `enso-plugin.json` 的目录。有 `package-lock.json` 时打包前会 `npm ci`；否则依赖要放在目录里。安装时不会 `npm install`。CI 会运行 `node scripts/catalog.mjs` 并把插件索引写回 README；本地也可以先跑这个命令。
 2. 可选：加 `registry/meta/<id>.json`。
 
 ```json

@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -22,6 +22,14 @@ jobs:
         run: git fetch origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
       - name: Fetch external plugins
         run: node scripts/external.mjs
+      - name: Update plugin index
+        run: |
+          set -euo pipefail
+          node scripts/catalog.mjs
+          git add README.md
+          git diff --cached --quiet && exit 0
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' -c commit.gpgsign=false commit -m "更新插件索引"
+          git push origin "HEAD:${{ github.head_ref }}" || echo "无法写回 PR，校验会要求本地运行 node scripts/catalog.mjs"
       - name: Validate
         id: validate
         continue-on-error: true
