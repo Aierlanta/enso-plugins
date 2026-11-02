@@ -17,7 +17,10 @@ button.f{padding:8px 14px;border:1px solid var(--line);border-radius:10px;backgr
 button.f[aria-pressed=true]{color:var(--fg);border-color:var(--acc)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px}
-.top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.name{font-weight:600;font-size:16px}
+.head{display:flex;gap:12px;align-items:flex-start}
+.icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);object-fit:contain;flex:none}
+.mark{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.min{min-width:0;flex:1}.top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.name{font-weight:600;font-size:16px}
 .ver,.id{color:var(--mut);font-size:12px;font-family:ui-monospace,Menlo,monospace}
 .tier{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mut)}.tier.official{color:var(--acc);border-color:var(--acc)}
 .desc{margin:0;color:var(--mut);font-size:14px;flex:1}
@@ -52,10 +55,12 @@ function render(){
     const v=(p.versions||[]).find(x=>x.version===p.latest)||{};
     const perms=Array.isArray(v.permissions)?v.permissions:[];
     const home=/^https:\\/\\//.test(p.homepage||'')?' · <a href="'+esc(p.homepage)+'" rel="noopener">主页</a>':'';
-    return '<div class="card"><div class="top"><span class="name">'+esc(p.name||p.id)+'</span><span class="ver">v'+esc(p.latest)+'</span><span class="tier '+esc(p.tier)+'">'+(p.tier==='official'?'官方':'社区')+'</span></div>'
+    const letter=esc((p.name||p.id).slice(0,1));
+    const icon=/^https:\\/\\//.test(p.icon||'')?'<img class="icon" alt="'+letter+'" src="/v1/icon?url='+encodeURIComponent(p.icon)+'" onerror="this.replaceWith(Object.assign(document.createElement(\\'span\\'),{className:\\'mark\\',textContent:this.alt}))">':'<span class="mark">'+letter+'</span>';
+    return '<div class="card"><div class="head">'+icon+'<div class="min"><div class="top"><span class="name">'+esc(p.name||p.id)+'</span><span class="ver">v'+esc(p.latest)+'</span><span class="tier '+esc(p.tier)+'">'+(p.tier==='official'?'官方':'社区')+'</span></div>'
       +'<div class="id">'+esc(p.id)+home+'</div><p class="desc">'+esc(p.description)+'</p>'
       +(perms.length?'<div class="perm">权限：'+perms.map(x=>'<code>'+esc(x)+'</code>').join(' ')+'</div>':'')
-      +((p.tags||[]).length?'<div class="tags">'+p.tags.map(t=>'<span>#'+esc(t)+'</span>').join('')+'</div>':'')+'</div>';
+      +((p.tags||[]).length?'<div class="tags">'+p.tags.map(t=>'<span>#'+esc(t)+'</span>').join('')+'</div>':'')+'</div></div></div>';
   }).join(''):'<p class="empty">没有匹配的插件</p>';
 }
 document.getElementById('q').oninput=render;

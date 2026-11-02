@@ -179,7 +179,7 @@ export async function handle(request, env, ctx) {
     return text(200, HOME, {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'public, max-age=300',
-      'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'",
+      'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'",
     });
   }
   if (url.pathname === '/v1/index.json') {
