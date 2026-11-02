@@ -99,7 +99,7 @@ git clone https://github.com/J3n5en/enso-hongguo.git
 插件数据都在 EnsoCode 的插件数据目录里（macOS）：
 
 ```
-~/Library/Application Support/enso-code/extension-plugins/data/local.hongguo/
+~/Library/Application Support/enso-code/extension-plugins/data/enso.hongguo/
 ├── video/           最近看过的视频，自动只保留 6 集
 ├── covers/          封面，自动只保留 300 张
 └── anonymous.json   匿名设备身份
