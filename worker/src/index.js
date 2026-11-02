@@ -32,7 +32,7 @@ async function fromBucket(env, key, cacheControl, contentType) {
 async function fromOrigin(env, key, ttl) {
   if (!env.ORIGIN) return null;
   try {
-    const response = await fetch(new URL(key, env.ORIGIN), { cf: { cacheEverything: true, cacheTtl: ttl } });
+    const response = await fetch(new URL(key, env.ORIGIN), key.endsWith('.zip') ? { cf: { cacheEverything: true, cacheTtl: ttl } } : { cache: 'no-store' });
     return response.ok ? new Uint8Array(await response.arrayBuffer()) : null;
   } catch {
     return null;
