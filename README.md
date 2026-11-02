@@ -79,7 +79,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 
 ## Worker
 
-`worker/` 只读。索引与签名成对回源 `ORIGIN`（`dist` 分支 raw，边缘缓存 5 分钟）并写回 R2，源站不可用时用 R2 里的上一份；包先读 R2，缺失时回源一次写入 R2。CI 不需要 Cloudflare 凭据。部署：`cd worker && npx wrangler deploy`。
+`worker/` 只读。索引与签名成对回源 `ORIGIN`（`dist` 分支 raw，边缘缓存 5 分钟）并写回 R2，源站不可用时用 R2 里的上一份；包先读 R2，缺失时回源一次写入 R2。CI 不需要 Cloudflare 凭据。`worker/` 有改动并合并到 `main` 时，`.github/workflows/worker.yml` 先跑 Worker 测试再自动部署（需要 secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`）；也可以手动 `cd worker && npx wrangler deploy`。
 
 | 路由 | 行为 |
 | --- | --- |
