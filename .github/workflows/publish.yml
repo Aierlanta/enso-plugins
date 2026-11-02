@@ -1,0 +1,77 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plugin-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Load dist index
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          if git ls-remote --exit-code --heads origin dist >/dev/null 2>&1; then
+            git fetch --depth=1 origin dist:refs/remotes/origin/dist
+            git archive origin/dist | tar -x -C out
+          fi
+      - name: Build
+        run: node scripts/build.mjs
+      - name: Sign
+        env:
+          ENSO_MARKET_PRIVATE_KEY: ${{ secrets.ENSO_MARKET_PRIVATE_KEY }}
+        run: node scripts/sign.mjs
+      - name: Push dist
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp -d)
+          git branch -D dist-publish >/dev/null 2>&1 || true
+          if git rev-parse --verify --quiet refs/remotes/origin/dist >/dev/null; then
+            git worktree add -B dist-publish "$tmp" origin/dist
+          else
+            git worktree add --detach "$tmp" HEAD
+            git -C "$tmp" checkout --orphan dist-publish
+          fi
+          find "$tmp" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a out/v1 "$tmp/v1"
+          git -C "$tmp" add -A
+          if git -C "$tmp" diff --cached --quiet; then
+            echo "dist 无变化"
+          else
+            git -C "$tmp" -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' -c commit.gpgsign=false commit -m "publish ${GITHUB_SHA}"
+            git -C "$tmp" push origin HEAD:dist
+          fi
+          git worktree remove --force "$tmp"
+      - name: Upload R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          test -n "$R2_BUCKET"
+          npm install --prefix "$RUNNER_TEMP/wrangler" wrangler@4
+          wrangler="$RUNNER_TEMP/wrangler/node_modules/.bin/wrangler"
+          while IFS= read -r -d '' file; do
+            key=${file#out/}
+            case "$file" in
+              *.json) type=application/json; cache='public, max-age=300' ;;
+              *.sig) type=text/plain; cache='public, max-age=300' ;;
+              *.zip) type=application/zip; cache='public, max-age=31536000, immutable' ;;
+              *) type=application/octet-stream; cache='public, max-age=300' ;;
+            esac
+            "$wrangler" r2 object put "$R2_BUCKET/$key" --file "$file" --content-type "$type" --cache-control "$cache" --remote || exit 1
+          done < <(find out/v1 -type f -print0)

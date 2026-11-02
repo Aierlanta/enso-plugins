@@ -1,0 +1,11 @@
+name = "enso-plugins"
+main = "src/index.js"
+compatibility_date = "2026-04-01"
+workers_dev = false
+
+# 自定义域名待定。确定后取消注释：
+# routes = [{ pattern = "plugins.example.com", custom_domain = true }]
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "enso-plugins"
