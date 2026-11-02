@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { lstat, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { zipFiles } from './zip.mjs';
 
@@ -539,6 +539,3 @@ export async function buildRepo(root, env = process.env) {
   return { index, indexPath, bytes: Buffer.from(text) };
 }
 
-export function rootFromArgs(argv, options) {
-  return resolve(options.root ?? repoRoot);
-}

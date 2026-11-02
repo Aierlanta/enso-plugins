@@ -22,11 +22,9 @@ function packageKey(pathname) {
 async function fromBucket(env, key, cacheControl, contentType) {
   const object = await env.BUCKET?.get(key);
   if (!object) return text(404, 'not found', { 'cache-control': 'no-store' });
-  const headers = {
-    'content-type': contentType,
-    'cache-control': cacheControl,
-    etag: object.httpEtag || object.etag,
-  };
+  const headers = { 'content-type': contentType, 'cache-control': cacheControl };
+  const etag = object.httpEtag || object.etag;
+  if (etag) headers.etag = etag;
   if (Number.isSafeInteger(object.size)) headers['content-length'] = String(object.size);
   return new Response(object.body, { headers });
 }
