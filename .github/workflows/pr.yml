@@ -20,6 +20,8 @@ jobs:
           node-version: 22
       - name: Fetch base
         run: git fetch origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+      - name: Fetch external plugins
+        run: node scripts/external.mjs
       - name: Validate
         id: validate
         continue-on-error: true

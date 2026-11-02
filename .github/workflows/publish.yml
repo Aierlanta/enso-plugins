@@ -28,6 +28,8 @@ jobs:
             git fetch --depth=1 origin dist:refs/remotes/origin/dist
             git archive origin/dist | tar -x -C out
           fi
+      - name: Fetch external plugins
+        run: node scripts/external.mjs
       - name: Build
         run: node scripts/build.mjs
       - name: Sign

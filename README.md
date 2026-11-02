@@ -89,3 +89,13 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 | 其他 | 404 |
 
 自定义域名尚未确定。在 `worker/` 执行 `npx wrangler deploy` 前，改好 `bucket_name` 和路由。
+
+## 外部插件
+
+插件源码在别的仓库时，不复制进来，在 `registry/external/<id>.json` 声明：
+
+```json
+{ "repo": "owner/name", "commit": "<完整 40 位 sha>", "path": "插件所在子目录" }
+```
+
+CI 在校验和打包前运行 `node scripts/external.mjs`，按固定 commit 下载并放到 `packages/<id>/`（该目录加入 `.gitignore`，不提交）。更新插件就是提 PR 改 `commit`，审核对象是那个 commit 的代码；作者改了 `version` 才会发新版。市场元数据照常放 `registry/meta/<id>.json`。

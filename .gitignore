@@ -1,7 +1,10 @@
 out/
-node_modules/
+/node_modules/
 .DS_Store
 .env
 *.pem
 .wrangler/
 .dev.vars
+
+# 外部插件由 scripts/external.mjs 按 registry/external 拉取，不提交
+/packages/dsh.bce/
