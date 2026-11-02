@@ -346,6 +346,17 @@ function tierOf(meta) {
   return meta?.tier === 'official' ? 'official' : 'community';
 }
 
+/** registry/delisted.json：从索引移除的插件 id；已发布的 zip 保留，已安装的用户不受影响 */
+function readDelisted(root) {
+  const path = join(root, 'registry', 'delisted.json');
+  if (!existsSync(path)) return new Set();
+  const list = JSON.parse(readFileSync(path, 'utf8'));
+  if (!Array.isArray(list) || list.some((id) => typeof id !== 'string' || !ID_RE.test(id))) {
+    throw new Error('registry/delisted.json 必须是插件 id 数组');
+  }
+  return new Set(list);
+}
+
 const CATALOG_START = '<!-- plugins:start -->';
 const CATALOG_END = '<!-- plugins:end -->';
 
@@ -527,7 +538,11 @@ export async function buildRepo(root, env = process.env) {
   const previous = readPrevious(root);
   assertPrevious(previous);
   const now = indexNow(env);
-  const previousPlugins = new Map((previous?.plugins ?? []).map((plugin) => [plugin.id, plugin]));
+  const delisted = readDelisted(root);
+  for (const plugin of packages) if (delisted.has(plugin.id)) throw new Error(`${plugin.id} 已下架，不能同时在 packages/ 里`);
+  const previousPlugins = new Map(
+    (previous?.plugins ?? []).filter((plugin) => !delisted.has(plugin.id)).map((plugin) => [plugin.id, plugin]),
+  );
   const staged = [];
   for (const plugin of packages) {
     const files = [];

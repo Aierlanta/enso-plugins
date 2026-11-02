@@ -113,3 +113,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 ```
 
 CI 在校验和打包前运行 `node scripts/external.mjs`，按固定 commit 下载并放到 `packages/<id>/`（该目录加入 `.gitignore`，不提交）。更新插件就是提 PR 改 `commit`，审核对象是那个 commit 的代码；作者改了 `version` 才会发新版。市场元数据照常放 `registry/meta/<id>.json`。
+
+## 下架
+
+把插件 id 加进 `registry/delisted.json`（数组），并删掉 `packages/<id>/`。下一次发布时它会从索引里消失；已发布的 zip 留在 `dist`，已安装的用户不受影响。

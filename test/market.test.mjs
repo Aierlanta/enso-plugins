@@ -155,6 +155,14 @@ test('删掉目录后已发布插件仍留在索引', async () => {
       next.index.plugins.map((plugin) => plugin.id),
       ['enso.example.notes', 'enso.example.wordstats'],
     );
+    await writeFile(join(root, 'registry/delisted.json'), '["enso.example.wordstats"]');
+    const delisted = await buildRepo(root, { ...process.env, ENSO_INDEX_TIME: '2026-11-04T00:00:00.000Z' });
+    assert.deepEqual(
+      delisted.index.plugins.map((plugin) => plugin.id),
+      ['enso.example.notes'],
+    );
+    await writeFile(join(root, 'registry/delisted.json'), '["enso.example.notes"]');
+    await assert.rejects(buildRepo(root, { ...process.env, ENSO_INDEX_TIME: '2026-11-05T00:00:00.000Z' }), /已下架/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
