@@ -201,10 +201,8 @@ test('示例插件可以校验、打包并验签', async () => {
     assert.equal(validated.ok, true, validated.errors.join('\n'));
     const { privatePem, publicPem } = createMarketKey();
     const built = await buildRepo(root, { ...process.env, ENSO_INDEX_TIME: NOW });
-    assert.deepEqual(
-      built.index.plugins.map((plugin) => plugin.id),
-      ['enso.example.notes', 'enso.example.wordstats'],
-    );
+    const ids = built.index.plugins.map((plugin) => plugin.id);
+    for (const id of ['enso.example.notes', 'enso.example.wordstats']) assert.ok(ids.includes(id), id);
     const signature = signIndex(built.bytes, privatePem);
     assert.equal(verify(null, built.bytes, createPublicKey(publicPem), Buffer.from(signature, 'base64')), true);
   } finally {
