@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #1f2328;
+        --muted: #8a919a;
+        --line: rgba(31, 35, 40, 0.1);
+        --col: rgba(31, 35, 40, 0.035);
+        --card: #fff;
+        --hover: rgba(31, 35, 40, 0.06);
+        --shadow: 0 1px 2px rgba(31, 35, 40, 0.06), 0 0 0 1px rgba(31, 35, 40, 0.07);
+        --shadow-lift: 0 8px 24px rgba(31, 35, 40, 0.16), 0 0 0 1px rgba(31, 35, 40, 0.08);
+        --accent: #3b82f6;
+        --danger: #e5484d;
+        --radius: 10px;
+      }
+      :root[data-theme='dark'] {
+        --fg: #e6e8eb;
+        --muted: #8b929b;
+        --line: rgba(255, 255, 255, 0.08);
+        --col: rgba(255, 255, 255, 0.03);
+        --card: #23262b;
+        --hover: rgba(255, 255, 255, 0.07);
+        --shadow: 0 0 0 1px rgba(255, 255, 255, 0.07);
+        --shadow-lift: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
+        --accent: #60a5fa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 13px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: var(--fg);
+        background: transparent;
+        -webkit-font-smoothing: antialiased;
+      }
+      button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; border-radius: 6px; padding: 0; }
+      input, textarea { font: inherit; color: inherit; background: transparent; border: 0; outline: none; width: 100%; padding: 0; resize: none; }
+      .icon {
+        width: 22px; height: 22px; display: inline-grid; place-items: center; flex: none;
+        color: var(--muted); transition: background 0.12s, color 0.12s;
+      }
+      .icon:hover { background: var(--hover); color: var(--fg); }
+      .icon.danger:hover { color: var(--danger); }
+      svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+      header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; backdrop-filter: blur(12px); }
+      header h1 { margin: 0; font-size: 13px; font-weight: 600; flex: 1; }
+      header .stat { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+      .toasts { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+      .toast {
+        display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; border-radius: 9px;
+        background: var(--card); box-shadow: var(--shadow-lift); font-size: 12.5px; pointer-events: auto;
+        animation: toast-in 0.18s ease-out; transition: opacity 0.2s, transform 0.2s;
+      }
+      .toast.error { color: var(--danger); }
+      .toast.leave { opacity: 0; transform: translateY(6px); }
+      @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+      .mask { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.32); animation: fade 0.15s; }
+      @keyframes fade { from { opacity: 0; } }
+      .modal { width: min(320px, 100%); padding: 16px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow-lift); }
+      .modal h2 { margin: 0 0 6px; font-size: 14px; }
+      .modal p { margin: 0; color: var(--muted); font-size: 12.5px; word-break: break-word; }
+      .modal .actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 16px; }
+      .btn.danger { background: var(--danger); color: #fff; }
+      .btn.danger:hover { background: var(--danger); filter: brightness(1.08); }
+
+      /* 窄侧栏纵向堆叠，宽时横向排列 */
+      .board { display: flex; flex-direction: column; gap: 10px; padding: 0 12px 12px; }
+      @media (min-width: 560px) {
+        .board { flex-direction: row; align-items: flex-start; overflow-x: auto; min-height: calc(100vh - 44px); }
+        .col { flex: 0 0 260px; }
+        .new-col { flex: 0 0 220px; }
+      }
+      .col { --dot: var(--accent); background: var(--col); border-radius: var(--radius); padding: 6px; transition: box-shadow 0.15s; }
+      .col.over { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--dot) 60%, transparent); }
+      .col-head { display: flex; align-items: center; gap: 6px; padding: 2px 4px 6px 0; min-height: 28px; }
+      .col-head .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot); flex: none; }
+      .col-head .name { font-weight: 600; font-size: 12.5px; padding: 1px 4px; border-radius: 5px; cursor: text; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .col-head .name:hover { background: var(--hover); }
+      .col-head input.name { flex: 1; background: var(--card); box-shadow: var(--shadow); }
+      .col-head .count { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+      .col-head .spacer { flex: 1; }
+      .col-head .tools { display: flex; opacity: 0; transition: opacity 0.12s; }
+      .col:hover .col-head .tools, .col-head .tools:focus-within { opacity: 1; }
+      .collapse svg { transition: transform 0.15s; }
+      .col.folded .collapse svg { transform: rotate(-90deg); }
+      .col.folded .cards, .col.folded .add { display: none; }
+
+      .cards { display: flex; flex-direction: column; gap: 6px; min-height: 6px; }
+      .card { position: relative; background: var(--card); border-radius: 8px; box-shadow: var(--shadow); padding: 8px 10px; cursor: grab; transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s; }
+      .card:hover { box-shadow: var(--shadow-lift); }
+      .card.dragging { opacity: 0.35; transform: scale(0.98); }
+      .placeholder { height: 36px; border-radius: 8px; border: 1.5px dashed color-mix(in srgb, var(--dot) 55%, transparent); background: color-mix(in srgb, var(--dot) 6%, transparent); }
+      .card .title { font-weight: 500; word-break: break-word; padding-right: 22px; }
+      .card .body { margin-top: 3px; color: var(--muted); font-size: 12px; white-space: pre-wrap; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .card .foot { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 11px; color: var(--muted); }
+      .chip { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; height: 18px; border-radius: 9px; background: var(--hover); }
+      .chip.session { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+      .chip svg { width: 11px; height: 11px; }
+      .card .ops { position: absolute; top: 5px; right: 5px; display: flex; gap: 1px; opacity: 0; background: var(--card); border-radius: 6px; }
+      .card:hover .ops, .card .ops.open { opacity: 1; }
+      .creator { display: inline-grid; place-items: center; color: var(--muted); }
+      .creator svg { width: 12px; height: 12px; }
+      .chip.bound { cursor: pointer; max-width: 150px; color: var(--fg); }
+      .chip.bound span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .chip.bound:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+      .chip.current { cursor: default; color: #fff; background: var(--accent); }
+      .chip.current:hover { color: #fff; background: var(--accent); }
+      .chip.stale { cursor: default; color: var(--muted); text-decoration: line-through; }
+      .chip.stale:hover { color: var(--muted); background: var(--hover); }
+      .chip .live { width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex: none; box-shadow: 0 0 0 2px color-mix(in srgb, #10b981 25%, transparent); }
+      .menu {
+        position: fixed; z-index: 10; min-width: 168px; padding: 4px; border-radius: 9px;
+        background: var(--card); box-shadow: var(--shadow-lift);
+      }
+      .menu button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; font-size: 12.5px; text-align: left; }
+      .menu button:hover { background: var(--hover); }
+      .menu button svg { color: var(--muted); }
+      .menu small { display: block; color: var(--muted); font-size: 11px; }
+
+      .btn { height: 24px; padding: 0 10px; border-radius: 6px; font-size: 12px; }
+      .cards + .editor { margin-top: 6px; }
+      .editor {
+        background: var(--card); border-radius: 10px; overflow: hidden;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent), 0 6px 20px rgba(0, 0, 0, 0.12);
+        animation: pop 0.14s ease-out;
+      }
+      @keyframes pop { from { opacity: 0; transform: translateY(-3px) scale(0.99); } }
+      .editor .fields { padding: 10px 12px 8px; }
+      .editor .title-in { font-size: 13.5px; font-weight: 600; }
+      .editor .title-in::placeholder, .editor textarea::placeholder { color: var(--muted); opacity: 0.7; }
+      .editor textarea { display: block; margin-top: 6px; min-height: 36px; max-height: 240px; font-size: 12.5px; line-height: 1.55; color: var(--fg); opacity: 0.85; }
+      .editor .bar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-top: 1px solid var(--line); background: var(--col); }
+      .pill {
+        flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; height: 24px; padding: 0 4px 0 8px;
+        border-radius: 12px; color: var(--muted); cursor: pointer; transition: background 0.12s, color 0.12s;
+      }
+      .pill:hover { background: var(--hover); color: var(--fg); }
+      .pill.on { color: var(--accent); }
+      .pill svg { flex: none; width: 12px; height: 12px; }
+      .pill select {
+        min-width: 0; max-width: 100%; font: inherit; font-size: 12px; color: inherit; background: none; border: 0; outline: none;
+        cursor: pointer; appearance: none; text-overflow: ellipsis;
+      }
+      .btn.ghost { color: var(--muted); }
+      .btn.ghost:hover { color: var(--fg); }
+      .btn:hover { background: var(--hover); }
+      .btn.primary { background: var(--accent); color: #fff; }
+      .btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+
+      .add { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: 6px; padding: 5px 8px; color: var(--muted); border-radius: 7px; font-size: 12.5px; }
+      .add:hover { background: var(--hover); color: var(--fg); }
+      .new-col { display: flex; align-items: center; gap: 6px; border-radius: var(--radius); border: 1.5px dashed var(--line); padding: 6px 10px 6px 6px; color: var(--muted); }
+      .new-col:focus-within { border-color: var(--accent); color: var(--fg); }
+      .empty-state { padding: 40px 16px; text-align: center; color: var(--muted); font-size: 12.5px; }
+    </style>
+  </head>
+  <body>
+    <header><h1>看板</h1><span class="stat" id="stat"></span></header>
+    <div id="toasts" class="toasts"></div>
+    <div id="board" class="board"></div>
+    <script>
+      const PALETTE = ['#8b93a1', '#3b82f6', '#f59e0b', '#10b981', '#a855f7', '#ef4444', '#06b6d4', '#ec4899'];
+      const ICON = {
+        plus: '<path d="M12 5v14M5 12h14"/>',
+        trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+        left: '<path d="M15 6l-6 6 6 6"/>',
+        right: '<path d="M9 6l6 6-6 6"/>',
+        chevron: '<path d="M6 9l6 6 6-6"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+        bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/>',
+        send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+        reply: '<path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/>',
+        draft: '<path d="M4 20h16M4 4h16v10H4z"/>',
+        newchat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M12 9v6M9 12h6"/>',
+        link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+      };
+      const $ = (id) => document.getElementById(id);
+      const svg = (name) => `<svg viewBox="0 0 24 24">${ICON[name]}</svg>`;
+      const h = (tag, props = {}, ...kids) => {
+        const node = document.createElement(tag);
+        for (const [k, v] of Object.entries(props)) {
+          if (k === 'html') node.innerHTML = v;
+          else if (k === 'class') node.className = v;
+          else if (k.startsWith('on')) node[k] = v;
+          else if (k === 'value') node.value = v;
+          else if (v != null && v !== false) node.setAttribute(k, v);
+        }
+        node.append(...kids.filter((k) => k != null && k !== false));
+        return node;
+      };
+      const iconBtn = (name, title, onclick, extra = '') => h('button', { class: `icon ${extra}`, title, html: svg(name), onclick });
+
+      let state = null;
+      let sess = { current: null, sessions: [] }; // 宿主会话列表；旧宿主不支持时保持空
+      const sessionOf = (id) => sess.sessions.find((s) => s.id === id);
+      const sessionName = (id) => (id === sess.current ? '当前会话' : sessionOf(id)?.title || '未命名会话');
+      const loadSessions = async () => {
+        const next = await window.enso.call('sessions').catch(() => null);
+        if (next) sess = next;
+        return next;
+      };
+      let editing = null; // { card?, column?, renaming? }
+      let drag = null; // { id, before }
+      const folded = new Set(JSON.parse(localStorage.getItem('kanban.folded') || '[]'));
+      const busy = () => editing || drag || menu || document.querySelector('.mask') || document.activeElement?.matches('input, textarea');
+
+      // Electron 侧栏不支持 alert/confirm/prompt，用页内 toast 与 modal
+      function toast(message, kind = '') {
+        const node = h('div', { class: `toast ${kind}` }, message);
+        $('toasts').append(node);
+        setTimeout(() => {
+          node.classList.add('leave');
+          setTimeout(() => node.remove(), 200);
+        }, kind === 'error' ? 3500 : 2000);
+      }
+
+      function ask(title, message, okText = '删除') {
+        return new Promise((resolve) => {
+          const done = (v) => {
+            mask.remove();
+            document.removeEventListener('keydown', onKey, true);
+            resolve(v);
+          };
+          const onKey = (e) => {
+            if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+            if (e.key === 'Enter') { e.preventDefault(); done(true); }
+          };
+          const ok = h('button', { class: 'btn danger', onclick: () => done(true) }, okText);
+          const mask = h('div', { class: 'mask', onmousedown: (e) => e.target === mask && done(false) },
+            h('div', { class: 'modal' }, h('h2', {}, title), h('p', {}, message),
+              h('div', { class: 'actions' }, h('button', { class: 'btn', onclick: () => done(false) }, '取消'), ok)));
+          document.body.append(mask);
+          document.addEventListener('keydown', onKey, true);
+          ok.focus();
+        });
+      }
+
+      const run = async (method, args) => {
+        try {
+          return await window.enso.call(method, args);
+        } catch (error) {
+          toast(error.message, 'error');
+          return null;
+        }
+      };
+      const apply = (next) => {
+        if (!next) return;
+        state = next;
+        render();
+      };
+      const edit = (next) => { editing = next; render(); };
+
+      let menu = null;
+      const closeMenu = () => {
+        menu?.remove();
+        menu = null;
+        document.querySelectorAll('.ops.open').forEach((o) => o.classList.remove('open'));
+      };
+      document.addEventListener('mousedown', (e) => menu && !menu.contains(e.target) && !e.target.closest('.ops') && closeMenu());
+      document.addEventListener('keydown', (e) => e.key === 'Escape' && closeMenu());
+
+      function openSendMenu(card, anchor) {
+        closeMenu();
+        const bound = card.boundTo && card.boundTo !== sess.current && sessionOf(card.boundTo);
+        const item = (icon, label, hint, target) =>
+          h('button', { html: svg(icon), onclick: async () => {
+            closeMenu();
+            apply(await run('send', { id: card.id, target }));
+            loadSessions().then(() => !busy() && render());
+          } }, h('span', {}, label, h('small', {}, hint)));
+        menu = h('div', { class: 'menu' },
+          bound && item('reply', '发送到绑定会话', bound.title || '未命名会话', 'bound'),
+          item('send', '发送到当前会话', '立即开始处理，并绑定', 'current'),
+          item('newchat', '新建会话', '预填到新会话输入框，并绑定', 'new'),
+          item('draft', '插入输入框', '只放进当前输入框', 'draft'));
+        document.body.append(menu);
+        anchor.parentElement.classList.add('open');
+        const r = anchor.getBoundingClientRect();
+        const w = menu.offsetWidth;
+        const mh = menu.offsetHeight;
+        menu.style.left = `${Math.max(6, Math.min(r.right - w, document.documentElement.clientWidth - w - 6))}px`;
+        menu.style.top = `${r.bottom + mh + 4 > document.documentElement.clientHeight ? r.top - mh - 4 : r.bottom + 4}px`;
+      }
+
+      const ago = (t) => {
+        const s = (Date.now() - t) / 1000;
+        if (s < 60) return '刚刚';
+        if (s < 3600) return `${Math.floor(s / 60)} 分钟前`;
+        if (s < 86400) return `${Math.floor(s / 3600)} 小时前`;
+        return new Date(t).toLocaleDateString();
+      };
+
+      function editor(card, column) {
+        const title = h('input', { class: 'title-in', placeholder: '卡片标题', value: card?.title ?? '' });
+        const body = h('textarea', { placeholder: '添加描述…', rows: 1, value: card?.body ?? '' });
+        const bound = card?.boundTo ?? '';
+        const options = [
+          ['', '不绑定'],
+          ...(sess.current ? [[sess.current, '当前会话']] : []),
+          ...sess.sessions.filter((s) => s.id !== sess.current).map((s) => [s.id, `${s.title || '未命名会话'}${s.archived ? '（已归档）' : ''}`]),
+          ...(bound && bound !== sess.current && !sessionOf(bound) ? [[bound, '已失效的会话']] : []),
+        ];
+        const select = h('select', {}, ...options.map(([v, label]) => h('option', { value: v }, label)));
+        select.value = bound;
+        const grow = () => { body.style.height = 'auto'; body.style.height = `${body.scrollHeight}px`; };
+        body.oninput = grow;
+        const submit = async () => {
+          if (!title.value.trim()) return title.focus();
+          const next = await run('upsert', { id: card?.id, title: title.value, body: body.value, column, bind: select.value || false });
+          if (!next) return;
+          editing = null;
+          apply(next);
+        };
+        title.onkeydown = body.onkeydown = (e) => {
+          if (e.key === 'Escape') edit(null);
+          else if (e.key === 'Enter' && !e.isComposing && (e.metaKey || e.ctrlKey || e.target === title)) {
+            e.preventDefault();
+            submit();
+          }
+        };
+        requestAnimationFrame(() => { grow(); title.focus(); });
+        const sync = () => pill.classList.toggle('on', !!select.value);
+        select.onchange = sync;
+        const pill = h('label', { class: 'pill', title: '绑定会话', html: svg('link') }, select);
+        sync();
+        return h('div', { class: 'editor' },
+          h('div', { class: 'fields' }, title, body),
+          h('div', { class: 'bar' }, pill,
+            h('button', { class: 'btn ghost', onclick: () => edit(null) }, '取消'),
+            h('button', { class: 'btn primary', title: '回车 / ⌘↩', onclick: submit }, card ? '保存' : '添加')));
+      }
+
+      function boundChip(id) {
+        const current = id === sess.current;
+        const s = sessionOf(id);
+        const supported = sess.current != null;
+        if (supported && !current && !s) return h('span', { class: 'chip stale', title: '会话已删除或已结束' }, '已失效');
+        const label = current ? '当前' : supported ? sessionName(id) : '已绑定会话';
+        const chip = h('span', {
+          class: `chip bound ${current ? 'current' : ''}`,
+          title: current ? '绑定到当前会话' : `跳转到「${label}」`,
+          html: s?.running && !current ? '<i class="live"></i>' : svg('link'),
+        }, h('span', {}, label));
+        chip.onclick = async (e) => {
+          e.stopPropagation();
+          if (!current && supported) await run('focus', { sessionId: id });
+        };
+        chip.onmousedown = (e) => e.stopPropagation();
+        return chip;
+      }
+
+      function cardEl(card) {
+        if (editing?.card === card.id) return editor(card, card.column);
+        const bySession = card.createdBy?.kind === 'session';
+        const creator = bySession ? `由${card.createdBy.sessionId === sess.current ? '当前会话' : '会话'}创建` : '由我创建';
+        const node = h('div', { class: 'card', draggable: 'true', 'data-id': card.id },
+          h('div', { class: 'title' }, card.title),
+          card.body && h('div', { class: 'body' }, card.body),
+          h('div', { class: 'foot' },
+            h('span', { class: 'creator', title: creator, html: svg(bySession ? 'bot' : 'user') }),
+            card.boundTo && boundChip(card.boundTo),
+            h('span', { title: new Date(card.updatedAt).toLocaleString() }, ago(card.updatedAt))),
+          h('div', { class: 'ops' },
+            iconBtn('send', '发送到会话', (e) => {
+              e.stopPropagation();
+              menu ? closeMenu() : openSendMenu(card, e.currentTarget);
+            }),
+            iconBtn('trash', '删除', async (e) => {
+              e.stopPropagation();
+              if (await ask('删除卡片', `「${card.title}」删除后无法恢复。`)) apply(await run('remove', { id: card.id }));
+            }, 'danger')));
+        node.onclick = () => edit({ card: card.id });
+        node.ondragstart = (e) => {
+          drag = { id: card.id, before: null };
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', card.id);
+          requestAnimationFrame(() => node.classList.add('dragging'));
+        };
+        node.ondragend = () => { drag = null; render(); };
+        return node;
+      }
+
+      function columnName(column) {
+        if (editing?.renaming !== column.id) {
+          return h('span', { class: 'name', title: '点击改名', onclick: () => edit({ renaming: column.id }) }, column.name);
+        }
+        const input = h('input', { class: 'name', value: column.name });
+        let done = false;
+        const finish = async (save) => {
+          if (done) return;
+          done = true;
+          editing = null;
+          const v = input.value.trim();
+          if (save && v && v !== column.name) apply(await run('column', { action: 'rename', id: column.id, name: v }));
+          else render();
+        };
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter' && !e.isComposing) finish(true);
+          if (e.key === 'Escape') finish(false);
+        };
+        input.onblur = () => finish(true);
+        requestAnimationFrame(() => { input.focus(); input.select(); });
+        return input;
+      }
+
+      function columnEl(column, index) {
+        const cards = state.cards.filter((c) => c.column === column.id).sort((a, b) => a.order - b.order);
+        const op = (action, extra) => async () => apply(await run('column', { action, id: column.id, ...extra }));
+        const isFolded = folded.has(column.id);
+        const toggle = () => {
+          isFolded ? folded.delete(column.id) : folded.add(column.id);
+          localStorage.setItem('kanban.folded', JSON.stringify([...folded]));
+          render();
+        };
+        const startAdd = () => { folded.delete(column.id); edit({ column: column.id }); };
+        const adding = editing?.column === column.id && !editing.card;
+
+        const list = h('div', { class: 'cards' }, ...cards.map(cardEl));
+        const col = h('section', { class: `col ${isFolded ? 'folded' : ''}`, style: `--dot:${PALETTE[index % PALETTE.length]}` },
+          h('div', { class: 'col-head' },
+            iconBtn('chevron', isFolded ? '展开' : '折叠', toggle, 'collapse'),
+            h('span', { class: 'dot' }),
+            columnName(column),
+            h('span', { class: 'count' }, String(cards.length)),
+            h('span', { class: 'spacer' }),
+            h('span', { class: 'tools' },
+              index > 0 && iconBtn('left', '前移', op('move', { index: index - 1 })),
+              index < state.columns.length - 1 && iconBtn('right', '后移', op('move', { index: index + 1 })),
+              iconBtn('trash', '删除列', () => {
+                if (cards.length) return toast(`「${column.name}」里还有 ${cards.length} 张卡片，先移走或删除`, 'error');
+                ask('删除列', `删除列「${column.name}」？`).then((ok) => ok && op('delete')());
+              }, 'danger')),
+            iconBtn('plus', '添加卡片', startAdd)),
+          list,
+          adding ? editor(null, column.id) : h('button', { class: 'add', html: svg('plus'), onclick: startAdd }, '添加卡片'));
+
+        // 拖放：占位块标出落点
+        const placeholder = h('div', { class: 'placeholder' });
+        const beforeOf = (y) => [...list.querySelectorAll('.card[data-id]')].find((c) => {
+          if (c.dataset.id === drag.id) return false;
+          const r = c.getBoundingClientRect();
+          return y < r.top + r.height / 2;
+        });
+        col.ondragover = (e) => {
+          if (!drag) return;
+          e.preventDefault();
+          document.querySelectorAll('.col.over').forEach((c) => c !== col && c.classList.remove('over'));
+          document.querySelectorAll('.placeholder').forEach((p) => p !== placeholder && p.remove());
+          col.classList.add('over');
+          if (isFolded) return (drag.before = null);
+          const before = beforeOf(e.clientY);
+          if (before) list.insertBefore(placeholder, before);
+          else list.append(placeholder);
+          drag.before = before?.dataset.id ?? null;
+        };
+        col.ondragleave = (e) => {
+          if (col.contains(e.relatedTarget)) return;
+          col.classList.remove('over');
+          placeholder.remove();
+        };
+        col.ondrop = async (e) => {
+          e.preventDefault();
+          if (!drag) return;
+          const { id, before } = drag;
+          drag = null;
+          apply(await run('move', { id, column: column.id, beforeId: before ?? undefined }));
+        };
+        return col;
+      }
+
+      function newColumnEl() {
+        const input = h('input', { placeholder: '新建列…' });
+        const add = async () => {
+          if (!input.value.trim()) return;
+          apply(await run('column', { action: 'add', name: input.value }));
+          requestAnimationFrame(() => document.querySelector('.new-col input')?.focus());
+        };
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter' && !e.isComposing) add();
+          if (e.key === 'Escape') input.blur();
+        };
+        return h('div', { class: 'new-col' }, h('span', { class: 'icon', html: svg('plus') }), input);
+      }
+
+      function render() {
+        if (!state) return;
+        const last = state.columns.at(-1);
+        const total = state.cards.length;
+        $('stat').textContent = total && last ? `${state.cards.filter((c) => c.column === last.id).length}/${total}` : '';
+        $('stat').title = last ? `「${last.name}」/ 全部` : '';
+        $('board').replaceChildren(
+          ...state.columns.map(columnEl),
+          newColumnEl(),
+          ...(state.columns.length ? [] : [h('div', { class: 'empty-state' }, '还没有列，先新建一列吧')]));
+      }
+
+      // 其他会话 / agent 改动时自动刷新；编辑、拖动、输入时暂停。会话列表每 5 秒刷新
+      let sessTick = 0;
+      async function poll() {
+        if (!busy()) {
+          const before = JSON.stringify(sess);
+          if (sessTick++ % 4 === 0) await loadSessions();
+          const rev = await window.enso.call('rev').catch(() => null);
+          if (rev === -1) {
+            state = null;
+            $('board').replaceChildren(h('div', { class: 'empty-state' }, '打开一个项目后即可使用看板'));
+          } else if (rev !== null && rev !== state?.rev) apply(await run('list'));
+          else if (state && before !== JSON.stringify(sess)) render();
+        }
+        setTimeout(poll, 1500);
+      }
+      poll();
+      setInterval(() => !busy() && render(), 60_000); // 刷新相对时间
+    </script>
+  </body>
+</html>

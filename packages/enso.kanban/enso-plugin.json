@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.kanban",
+  "name": "Kanban",
+  "version": "1.0.0",
+  "description": "项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。",
+  "main": "main.mjs",
+  "permissions": ["ui.view", "agent.tool", "agent.inject", "composer.draft", "session.read", "session.focus", "session.create"],
+  "contributes": {
+    "views": [{ "id": "kanban", "title": "看板", "entry": "kanban.html" }],
+    "agentTools": [
+      {
+        "name": "kanban_list",
+        "description": "List the columns and cards of the current project's shared kanban board. Shared across sessions of this project.",
+        "parameters": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "kanban_upsert",
+        "description": "Create a card (omit id) or update/move an existing card (pass id) on the project's shared kanban board. Use it to track tasks and report progress visible to the user and other sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Card id to update; omit to create" },
+            "title": { "type": "string" },
+            "body": { "type": "string", "description": "Details / notes" },
+            "column": { "type": "string", "description": "Column id or name; defaults to the first column on create" },
+            "bind": { "type": "boolean", "description": "true binds the card to the calling session, false unbinds. New cards are bound to the calling session by default." }
+          }
+        }
+      },
+      {
+        "name": "kanban_column",
+        "description": "Manage board columns: add (name, optional index), rename (id, name), delete (id; must be empty), move (id, index).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string", "enum": ["add", "rename", "delete", "move"] },
+            "id": { "type": "string", "description": "Column id or name" },
+            "name": { "type": "string" },
+            "index": { "type": "integer", "description": "Target position (0-based)" }
+          },
+          "required": ["action"]
+        }
+      },
+      {
+        "name": "kanban_delete",
+        "description": "Delete a card from the project's kanban board.",
+        "parameters": {
+          "type": "object",
+          "properties": { "id": { "type": "string" } },
+          "required": ["id"]
+        }
+      }
+    ]
+  }
+}
