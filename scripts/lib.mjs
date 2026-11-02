@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { lstat, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +35,18 @@ export function indexNow(env = process.env) {
   const date = new Date(env.ENSO_INDEX_TIME);
   if (Number.isNaN(date.getTime())) throw new Error('ENSO_INDEX_TIME 不是合法时间');
   return date.toISOString();
+}
+
+/** 有 package-lock.json 的插件在打包前安装依赖。依赖进发布包，不进 Git。 */
+export function installPackageDeps(root) {
+  const packagesDir = join(root, 'packages');
+  if (!existsSync(packagesDir)) return;
+  for (const name of readdirSync(packagesDir)) {
+    const dir = join(packagesDir, name);
+    if (!existsSync(join(dir, 'package-lock.json'))) continue;
+    const npm = spawnSync('npm', ['ci', '--omit=dev', '--ignore-scripts'], { cwd: dir, encoding: 'utf8' });
+    if (npm.status !== 0) throw new Error(`${name}: npm ci 失败\n${npm.stderr || npm.stdout || ''}`);
+  }
 }
 
 function comparePrerelease(a, b) {
@@ -362,6 +374,7 @@ function readBaseTier(root, ref, id) {
 }
 
 export async function validateRepo(root, options = {}) {
+  installPackageDeps(root);
   const { packages, errors } = await readPackages(root);
   const community = options.community ?? isCommunity();
   const explicit = options.base ?? process.env.BASE_REF ?? '';
@@ -455,6 +468,7 @@ function readPrevious(root) {
 }
 
 export async function buildRepo(root, env = process.env) {
+  installPackageDeps(root);
   const { packages, errors } = await readPackages(root);
   if (errors.length) throw new Error(errors.join('\n'));
   const previous = readPrevious(root);

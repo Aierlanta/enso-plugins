@@ -63,6 +63,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml`：
 
 1. 若已有 `dist` 分支，先取出其中的 `v1/`（保留历史 zip 和索引）。
 2. `build` + `sign`。
+   带 `package-lock.json` 的插件会先 `npm ci --omit=dev`，依赖打进 zip，不提交 `node_modules`。
 3. 把 `out/v1` 提交并推到 `dist`（`v1/index.json`、`v1/index.json.sig`、`v1/packages/<id>/<version>.zip`）。
 
 客户端内置公钥，源可以是 Worker、jsDelivr 或 GitHub raw，内容必须对得上同一份签名。
