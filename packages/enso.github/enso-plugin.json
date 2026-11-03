@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.github",
+  "name": "GitHub",
+  "version": "0.1.0",
+  "icon": "icon.svg",
+  "description": "在侧栏查看、回复、关闭和重开当前项目的 GitHub issue 与 PR；会话里的 agent 也能调用。支持设备码登录，已登录的 gh CLI 可直接复用。",
+  "engines": {
+    "enso": ">=0.2.14"
+  },
+  "main": "main.mjs",
+  "permissions": ["agent.tool", "net.fetch", "ui.view", "ui.openExternal"],
+  "net": {
+    "domains": ["github.com", "api.github.com"]
+  },
+  "contributes": {
+    "configuration": [
+      {
+        "key": "token",
+        "title": "Personal Access Token（可选）",
+        "description": "不想用设备码登录时填写；需要 Issues 与 Pull requests 读写权限",
+        "secret": true
+      }
+    ],
+    "views": [{ "id": "github", "title": "GitHub", "entry": "view.html" }],
+    "methods": [
+      { "name": "state", "timeoutMs": 15000 },
+      { "name": "login", "timeoutMs": 20000 },
+      { "name": "list", "timeoutMs": 30000 },
+      { "name": "view", "timeoutMs": 30000 },
+      { "name": "comment", "timeoutMs": 30000 },
+      { "name": "setState", "timeoutMs": 30000 }
+    ],
+    "agentTools": [
+      {
+        "name": "github_list",
+        "description": "List GitHub issues or pull requests of a repository (defaults to the current project's origin). Returns number, title, state, author, labels, url.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": { "type": "string", "description": "owner/name; omit to use the current project's GitHub origin" },
+            "kind": { "type": "string", "enum": ["issue", "pr"], "description": "Default issue" },
+            "state": { "type": "string", "enum": ["open", "closed", "all"], "description": "Default open" }
+          }
+        }
+      },
+      {
+        "name": "github_view",
+        "description": "View one GitHub issue or pull request with its body and comments.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": { "type": "string", "description": "owner/name; omit to use the current project's GitHub origin" },
+            "number": { "type": "integer" }
+          },
+          "required": ["number"]
+        }
+      },
+      {
+        "name": "github_comment",
+        "description": "Post a comment (Markdown) on a GitHub issue or pull request.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": { "type": "string", "description": "owner/name; omit to use the current project's GitHub origin" },
+            "number": { "type": "integer" },
+            "body": { "type": "string" }
+          },
+          "required": ["number", "body"]
+        }
+      },
+      {
+        "name": "github_set_state",
+        "description": "Close or reopen a GitHub issue or pull request, optionally posting a comment first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": { "type": "string", "description": "owner/name; omit to use the current project's GitHub origin" },
+            "number": { "type": "integer" },
+            "state": { "type": "string", "enum": ["closed", "open"] },
+            "reason": { "type": "string", "enum": ["completed", "not_planned"], "description": "Issue close reason; ignored for PRs" },
+            "comment": { "type": "string", "description": "Optional comment posted before changing state" }
+          },
+          "required": ["number", "state"]
+        }
+      }
+    ]
+  }
+}
