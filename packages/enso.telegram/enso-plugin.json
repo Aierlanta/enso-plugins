@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "enso.telegram",
   "name": "Telegram",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "icon": "icon.svg",
-  "description": "用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。",
+  "description": "用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊绑定、成员白名单与群聊上下文、插话、远程停止和双向同步。",
   "engines": {
     "enso": ">=0.2.14"
   },
@@ -14,6 +14,8 @@
     "agent.tool",
     "agent.observe",
     "agent.inject",
+    "session.read",
+    "session.create",
     "process.background",
     "net.fetch",
     "ui.view",
@@ -84,6 +86,26 @@
       },
       {
         "name": "sync",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "whitelist",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "allow",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "context",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "move",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "fresh",
         "timeoutMs": 15000
       }
     ]

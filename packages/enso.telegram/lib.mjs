@@ -4,6 +4,10 @@ const IMAGE_MIME = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 /** Telegram 下载上限 20MB；宿主单次响应 5MB */
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const MEDIA = ['photo', 'document', 'voice', 'video', 'audio', 'sticker', 'video_note', 'animation'];
+const MAX_REQUESTS = 5;
+/** 群聊上下文：每个群最多缓存的条数、单条截断长度 */
+export const MAX_CONTEXT = 50;
+const CONTEXT_CHARS = 500;
 
 export const COMMANDS = [
   { command: 'help', description: '查看用法' },
@@ -11,6 +15,10 @@ export const COMMANDS = [
   { command: 'steer', description: '向正在运行的任务插话' },
   { command: 'stop', description: '停止正在运行的任务' },
   { command: 'sync', description: '开关 EnsoCode 对话同步（on / off）' },
+  { command: 'allow', description: '群聊：回复某人的消息把 TA 加入白名单；单独发送查看白名单' },
+  { command: 'deny', description: '群聊：回复某人的消息把 TA 移出白名单' },
+  { command: 'context', description: '群聊：触发时附带最近几条其他消息（0 关闭）' },
+  { command: 'session', description: '切换绑定的 EnsoCode 会话' },
   { command: 'unbind', description: '解除绑定' },
 ];
 
@@ -23,9 +31,12 @@ const HELP = [
   '/status：查看绑定',
   '/unbind：解除绑定',
   '群聊里请 @机器人 或回复机器人的消息。',
+  '群聊白名单：回复某人的消息发 /allow 或 /deny；单独发 /allow 查看名单。',
+  `/context <0-${MAX_CONTEXT}>：群聊里触发时附带最近几条其他人的消息`,
+  '/session：切换这个聊天绑定的 EnsoCode 会话',
 ].join('\n');
 
-export const emptyState = () => ({ offset: 0, bindings: [], pairings: [], pending: {} });
+export const emptyState = () => ({ offset: 0, bindings: [], pairings: [], pending: {}, history: {}, menus: {} });
 
 export const rootSession = (id) => String(id).split('::')[0];
 
@@ -78,8 +89,44 @@ export function createPairing(state, sessionId, now, random = Math.random) {
   return code;
 }
 
-export function bindChat(state, { chatId, chatType, title, sessionId, sync = false }) {
+/** 群里以匿名管理员身份发言时，from 固定是这个机器人账号 */
+const ANONYMOUS_ADMIN = 1087968824;
+const isBotUser = (u) => u.is_bot && u.id !== ANONYMOUS_ADMIN;
+
+export const userOf = (u) => ({
+  id: u.id,
+  name:
+    u.id === ANONYMOUS_ADMIN
+      ? '匿名管理员'
+      : u.username
+        ? `@${u.username}`
+        : [u.first_name, u.last_name].filter(Boolean).join(' ') || String(u.id),
+});
+
+/** 白名单开启时只放行名单内的人；旧绑定没有该字段视为关闭 */
+export const isAllowed = (binding, userId) =>
+  !binding.whitelist || (binding.allow ?? []).some((u) => u.id === userId);
+
+export function setAllowed(binding, user, on) {
+  const allow = (binding.allow ?? []).filter((u) => u.id !== user.id);
+  binding.allow = on ? [...allow, user] : allow;
+  binding.requests = (binding.requests ?? []).filter((u) => u.id !== user.id);
+}
+
+function noteRequest(binding, user) {
+  binding.requests = [user, ...(binding.requests ?? []).filter((u) => u.id !== user.id)].slice(0, MAX_REQUESTS);
+}
+
+/** 群聊绑定时把绑定者加入白名单并默认开启；重新绑定沿用原名单 */
+export function bindChat(state, { chatId, chatType, title, sessionId, sync = false, user }) {
+  const prev = state.bindings.find((b) => b.chatId === chatId);
   const binding = { chatId, chatType, title, sessionId: rootSession(sessionId), sync };
+  if (user) {
+    binding.whitelist = prev?.whitelist ?? true;
+    binding.allow = prev?.allow ?? [];
+    binding.requests = prev?.requests ?? [];
+    setAllowed(binding, user, true);
+  }
   state.bindings = [binding, ...state.bindings.filter((b) => b.chatId !== chatId)];
 }
 
@@ -88,12 +135,45 @@ const parseCommand = (text) => {
   return m ? { name: m[1].toLowerCase(), target: m[2], arg: (m[3] ?? '').trim() } : null;
 };
 
-/** 把一条 update 归类成要做的事；只有配对过的聊天能投递消息 */
+const isGroupChat = (chat) => chat?.type === 'group' || chat?.type === 'supergroup';
+
+function summarize(m) {
+  const text = String(m.text ?? m.caption ?? '').trim();
+  const media = m.photo ? '[图片]' : MEDIA.some((k) => m[k] !== undefined) ? '[文件/语音等]' : '';
+  const body = [media, text.length > CONTEXT_CHARS ? `${text.slice(0, CONTEXT_CHARS)}…` : text].filter(Boolean).join(' ');
+  return body && { from: m.from ? userOf(m.from).name : '匿名', text: body };
+}
+
+/** 把一条 update 归类成要做的事；群聊开了上下文时，缓存没投递的消息，投递时带上最近几条 */
 export function route(state, update, now, bot = {}) {
+  const action = decide(state, update, now, bot);
+  const m = update?.message;
+  if (!isGroupChat(m?.chat)) return action;
+  state.history ??= {};
+  const chatId = m.chat.id;
+  const binding = state.bindings.find((b) => b.chatId === chatId);
+  const size = binding?.context ?? 0;
+  if (!size) {
+    delete state.history[chatId];
+    return action;
+  }
+  const history = state.history[chatId] ?? [];
+  if (action.kind === 'inject') {
+    if (history.length) action.context = history.slice(-size);
+    delete state.history[chatId];
+  } else if (action.kind !== 'bound' && !parseCommand(String(m.text ?? m.caption ?? '').trim())) {
+    const line = summarize(m);
+    if (line) state.history[chatId] = [...history, line].slice(-MAX_CONTEXT);
+  }
+  return action;
+}
+
+function decide(state, update, now, bot) {
+  if (update?.callback_query) return routeCallback(state, update.callback_query);
   const m = update?.message;
   const chatId = m?.chat?.id;
   if (typeof chatId !== 'number') return { kind: 'ignore' };
-  const isGroup = m.chat.type === 'group' || m.chat.type === 'supergroup';
+  const isGroup = isGroupChat(m.chat);
   const from = m.from?.username ?? m.from?.first_name ?? String(m.from?.id ?? chatId);
   const reply = (text) => ({ kind: 'reply', chatId, text });
   let text = String(m.text ?? m.caption ?? '').trim();
@@ -102,6 +182,8 @@ export function route(state, update, now, bot = {}) {
   const command = parseCommand(text);
   if (command?.target && command.target.toLowerCase() !== String(bot.username).toLowerCase())
     return { kind: 'ignore' };
+  const mention = isGroup && bot.username ? new RegExp(`@${bot.username}\\b`, 'i') : null;
+  const repliedToBot = m.reply_to_message?.from?.id === bot.id && bot.id !== undefined;
 
   // 侧栏的 t.me 链接会带着配对码发 /start <码>
   if (command?.name === 'bind' || (command?.name === 'start' && command.arg)) {
@@ -109,12 +191,14 @@ export function route(state, update, now, bot = {}) {
       ? state.pairings.find((p) => p.code === command.arg && p.expiresAt > now)
       : null;
     if (!pairing) return reply('配对码无效或已过期，请在 EnsoCode 侧栏「Telegram」里重新生成。');
-    state.pairings = state.pairings.filter((p) => p !== pairing);
+    // 同一会话的其他配对码一并作废，侧栏不再显示配对界面
+    state.pairings = state.pairings.filter((p) => p.sessionId !== pairing.sessionId);
     bindChat(state, {
       chatId,
       chatType: m.chat.type,
       title: m.chat.title ?? from,
       sessionId: pairing.sessionId,
+      user: isGroup && m.from ? userOf(m.from) : undefined,
     });
     return { kind: 'bound', chatId, sessionId: pairing.sessionId };
   }
@@ -124,13 +208,48 @@ export function route(state, update, now, bot = {}) {
       : { kind: 'ignore' };
   }
 
+  if (isGroup && !isAllowed(binding, m.from?.id)) {
+    if (!(command || mention?.test(text) || repliedToBot) || !m.from || isBotUser(m.from)) return { kind: 'ignore' };
+    noteRequest(binding, userOf(m.from));
+    return reply(`${userOf(m.from).name} 不在本群白名单里。请白名单成员回复 TA 的消息发 /allow，或在 EnsoCode 侧栏批准。`);
+  }
+
   if (command) {
     switch (command.name) {
       case 'start':
       case 'help':
         return reply(HELP);
       case 'status':
-        return reply(`已绑定会话 ${binding.sessionId}\n同步 EnsoCode 对话：${binding.sync ? '开' : '关'}`);
+        return reply(
+          `已绑定会话 ${binding.sessionId}\n同步 EnsoCode 对话：${binding.sync ? '开' : '关'}` +
+            (isGroup ? `\n白名单：${binding.whitelist ? `开（${binding.allow?.length ?? 0} 人）` : '关，群内所有人可用'}` : '')
+        );
+      case 'allow':
+      case 'deny': {
+        if (!isGroup) return reply('白名单只用于群聊。');
+        const target = m.reply_to_message?.from;
+        if (!target || isBotUser(target)) {
+          if (command.name === 'deny') return reply('用法：回复某人的消息发 /deny');
+          const names = (binding.allow ?? []).map((u) => u.name).join('、') || '（空）';
+          return reply(`白名单${binding.whitelist ? '' : '（未开启，群内所有人可用）'}：${names}\n回复某人的消息发 /allow 添加。`);
+        }
+        const user = userOf(target);
+        setAllowed(binding, user, command.name === 'allow');
+        return reply(command.name === 'allow' ? `已把 ${user.name} 加入白名单。` : `已把 ${user.name} 移出白名单。`);
+      }
+      case 'context': {
+        if (!isGroup) return reply('上下文只用于群聊。');
+        if (!command.arg) return reply(`当前附带最近 ${binding.context ?? 0} 条消息。用法：/context 5（0 关闭）`);
+        const n = Number(command.arg);
+        if (!Number.isInteger(n) || n < 0 || n > MAX_CONTEXT) return reply(`请给 0 到 ${MAX_CONTEXT} 的整数。`);
+        binding.context = n;
+        return reply(n ? `之后触发时会附带最近 ${n} 条其他消息。` : '已关闭群聊上下文。');
+      }
+      case 'session':
+        if (!command.arg) return { kind: 'sessions', chatId, current: binding.sessionId };
+        return switchSession(state, binding, Number(command.arg));
+      case 'new':
+        return reply('EnsoCode 只允许在界面上点击新建会话：请在 EnsoCode「Telegram」侧栏点这个聊天的「新会话」，或在 EnsoCode 里新建后发 /session 切过去。');
       case 'unbind':
         state.bindings = state.bindings.filter((b) => b !== binding);
         return reply('已解绑。');
@@ -148,8 +267,6 @@ export function route(state, update, now, bot = {}) {
   }
 
   if (isGroup) {
-    const mention = bot.username ? new RegExp(`@${bot.username}\\b`, 'i') : null;
-    const repliedToBot = m.reply_to_message?.from?.id === bot.id && bot.id !== undefined;
     if (!(mention?.test(text) || repliedToBot)) return { kind: 'ignore' };
     if (mention) text = text.replace(mention, '').trim();
   }
@@ -195,7 +312,12 @@ const inject = (binding, chatId, text, from, messageId, deliverAs) => ({
   deliverAs,
 });
 
-export const inboundText = ({ from, text }) => `[Telegram 消息，来自 ${from}]\n\n${text}`;
+export const inboundText = ({ from, text, context }) => {
+  const head = context?.length
+    ? `[Telegram 群聊里此前的其他消息，仅供参考]\n${context.map((c) => `${c.from}：${c.text}`).join('\n')}\n\n`
+    : '';
+  return `${head}[Telegram 消息，来自 ${from}]\n\n${text}`;
+};
 
 /** 记下这个会话有一轮由 Telegram 发起，结束时回发；同一聊天只保留最新的占位消息 */
 export function markPending(state, sessionId, target) {
@@ -220,3 +342,21 @@ export const mirrorTargets = (state, sessionId, exclude = []) =>
   state.bindings
     .filter((b) => b.sync && b.sessionId === rootSession(sessionId) && !exclude.includes(b.chatId))
     .map((b) => b.chatId);
+/** 会话按钮：callback_data 是 sess:<序号>，对应最近一次 /session 发出的列表 */
+function routeCallback(state, q) {
+  const chatId = q.message?.chat?.id;
+  const binding = state.bindings.find((b) => b.chatId === chatId);
+  const answer = (text = '') => ({ kind: 'answer', callbackId: q.id, text });
+  const hit = /^sess:(\d+)$/.exec(q.data ?? '');
+  if (!binding || !hit) return answer();
+  if (isGroupChat(q.message.chat) && !isAllowed(binding, q.from?.id)) return answer('你不在本群白名单里');
+  return { ...switchSession(state, binding, Number(hit[1])), callbackId: q.id, messageId: q.message.message_id };
+}
+
+function switchSession(state, binding, n) {
+  const pick = state.menus?.[binding.chatId]?.[n - 1];
+  if (!pick) return { kind: 'reply', chatId: binding.chatId, text: '列表已过期或序号不对，请重新发 /session。' };
+  binding.sessionId = rootSession(pick.id);
+  return { kind: 'switched', chatId: binding.chatId, sessionId: binding.sessionId, title: pick.title };
+}
+

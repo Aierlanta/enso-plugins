@@ -180,3 +180,83 @@ test('深链 /start <配对码> 等同 /bind', () => {
   assert.equal(state.bindings[0].sessionId, 's1');
   assert.equal(route(emptyState(), msg('/start 999999'), 0, BOT).kind, 'reply');
 });
+
+test('绑定后同一会话的其他配对码一并作废', () => {
+  const state = emptyState();
+  const a = createPairing(state, 's1', 0, () => 0.1);
+  createPairing(state, 's1', 0, () => 0.2);
+  createPairing(state, 's2', 0, () => 0.3);
+  assert.equal(route(state, msg(`/bind ${a}`), 0, BOT).kind, 'bound');
+  assert.deepEqual(state.pairings.map((p) => p.sessionId), ['s2']);
+});
+
+test('会话按钮：群里非白名单成员点了无效，序号对应最近一次列表', () => {
+  const state = emptyState();
+  bindChat(state, { chatId: -100, sessionId: 's1', user: { id: 7, name: '@alice' } });
+  state.menus[-100] = [{ id: 's1', title: 'A' }, { id: 's2::x', title: 'B' }];
+  const q = (from, data = 'sess:2') => ({
+    update_id: 2,
+    callback_query: { id: 'q', data, from: { id: from }, message: { message_id: 3, chat: { id: -100, type: 'group' } } },
+  });
+  assert.deepEqual(route(state, q(8), 0, BOT), { kind: 'answer', callbackId: 'q', text: '你不在本群白名单里' });
+  assert.equal(state.bindings[0].sessionId, 's1');
+  assert.deepEqual(route(state, q(7), 0, BOT), {
+    kind: 'switched', chatId: -100, sessionId: 's2', title: 'B', callbackId: 'q', messageId: 3,
+  });
+  assert.equal(route(state, group('/session 5'), 0, BOT).kind, 'reply');
+  assert.equal(route(state, group('/session'), 0, BOT).kind, 'sessions');
+});
+
+test('群聊绑定：绑定者自动进白名单，非名单成员被拦并记为待批准，/allow /deny 管理', () => {
+  const state = emptyState();
+  const code = createPairing(state, 's1', 0, () => 0.3);
+  assert.equal(route(state, group(`/start@enso_bot ${code}`), 0, BOT).kind, 'bound');
+  const b = state.bindings[0];
+  assert.equal(b.whitelist, true);
+  assert.deepEqual(b.allow, [{ id: 7, name: '@alice' }]);
+  assert.equal(route(state, group('@enso_bot 看下日志'), 0, BOT).kind, 'inject');
+
+  const bob = { id: 8, first_name: 'Bob' };
+  assert.deepEqual(route(state, group('闲聊', { from: bob }), 0, BOT), { kind: 'ignore' });
+  assert.match(route(state, group('@enso_bot rm -rf', { from: bob }), 0, BOT).text, /不在本群白名单/);
+  assert.match(route(state, group('/unbind', { from: bob }), 0, BOT).text, /不在本群白名单/);
+  assert.equal(state.bindings.length, 1);
+  assert.deepEqual(b.requests, [{ id: 8, name: 'Bob' }]);
+
+  assert.match(route(state, group('/allow', { reply_to_message: { from: bob } }), 0, BOT).text, /加入白名单/);
+  assert.deepEqual(b.requests, []);
+  assert.equal(route(state, group('@enso_bot 你好', { from: bob }), 0, BOT).kind, 'inject');
+  assert.match(route(state, group('/allow'), 0, BOT).text, /@alice、Bob/);
+  route(state, group('/deny', { reply_to_message: { from: bob } }), 0, BOT);
+  assert.equal(route(state, group('@enso_bot 你好', { from: bob }), 0, BOT).kind, 'reply');
+
+  b.whitelist = false;
+  assert.equal(route(state, group('@enso_bot 你好', { from: bob }), 0, BOT).kind, 'inject');
+  assert.match(route(bound(), msg('/allow'), 0, BOT).text, /只用于群聊/);
+});
+
+test('群聊上下文：缓存未投递的消息，触发时带最近 N 条并清空；/context 设置条数', () => {
+  const state = emptyState();
+  bindChat(state, { chatId: -100, sessionId: 's1' });
+  route(state, group('早'), 0, BOT);
+  assert.equal(state.history[-100], undefined);
+  assert.match(route(state, group('/context 2'), 0, BOT).text, /2 条/);
+  assert.match(route(state, group('/context 99'), 0, BOT).text, /0 到 50/);
+  const bob = { id: 8, first_name: 'Bob' };
+  route(state, group('一', { from: bob }), 0, BOT);
+  route(state, group('二', { from: bob }), 0, BOT);
+  route(state, group(undefined, { from: bob, photo: [{ file_id: 'p' }], caption: '三' }), 0, BOT);
+  const action = route(state, group('@enso_bot 总结下'), 0, BOT);
+  assert.deepEqual(action.context, [
+    { from: 'Bob', text: '二' },
+    { from: 'Bob', text: '[图片] 三' },
+  ]);
+  assert.equal(
+    inboundText(action),
+    '[Telegram 群聊里此前的其他消息，仅供参考]\nBob：二\nBob：[图片] 三\n\n[Telegram 消息，来自 alice]\n\n总结下'
+  );
+  assert.equal(route(state, group('@enso_bot 再来'), 0, BOT).context, undefined);
+  route(state, group('四', { from: bob }), 0, BOT);
+  route(state, group('/context 0'), 0, BOT);
+  assert.equal(state.history[-100], undefined);
+});
