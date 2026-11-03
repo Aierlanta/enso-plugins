@@ -53,6 +53,10 @@ const TERMS = [
   { key: 'Cursor-only features', re: /Bugbot|Cursor [Aa]utomation|cursor\.(sh|com)\/automations|[Cc]loud [Aa]gent|built-in PR tool/ },
 ];
 const ROUTE_KEY = 'Run another pstack skill';
+// composer 预设：只在选中时加载 skills/poteto，系统提示词尾巴让顶层会话每个任务先走 poteto-mode
+const PRESET = 'preset';
+const PRESET_SKILL = 'skills/poteto';
+const PRESET_TAIL = 'prompts/poteto.md';
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // 插件子代理的 systemPrompt 是正文文本：上游 frontmatter 用不上，也不知道 pstack 装在哪
@@ -138,6 +142,7 @@ for (const skill of skills) {
   if (name !== skill) problems.push(`skills/${skill}/SKILL.md has name ${JSON.stringify(name ?? '')}, not ${skill}`);
   if (!SKILL_NAME.test(skill) || skill.length > 64) problems.push(`skills/${skill} is not a valid skill name`);
 }
+if (skills.includes(PRESET_SKILL.split('/')[1])) problems.push(`upstream now has ${PRESET_SKILL}, rename the preset skill`);
 for (const agent of Object.keys(AGENTS)) {
   const path = join(PSTACK, 'agents', `${agent}.md`);
   if (!existsSync(path)) problems.push(`agents/${agent}.md is missing`);
@@ -176,6 +181,7 @@ function render() {
     ].map((path) => [relative(PSTACK, path), file(path)])
   );
   files.set(ADAPTER, { bytes: Buffer.from(adapter), executable: false });
+  for (const path of [`${PRESET_SKILL}/SKILL.md`, PRESET_TAIL]) files.set(path, file(join(HERE, PRESET, path)));
   for (const [skill, wrap] of wraps) {
     const entry = files.get(`skills/${skill}/SKILL.md`);
     if (wrap) entry.bytes = Buffer.from(text(entry.bytes).replace(/^(# .*)\n+/m, `$1\n\n${SKILL_LINE}\n\n`));
@@ -198,7 +204,8 @@ function render() {
   const readme = files.get('README.md');
   readme.bytes = Buffer.from(
     `> EnsoCode 版 pstack，生成自 [cursor/plugins pstack ${version}](${source})，作者 Lauren Tan，MIT 协议。` +
-      `用 \`/skill:poteto-mode\` 开始一个任务；Cursor 名称在 EnsoCode 里的对应见 [${ADAPTER}](${ADAPTER})。` +
+      '在输入框选「pstack · poteto-mode」预设，每个任务都会先走 poteto-mode；也可以用 `/skill:poteto-mode` 单次开始。' +
+      `Cursor 名称在 EnsoCode 里的对应见 [${ADAPTER}](${ADAPTER})。` +
       `不要手改，在 enso-plugins 仓库运行 \`${COMMAND}\` 重新生成。\n\n${text(readme.bytes)}`
   );
   for (const [path, entry] of files) {
@@ -221,10 +228,19 @@ function render() {
     name: 'pstack',
     version: previous,
     icon: 'icon.svg',
-    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。用 /skill:poteto-mode 开始。`,
+    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。在输入框选「pstack · poteto-mode」预设，或用 /skill:poteto-mode 开始。`,
     permissions: [],
     contributes: {
-      skills: skills.map((skill) => `skills/${skill}`),
+      skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
+      presets: [
+        {
+          id: 'poteto',
+          name: 'pstack · poteto-mode',
+          skills: [PRESET_SKILL],
+          mcpServers: [],
+          systemPromptTail: PRESET_TAIL,
+        },
+      ],
       agentTypes: Object.entries(AGENTS).map(([agent, { description, tools }]) => ({
         name: `pstack:${agent}`,
         description,

@@ -1,0 +1,1 @@
+This session runs pstack's poteto-mode. When the user gives you a new task, load the `poteto` skill before any other work. This applies only to the top-level session talking to the user. If you are a subagent working from a parent's brief, ignore this and follow the brief.
