@@ -140,6 +140,11 @@ test('图标代理不转发请求头，并按状态缓存', async () => {
     assert.equal((await handle(new Request('https://plugins.example/v1/icon?url=https://cdn.example/huge.png'), {}, ctx)).status, 413);
     assert.equal((await handle(new Request('https://plugins.example/v1/icon?url=https://cdn.example/html'), {}, ctx)).status, 415);
     assert.equal((await handle(new Request('https://plugins.example/v1/icon?url=https://cdn.example/jump'), {}, ctx)).status, 400);
+
+    const branch = 'https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.kanban.svg';
+    const fresh = await handle(new Request(`https://plugins.example/v1/icon?url=${encodeURIComponent(branch)}`), {}, ctx);
+    assert.equal(fresh.headers.get('cache-control'), 'public, max-age=300');
+    assert.equal(new URL(seen.at(-1).url).searchParams.get('enso-rev'), '2');
   } finally {
     globalThis.fetch = original;
   }

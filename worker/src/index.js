@@ -113,12 +113,27 @@ async function readLimited(response) {
   return bytes;
 }
 
+/** 改图标文件但不改 URL 时加一，丢掉已缓存的旧图 */
+const ICON_REV = '2';
+const BRANCH_ICON = /^https:\/\/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^/@]+@[^/]+\//;
+
+function isBranchIcon(target) {
+  return BRANCH_ICON.test(target.href);
+}
+
 async function fetchIcon(target) {
   let current = target;
   for (let hop = 0; hop < 3; hop++) {
+    // jsDelivr 的 @main 地址不变但内容会变；带上版本避免命中上次 fetch 的边缘缓存
+    if (isBranchIcon(current)) {
+      const busted = new URL(current);
+      busted.searchParams.set('enso-rev', ICON_REV);
+      current = busted;
+    }
     const init = { method: 'GET', redirect: 'manual', headers: { accept: 'image/*' } };
     if (globalThis.navigator?.userAgent === 'Cloudflare-Workers') {
-      init.cf = { cacheEverything: true, cacheTtlByStatus: { '200-299': 86400, 404: 300, '500-599': -1 } };
+      const ttl = isBranchIcon(current) ? 300 : 86400;
+      init.cf = { cacheEverything: true, cacheTtlByStatus: { '200-299': ttl, 404: 300, '500-599': -1 } };
     }
     const response = await fetch(current, init);
     if (response.status < 300 || response.status >= 400) return response;
@@ -145,7 +160,7 @@ async function proxyIcon(url, ctx) {
     target = null;
   }
   if (!target || !allowedIconUrl(target)) return text(400, 'bad url', { 'cache-control': 'no-store' });
-  const cacheKey = new Request(url.origin + url.pathname + url.search, { method: 'GET' });
+  const cacheKey = new Request(`${url.origin}${url.pathname}${url.search}&rev=${ICON_REV}`, { method: 'GET' });
   const cache = globalThis.caches?.default;
   if (cache) {
     const hit = await cache.match(cacheKey).catch(() => undefined);
@@ -164,7 +179,7 @@ async function proxyIcon(url, ctx) {
   const bytes = await readLimited(upstream);
   if (!bytes) return text(413, 'too large', { 'cache-control': 'no-store' });
   const response = new Response(bytes, {
-    headers: { 'content-type': type, 'cache-control': 'public, max-age=86400' },
+    headers: { 'content-type': type, 'cache-control': `public, max-age=${isBranchIcon(target) ? 300 : 86400}` },
   });
   if (cache && ctx) ctx.waitUntil(cache.put(cacheKey, response.clone()).catch(() => {}));
   return response;
