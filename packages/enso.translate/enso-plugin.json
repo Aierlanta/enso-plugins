@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.translate",
+  "name": "双语对照翻译",
+  "version": "0.1.0",
+  "icon": "icon.svg",
+  "description": "把思考过程和回复正文译成目标语言，原文下面紧跟译文。代码、链接、路径和公式保持原样。",
+  "engines": {
+    "enso": ">=0.2.15"
+  },
+  "main": "main.mjs",
+  "renderer": "ui.js",
+  "permissions": ["net.fetch", "ui.slot"],
+  "net": {
+    "domains": ["index-translate.bilibili.com"]
+  },
+  "contributes": {
+    "methods": [
+      { "name": "translate", "timeoutMs": 60000 },
+      { "name": "settings", "timeoutMs": 5000 }
+    ],
+    "configuration": [
+      {
+        "key": "thinking",
+        "title": "翻译思考过程",
+        "description": "关闭后思考过程只显示原文",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "bodyMode",
+        "title": "翻译回复正文",
+        "description": "自动：默认显示译文；手动：点「翻译」才显示；关闭：不翻译",
+        "type": "enum",
+        "options": ["关闭", "手动", "自动"],
+        "default": "手动"
+      },
+      {
+        "key": "targetLanguage",
+        "title": "目标语言",
+        "type": "enum",
+        "options": ["中文", "英文", "日文", "韩文", "法文", "德文", "西班牙文", "俄文"],
+        "default": "中文"
+      },
+      {
+        "key": "model",
+        "title": "翻译模型",
+        "description": "B 站 Index-Translate 免费公共模型",
+        "type": "enum",
+        "options": ["Index-Translate-35B-A3B", "Index-Translate-9B", "Index-Translate-2B"],
+        "default": "Index-Translate-35B-A3B"
+      }
+    ]
+  }
+}
