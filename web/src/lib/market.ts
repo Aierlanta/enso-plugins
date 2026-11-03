@@ -67,7 +67,8 @@ export function installLink(plugin: Plugin): string | null {
 
 /** 远程图标统一经 Worker 代理，CSP 只放行同源图片 */
 export function iconSrc(plugin: Plugin): string | null {
-  return /^https:\/\//.test(plugin.icon ?? '') ? `/v1/icon?url=${encodeURIComponent(plugin.icon!)}` : null;
+  // rev 跟着 Worker 的 ICON_REV 走，换图后浏览器不会继续用旧缓存
+  return /^https:\/\//.test(plugin.icon ?? '') ? `/v1/icon?url=${encodeURIComponent(plugin.icon!)}&rev=2` : null;
 }
 
 export function matches(plugin: Plugin, query: string): boolean {
