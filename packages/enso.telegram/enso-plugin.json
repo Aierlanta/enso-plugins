@@ -6,7 +6,7 @@
   "icon": "icon.svg",
   "description": "用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。",
   "engines": {
-    "enso": ">=0.2.13"
+    "enso": ">=0.2.14"
   },
   "main": "main.mjs",
   "resident": true,
