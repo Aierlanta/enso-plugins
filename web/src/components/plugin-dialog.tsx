@@ -9,7 +9,7 @@ import { PluginIcon } from '@/components/plugin-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatSize, latestVersion, PERMISSION_LABELS, timeAgo, type Plugin } from '@/lib/market';
+import { formatSize, installLink, latestVersion, PERMISSION_LABELS, timeAgo, type Plugin } from '@/lib/market';
 import { easeOut, spring } from '@/lib/motion';
 
 export type Origin = { x: number; y: number };
@@ -116,6 +116,7 @@ function DialogBody({ plugin }: { plugin: Plugin }) {
   const perms = latest?.permissions ?? [];
   const versions = [...plugin.versions].reverse();
   const homepage = /^https:\/\//.test(plugin.homepage ?? '') ? plugin.homepage : null;
+  const install = installLink(plugin);
 
   return (
     <>
@@ -149,6 +150,11 @@ function DialogBody({ plugin }: { plugin: Plugin }) {
         <p className="text-sm leading-relaxed">{plugin.description}</p>
 
         <Section title="安装">
+          {install && (
+            <Button asChild>
+              <a href={install}>在 EnsoCode 中安装</a>
+            </Button>
+          )}
           <ol className="space-y-1.5 text-sm text-muted-foreground">
             <li>
               1. 在 EnsoCode 中打开 <span className="font-medium text-foreground">设置 → 插件 → 市场</span>
