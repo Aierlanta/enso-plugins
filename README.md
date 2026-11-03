@@ -33,7 +33,7 @@ EnsoCode 官方插件市场的源仓库 · [浏览插件](https://enso-plugins.j
 | Context Window | `enso.context` | 0.1.2 | 官方 | 侧栏里看当前会话的上下文窗口：各部分占多少、还剩多少、提示词缓存命中率。 |
 | Notes | `enso.example.notes` | 1.0.2 | 官方 | 侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。 |
 | Word Stats | `enso.example.wordstats` | 1.0.2 | 官方 | 统计项目里文本文件的字数、行数与高频词，结果以卡片展示；提供条形图代码块。 |
-| 红果短剧 | `enso.hongguo` | 0.2.7 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
+| 红果短剧 | `enso.hongguo` | 0.2.8 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
 | Kanban | `enso.kanban` | 1.0.2 | 官方 | 项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。 |
 | Scheduler | `enso.scheduler` | 1.0.2 | 官方 | 定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。 |
 | Telegram | `enso.telegram` | 0.2.2 | 官方 | 用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。 |

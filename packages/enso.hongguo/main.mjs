@@ -87,6 +87,21 @@ export function activate(enso) {
 
   enso.renderer.handle('discover', (a) => list((c) => c.discover({ cursor: a?.cursor || undefined })));
 
+  // 侧栏按会话各开一个页面实例：记住唯一在播的实例和进度，其余实例据此接力
+  let now = null;
+  let recent = null;
+  enso.renderer.handle('sync', (a) => {
+    const inst = String(a?.inst ?? '');
+    const own = Boolean(inst) && now?.owner === inst;
+    const state = a?.state && typeof a.state === 'object' && a.state.series?.id ? a.state : null;
+    if (state && (a.claim || own)) now = { ...state, owner: inst };
+    else if (a?.state === null && own) now = null;
+    if (Array.isArray(a?.recent)) recent = a.recent;
+    const res = { own: Boolean(inst) && now?.owner === inst };
+    if (a?.pull) Object.assign(res, { now, recent });
+    return res;
+  });
+
   enso.renderer.handle('search', (a) => {
     const q = String(a?.q ?? '').trim().slice(0, 100);
     if (!q) return { items: [], hasMore: false };

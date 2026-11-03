@@ -295,7 +295,10 @@
       // entry: { id, title, description, cover, count, number, time, duration, at, watched: [numbers] }
       const HISTORY_MAX = 50;
       const loadHistory = () => store.get('recent', []);
-      const saveHistory = (list) => store.set('recent', list.slice(0, HISTORY_MAX));
+      const saveHistory = (list) => {
+        store.set('recent', list.slice(0, HISTORY_MAX));
+        dirty = true;
+      };
       const clock = (s) => {
         s = Math.max(0, Math.floor(s || 0));
         return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -434,6 +437,29 @@
       let episodes = [];
       let current = null;
       let playToken = 0;
+      // 每个会话的侧栏各有一个页面实例；主进程记录唯一在播的实例，其余实例露面时接力
+      const inst = Math.random().toString(36).slice(2);
+      let owned = false;
+      let dirty = false;
+      let wantPlay = false;
+      const sync = (args) => {
+        const a = { inst, ...args };
+        if (dirty) { a.recent = loadHistory(); dirty = false; }
+        return call('sync', a, 0);
+      };
+      const snap = () =>
+        series && current
+          ? {
+              series: { id: series.id, title: series.title, description: series.description?.slice(0, 300), cover: series.cover, count: series.count },
+              epId: current.id,
+              time: pos,
+              playing: wantPlay,
+            }
+          : null;
+      const claim = () => {
+        owned = true;
+        sync({ claim: true, state: snap() }).catch(() => {});
+      };
       const QUALITIES = ['360p', '480p', '540p', '720p', '1080p'];
       let quality = store.get('quality', '720p');
       if (!QUALITIES.includes(quality)) quality = '720p';
@@ -468,7 +494,7 @@
       }
       $('back').onclick = () => show(false);
 
-      async function openSeries(s) {
+      async function openSeries(s, resume) {
         series = s;
         episodes = [];
         current = null;
@@ -502,6 +528,10 @@
             return b;
           })
         );
+        if (resume) {
+          const ep = episodes.find((e) => e.id === resume.epId && e.playable);
+          if (ep) return play(ep, resume.time, !resume.playing);
+        }
         let ep = episodes.find((e) => e.number === last?.number && e.playable);
         // last episode was finished: continue from the next one
         if (ep && last.duration && last.time >= last.duration - 3) ep = episodes.find((e) => e.number > ep.number && e.playable) ?? ep;
@@ -520,7 +550,7 @@
       let pos = 0;
       let dur = 0;
       function remember({ finished = false } = {}) {
-        if (!series || !current) return;
+        if (!series || !current || !owned) return;
         const list = loadHistory();
         const prev = list.find((r) => r.id === series.id);
         const watched = new Set(prev?.watched ?? []);
@@ -544,7 +574,11 @@
       }
       const tracking = () => !video.seeking && video.readyState >= 2 && video.getAttribute('src');
       video.addEventListener('pause', () => {
-        if (tracking()) { pos = video.currentTime; remember(); }
+        if (tracking()) { pos = video.currentTime; wantPlay = false; remember(); }
+      });
+      video.addEventListener('play', () => {
+        wantPlay = true;
+        if (!owned && current) claim();
       });
       let lastSave = 0;
       video.addEventListener('timeupdate', () => {
@@ -566,6 +600,10 @@
 
       function stop() {
         remember();
+        if (owned) {
+          sync({ state: null }).catch(() => {});
+          owned = false;
+        }
         current = null;
         playToken++;
         player.exitFull();
@@ -596,11 +634,14 @@
         return b.length ? b.end(b.length - 1) - video.currentTime : 0;
       };
 
-      async function play(ep, startAt = 0) {
+      async function play(ep, startAt = 0, paused = false) {
         if (current && current.id !== ep.id) remember();
         const token = ++playToken;
         current = ep;
         pos = startAt;
+        wantPlay = !paused;
+        video.autoplay = !paused;
+        claim();
         player.setTitle(`第${ep.number}集${ep.title ? ` · ${ep.title}` : ''}`, series?.title ?? '');
         player.setHasNext(Boolean(nextOf(ep)));
         player.loading(true);
@@ -683,12 +724,49 @@
         if (Number.isFinite(video.duration) && video.duration > 0) dur = video.duration;
       });
 
+      // 被别的实例接管：停下并让出下载
+      function yieldTo() {
+        owned = false;
+        playToken++;
+        video.pause();
+        player.loading(false);
+      }
+      let adopting = false;
+      async function adopt() {
+        if (adopting) return;
+        adopting = true;
+        const r = await sync({ pull: true }).catch(() => null);
+        adopting = false;
+        if (!r || r.own) return;
+        if (Array.isArray(r.recent)) store.set('recent', r.recent);
+        const n = r.now;
+        if (!n?.series) {
+          if (!$('home').hidden) renderRecent();
+          return;
+        }
+        const ep = series?.id === n.series.id && episodes.find((e) => e.id === n.epId);
+        if (ep && !$('detail').hidden) play(ep, n.time, !n.playing);
+        else openSeries(n.series, n);
+      }
+      setInterval(() => {
+        if (owned && snap()) sync({ state: snap() }).then((r) => r.own || yieldTo(), () => {});
+        else if (dirty) sync({}).catch(() => {});
+      }, 1000);
+      // display:none 的面板不跑 rAF：长时间断帧后恢复说明面板重新露面
+      let lastFrame = performance.now();
+      requestAnimationFrame(function tick(t) {
+        if (t - lastFrame > 1000) adopt();
+        lastFrame = t;
+        requestAnimationFrame(tick);
+      });
+
       ensoUI.tooltip();
       ensoUI.fill($('eps'));
       ensoUI.fill($('historyList'));
       syncNav();
       renderRecent();
       loadFeed(true);
+      adopt();
     </script>
   </body>
 </html>
