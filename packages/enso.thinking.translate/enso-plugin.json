@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.thinking.translate",
+  "name": "思考翻译",
+  "version": "0.1.0",
+  "icon": "icon.svg",
+  "description": "把模型思考过程按段译成中文，原文下面紧跟译文。代码块和中文段落保持原样。",
+  "engines": {
+    "enso": ">=0.2.15"
+  },
+  "main": "main.mjs",
+  "renderer": "ui.js",
+  "permissions": ["net.fetch", "ui.slot"],
+  "net": {
+    "domains": ["index-translate.bilibili.com"]
+  },
+  "contributes": {
+    "methods": [{ "name": "translate", "timeoutMs": 60000 }],
+    "configuration": [
+      {
+        "key": "model",
+        "title": "翻译模型",
+        "description": "B 站 Index-Translate 免费公共模型",
+        "type": "enum",
+        "options": ["Index-Translate-35B-A3B", "Index-Translate-9B", "Index-Translate-2B"],
+        "default": "Index-Translate-35B-A3B"
+      }
+    ]
+  }
+}
