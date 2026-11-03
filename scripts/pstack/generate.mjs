@@ -53,31 +53,21 @@ const TERMS = [
   { key: 'Cursor-only features', re: /Bugbot|Cursor [Aa]utomation|cursor\.(sh|com)\/automations|[Cc]loud [Aa]gent|built-in PR tool/ },
 ];
 const ROUTE_KEY = 'Run another pstack skill';
-// composer 预设：只在选中时加载 skills/poteto，系统提示词尾巴让顶层会话每个任务先走 poteto-mode
+// composer 预设：pstack 的 skill 只在选中时加载，系统提示词尾巴让顶层会话每个任务先走 poteto-mode
 const PRESET = 'preset';
 const PRESET_SKILL = 'skills/poteto';
 const PRESET_TAIL = 'prompts/poteto.md';
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-// 插件子代理的 systemPrompt 是正文文本：上游 frontmatter 用不上，也不知道 pstack 装在哪
+// 预设管不到 agentTypes，子代理改由 worker 读 agents/*.md；正文读不到上游 frontmatter，也不知道 pstack 装在哪
 const AGENTS = {
-  'poteto-agent': {
-    description:
-      "Delegate subagent for code-writing and helper tasks spawned during a poteto-mode run, not the runner itself. Runs on the session model and cannot take a model; when the role names a model, spawn worker with that model instead and tell it to read pstack's agents/poteto-agent.md. Always put the absolute path of pstack's skills/poteto-mode/SKILL.md in the brief.",
-    tools: 'all',
-    replace: [
-      [
-        "search `~/.cursor/plugins/` for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `.cursor-plugin/plugin.json` has the highest `version`.",
-        "search `extension-plugins/packages/enso.pstack/` in EnsoCode's app data folder (`~/Library/Application Support/enso-code/` on macOS) for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `enso-plugin.json` has the highest `version`.",
-      ],
+  'poteto-agent': [
+    [
+      "search `~/.cursor/plugins/` for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `.cursor-plugin/plugin.json` has the highest `version`.",
+      "search `extension-plugins/packages/enso.pstack/` in EnsoCode's app data folder (`~/Library/Application Support/enso-code/` on macOS) for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `enso-plugin.json` has the highest `version`.",
     ],
-  },
-  'comment-sicko': {
-    description:
-      'A deranged comment-hater that savors deletion and condemns workaround code. Deletes comments in the scoped files or diff and flags workaround code with MUST KILL; never writes application code. Runs on the session model and cannot take a model.',
-    tools: 'all',
-    replace: [],
-  },
+  ],
+  'comment-sicko': [],
 };
 const AGENT_LINE =
   'In EnsoCode, read `docs/harness/enso.md` in the pstack folder once before you start. It maps the Cursor names in pstack to EnsoCode. ' +
@@ -186,7 +176,7 @@ function render() {
     const entry = files.get(`skills/${skill}/SKILL.md`);
     if (wrap) entry.bytes = Buffer.from(text(entry.bytes).replace(/^(# .*)\n+/m, `$1\n\n${SKILL_LINE}\n\n`));
   }
-  for (const [agent, { replace }] of Object.entries(AGENTS)) {
+  for (const [agent, replace] of Object.entries(AGENTS)) {
     let body = readFileSync(join(PSTACK, 'agents', `${agent}.md`), 'utf8');
     body = body.slice(frontmatter(body)?.[0].length ?? 0);
     for (const [from, to] of replace) {
@@ -204,7 +194,7 @@ function render() {
   const readme = files.get('README.md');
   readme.bytes = Buffer.from(
     `> EnsoCode 版 pstack，生成自 [cursor/plugins pstack ${version}](${source})，作者 Lauren Tan，MIT 协议。` +
-      '在输入框选「pstack · poteto-mode」预设，每个任务都会先走 poteto-mode；也可以用 `/skill:poteto-mode` 单次开始。' +
+      'pstack 的 skill 只在输入框选了「pstack · poteto-mode」预设的会话里加载，这类会话的每个任务都会先走 poteto-mode。' +
       `Cursor 名称在 EnsoCode 里的对应见 [${ADAPTER}](${ADAPTER})。` +
       `不要手改，在 enso-plugins 仓库运行 \`${COMMAND}\` 重新生成。\n\n${text(readme.bytes)}`
   );
@@ -228,7 +218,7 @@ function render() {
     name: 'pstack',
     version: previous,
     icon: 'icon.svg',
-    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。在输入框选「pstack · poteto-mode」预设，或用 /skill:poteto-mode 开始。`,
+    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。`,
     permissions: [],
     contributes: {
       skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
@@ -236,18 +226,11 @@ function render() {
         {
           id: 'poteto',
           name: 'pstack · poteto-mode',
-          skills: [PRESET_SKILL],
+          skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
           mcpServers: [],
           systemPromptTail: PRESET_TAIL,
         },
       ],
-      agentTypes: Object.entries(AGENTS).map(([agent, { description, tools }]) => ({
-        name: `pstack:${agent}`,
-        description,
-        systemPrompt: `agents/${agent}.md`,
-        tools,
-        skills: [],
-      })),
     },
   };
   files.set('enso-plugin.json', { bytes: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`), executable: false });

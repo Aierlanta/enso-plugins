@@ -1,4 +1,4 @@
-> EnsoCode 版 pstack，生成自 [cursor/plugins pstack 0.15.36](https://github.com/cursor/plugins/tree/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack)，作者 Lauren Tan，MIT 协议。在输入框选「pstack · poteto-mode」预设，每个任务都会先走 poteto-mode；也可以用 `/skill:poteto-mode` 单次开始。Cursor 名称在 EnsoCode 里的对应见 [docs/harness/enso.md](docs/harness/enso.md)。不要手改，在 enso-plugins 仓库运行 `node scripts/pstack/generate.mjs [--source <cursor-plugins>/pstack]` 重新生成。
+> EnsoCode 版 pstack，生成自 [cursor/plugins pstack 0.15.36](https://github.com/cursor/plugins/tree/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack)，作者 Lauren Tan，MIT 协议。pstack 的 skill 只在输入框选了「pstack · poteto-mode」预设的会话里加载，这类会话的每个任务都会先走 poteto-mode。Cursor 名称在 EnsoCode 里的对应见 [docs/harness/enso.md](docs/harness/enso.md)。不要手改，在 enso-plugins 仓库运行 `node scripts/pstack/generate.mjs [--source <cursor-plugins>/pstack]` 重新生成。
 
 # pstack
 

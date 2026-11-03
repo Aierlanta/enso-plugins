@@ -18,8 +18,8 @@ pstack skills use Cursor names. In EnsoCode, read this file once per session, th
 | Cursor | EnsoCode |
 | --- | --- |
 | `subagent_type: generalPurpose` | `agent_type: "worker"`. `worker` requires `model`; see Models. |
-| `poteto-agent` | `agent_type: "pstack:poteto-agent"` when the role runs on the session model. It cannot take `model`, so when the role names a model use `agent_type: "worker"` with that `model`, and start the brief with "Read `<pstack>/agents/poteto-agent.md` and follow it. The poteto-mode skill is `<pstack>/skills/poteto-mode/SKILL.md`." with `<pstack>` written as an absolute path. Give `pstack:poteto-agent` that skill path too. |
-| `comment-sicko` | `agent_type: "pstack:comment-sicko"`. It runs on the session model and cannot take `model`. |
+| `poteto-agent` | `agent_type: "worker"` with the role's `model` (see Models). Start the brief with "Read `<pstack>/agents/poteto-agent.md` and follow it. The poteto-mode skill is `<pstack>/skills/poteto-mode/SKILL.md`." with `<pstack>` written as an absolute path. |
+| `comment-sicko` | `agent_type: "worker"` with the role's `model` (see Models). Start the brief with "Read `<pstack>/agents/comment-sicko.md` and follow it." with `<pstack>` written as an absolute path. |
 | `readonly: true` | `agent_type: "scout"` for recon or `"reviewer"` for review, with `model`. Both have only `read`, `grep`, `find`, `ls` and no shell. When the task must run commands, use `worker`, say "do not edit files" in the brief, and check `git status` afterward. |
 | `readonly: false` | `agent_type: "worker"`. |
 | `environment: "cloud"` | EnsoCode has no isolation field. Tell the worker to create its own copy with `git worktree add --detach /tmp/<unique-name> <ref>`, work only there, and report the path. Name the branch or commit it checks out. |
@@ -37,7 +37,7 @@ The `subagent` tool schema lists the valid `model` values. Each is `<provider>/<
 | --- | --- |
 | `claude-<family>-<version>-<effort>[-fast]`, such as `claude-opus-5-5-xhigh` | `model`: the listed value whose part after the last `/` is `claude-<family>-<version>` or starts with it, such as `Max/claude-opus-5-5`, and `thinking: "<effort>"`. Drop `-fast`. |
 | A `grok-*`, `gpt-*`, or other slug, such as `grok-4.7-xhigh-fast` | Same rule. Strip the effort and `-fast`, then pick the listed value whose part after the last `/` starts with the rest, such as `grok-4.7`. With no match, use the `inherit-parent` row and say so. |
-| `auto` or `inherit-parent` | `pstack:poteto-agent` and `pstack:comment-sicko` already run on the session model, so pass no `model`. For `worker`, `scout`, `reviewer` and `tester`, pass the listed value whose part after the last `/` equals `$PI_MODEL`, else the first listed value, and say so. Alias entries in a panel list still count toward its fan-out. |
+| `auto` or `inherit-parent` | Pass the listed value whose part after the last `/` equals `$PI_MODEL`, else the first listed value, and say so. Alias entries in a panel list still count toward its fan-out. |
 | The `pstack-models.mdc` rule, `~/.cursor/rules/pstack-models.mdc` | `~/.agents/pstack-models.md`. EnsoCode does not load it into the session, so `read` it the first time a skill needs a role's model. If the file or the role's line is missing, use the skill's default slug. |
 | A role value `<model> <effort>`, such as `Max/claude-opus-5-5 xhigh` | `model: "Max/claude-opus-5-5"` and `thinking: "xhigh"`. The effort is the last token, and a model value may contain spaces. |
 
