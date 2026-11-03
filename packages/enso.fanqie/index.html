@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="enso-ui.css" />
+    <style>
+      :root {
+        --fq: oklch(0.646 0.222 41.116);
+        --paper-bg: #f6eedd;
+        --paper-fg: #3b3126;
+        --green-bg: #e2eedb;
+        --green-fg: #2f3a2b;
+      }
+      :root[data-theme='dark'] {
+        --fq: oklch(0.705 0.187 47.604);
+        --paper-bg: #2a251e;
+        --paper-fg: #d8cdbb;
+        --green-bg: #1e2a1f;
+        --green-fg: #c6d4c1;
+      }
+      body { padding: 12px; }
+      section:not([hidden]) {
+        animation: ui-rise var(--dur-3) var(--ease-out) both, ui-fade-in var(--dur-2) var(--ease-out) both;
+      }
+      svg.i { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      [hidden] { display: none !important; }
+
+      .nav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+      .bar { display: flex; gap: 6px; margin-bottom: 12px; align-items: center; }
+      .search { position: relative; flex: 1; min-width: 0; }
+      .search svg { position: absolute; left: 9px; top: 50%; translate: 0 -50%; color: var(--muted-foreground); pointer-events: none; }
+      .search .ui-input { padding-left: 28px; }
+      .title { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.01em; }
+      h3 { margin: 0 0 8px; font-size: 12px; color: var(--muted-foreground); font-weight: 500; }
+      .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+      .head h3 { margin: 0; }
+      .muted { color: var(--muted-foreground); font-size: 12px; }
+      .error {
+        margin: 8px 0; padding: 8px 10px; border-radius: var(--radius-md); font-size: 12px; white-space: pre-wrap;
+        color: var(--destructive); background: color-mix(in oklch, var(--destructive) 8%, transparent);
+        border: 1px solid color-mix(in oklch, var(--destructive) 20%, transparent);
+        animation: ui-fade-in var(--dur-2) var(--ease-out);
+      }
+      .error:empty, .ui-empty:empty { display: none; }
+      .more { display: flex; margin: 16px auto 4px; }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px 10px; }
+      .card { cursor: pointer; -webkit-tap-highlight-color: transparent; min-width: 0; }
+      .img {
+        position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius-md);
+        background: var(--muted) center / cover no-repeat;
+        box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--foreground) 6%, transparent);
+        transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+      }
+      .grid .card:hover .img { transform: scale(1.03); box-shadow: var(--shadow-lg); }
+      .grid .card:hover:active .img { transform: scale(0.99); transition-duration: var(--dur-1); }
+      .badge {
+        position: absolute; right: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px;
+        font-size: 10.5px; font-weight: 500; color: #fff;
+        background: rgb(0 0 0 / 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      }
+      .card .t {
+        margin-top: 6px; font-size: 12px; font-weight: 500; line-height: 1.4; overflow: hidden;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        transition: color var(--dur-1) var(--ease-out);
+      }
+      .card .a { margin-top: 2px; font-size: 11px; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .grid .card:hover .t { color: var(--fq); }
+      .skel .img { aspect-ratio: 3 / 4; }
+      .skel .line { height: 10px; margin-top: 8px; width: 80%; }
+
+      #shelfList, #histList { display: flex; flex-direction: column; gap: 2px; }
+      .row { display: flex; gap: 10px; align-items: center; padding: 6px; border-radius: var(--radius-lg); cursor: pointer; }
+      .row .img { width: 44px; flex: none; }
+      .row .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .row .info .t { margin: 0; -webkit-line-clamp: 1; }
+      .row .info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .row .x { opacity: 0; transition: opacity var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out), transform var(--dur-2) var(--ease-spring); }
+      .row:hover .x, .row .x:focus-visible { opacity: 1; }
+      .prog { height: 3px; margin-top: 4px; border-radius: 2px; background: var(--muted); overflow: hidden; }
+      .prog i { display: block; height: 100%; border-radius: inherit; background: var(--fq); }
+      .cache { display: flex; align-items: center; gap: 8px; margin: -4px 0 10px; }
+      .cache .muted { flex: 1; }
+
+      /* 详情：书籍信息在上，目录占剩余高度单独滚动 */
+      #book:not([hidden]), #reader:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - 24px); }
+      #book > * { flex: none; }
+      .info { display: flex; gap: 12px; }
+      .info .img { width: 84px; flex: none; }
+      .facts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding-top: 2px; }
+      .facts h2 { margin: 0 0 2px; font-size: 15px; line-height: 1.35; letter-spacing: -0.01em; }
+      .facts .muted { line-height: 1.5; }
+      .facts .score { color: var(--fq); font-weight: 600; }
+      .abs {
+        margin: 12px 0 0; font-size: 12px; line-height: 1.7; color: var(--muted-foreground); white-space: pre-line; cursor: pointer;
+        display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .abs.open { -webkit-line-clamp: unset; }
+      .abs:empty { display: none; }
+      .actions { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+      .actions .ui-btn--primary { background: var(--fq); color: #fff; }
+      .actions .muted { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #toc { flex: 1 1 0; min-height: 96px; overflow-y: auto; overscroll-behavior: contain; margin-top: 6px; }
+      #toc button {
+        display: block; width: 100%; height: 30px; padding: 0 8px; border: 0; border-radius: var(--radius-md);
+        font: 12px/30px var(--font-sans); text-align: left; color: var(--foreground); background: transparent; cursor: pointer;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        content-visibility: auto; contain-intrinsic-size: auto 30px;
+      }
+      #toc button.seen:not(.on) { color: var(--muted-foreground); }
+      #toc button.on { color: var(--fq); font-weight: 600; background: color-mix(in oklch, var(--fq) 12%, transparent); }
+      #toc .vol { padding: 10px 8px 4px; font-size: 11px; font-weight: 600; color: var(--muted-foreground); }
+
+      /* 阅读器 */
+      #reader { position: relative; }
+      #reader > .bar { flex: none; margin-bottom: 8px; }
+      .rtitle { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+      .rtitle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .rtitle span:first-child { font-weight: 600; font-size: 13px; }
+      #page {
+        --fs: 17px; --lh: 1.9;
+        flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; outline: none;
+        padding: 14px 18px 24px; border-radius: var(--radius-lg);
+        background: var(--background); color: var(--foreground);
+        box-shadow: inset 0 0 0 1px var(--border);
+        transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+      }
+      #page[data-bg='paper'] { background: var(--paper-bg); color: var(--paper-fg); box-shadow: none; }
+      #page[data-bg='green'] { background: var(--green-bg); color: var(--green-fg); box-shadow: none; }
+      #page[data-font='serif'] { font-family: 'Songti SC', 'STSong', 'Noto Serif CJK SC', 'Source Han Serif SC', serif; }
+      #page h2 { margin: 6px 0 18px; font-size: calc(var(--fs) * 1.25); line-height: 1.4; font-weight: 700; }
+      #pBody p { margin: 0 0 0.75em; font-size: var(--fs); line-height: var(--lh); text-indent: 2em; text-align: justify; word-break: break-word; }
+      #pBody .ui-skeleton { height: 14px; margin: 14px 0; border-radius: 4px; }
+      .pend { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 28px 0 8px; }
+      .pend .ui-btn { min-width: 160px; justify-content: center; }
+      .rfoot { flex: none; display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+      .rfoot .muted { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+      .settings {
+        position: absolute; z-index: 5; top: 40px; right: 0; width: 240px; padding: 12px;
+        display: flex; flex-direction: column; gap: 10px;
+      }
+      .settings .line { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+      .settings .line > span:first-child { width: 32px; color: var(--muted-foreground); flex: none; }
+      .settings .ui-seg { flex: 1; }
+      .settings .ui-seg > button { flex: 1; padding: 0 6px; }
+      .settings #fsVal { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+    </style>
+  </head>
+  <body>
+    <nav class="nav" id="nav">
+      <div class="ui-seg" id="tabs" role="tablist">
+        <button id="toHome" type="button" aria-pressed="true">书城</button>
+        <button id="toShelf" type="button" aria-pressed="false">书架</button>
+        <button id="toHist" type="button" aria-pressed="false">历史</button>
+      </div>
+    </nav>
+
+    <section id="home">
+      <div class="bar">
+        <label class="search">
+          <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input id="q" class="ui-input" type="search" placeholder="搜索书名或作者，回车" />
+        </label>
+      </div>
+      <div id="recent" hidden>
+        <div class="head">
+          <h3>继续阅读</h3>
+          <button class="ui-btn ui-btn--sm" id="allHist" type="button">全部<svg class="i" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg></button>
+        </div>
+        <div class="grid ui-stagger" id="recentGrid"></div>
+        <h3 style="margin-top: 18px" id="listTitle">推荐</h3>
+      </div>
+      <div id="homeError" class="ui-empty"></div>
+      <div class="grid ui-stagger" id="grid"></div>
+      <button id="more" class="more ui-btn ui-btn--outline" type="button" hidden>加载更多</button>
+    </section>
+
+    <section id="shelfView" hidden>
+      <div class="bar">
+        <span class="title">书架</span>
+        <button id="clearShelf" class="ui-btn ui-btn--sm ui-btn--destructive" type="button">清空</button>
+      </div>
+      <div id="shelfList"></div>
+    </section>
+
+    <section id="histView" hidden>
+      <div class="bar">
+        <span class="title">阅读历史</span>
+        <button id="clearHist" class="ui-btn ui-btn--sm ui-btn--destructive" type="button">清空</button>
+      </div>
+      <div class="cache">
+        <span class="muted" id="cacheInfo">缓存计算中…</span>
+        <button id="clearCache" class="ui-btn ui-btn--sm ui-btn--outline" type="button" hidden>清理缓存</button>
+      </div>
+      <div id="histList"></div>
+    </section>
+
+    <section id="book" hidden>
+      <div class="bar">
+        <button id="bookBack" class="ui-btn ui-btn--icon" type="button" data-tip="返回">
+          <svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <span class="title" id="bookTitle"></span>
+      </div>
+      <div class="info">
+        <div class="img" id="bookCover"></div>
+        <div class="facts">
+          <h2 id="bookName"></h2>
+          <span class="muted" id="bookAuthor"></span>
+          <span class="muted" id="bookMeta"></span>
+          <span class="muted" id="bookStat"></span>
+        </div>
+      </div>
+      <p class="abs" id="abs" data-tip="点击展开或收起"></p>
+      <div class="actions">
+        <button id="readBtn" class="ui-btn ui-btn--primary" type="button" disabled>开始阅读</button>
+        <button id="favBtn" class="ui-btn ui-btn--outline" type="button" aria-pressed="false">加入书架</button>
+        <span class="muted" id="readHint"></span>
+      </div>
+      <div id="bookError" class="error"></div>
+      <div class="head">
+        <h3 id="tocTitle">目录</h3>
+        <button id="order" class="ui-btn ui-btn--sm" type="button" hidden>倒序</button>
+      </div>
+      <div id="toc"></div>
+    </section>
+
+    <section id="reader" hidden>
+      <div class="bar">
+        <button id="readerBack" class="ui-btn ui-btn--icon" type="button" data-tip="返回详情">
+          <svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <div class="rtitle"><span id="rChapter"></span><span class="muted" id="rBook"></span></div>
+        <button id="tocBtn" class="ui-btn ui-btn--icon" type="button" data-tip="目录">
+          <svg class="i" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+        </button>
+        <button id="setBtn" class="ui-btn ui-btn--icon" type="button" data-tip="阅读设置">
+          <svg class="i" viewBox="0 0 24 24"><path d="M4 20 9.5 5h1L16 20M6.2 14.5h7.6M15 20l3.2-8.5h.6L22 20M16 17.5h5" /></svg>
+        </button>
+      </div>
+      <div id="settings" class="settings ui-pop" hidden>
+        <div class="line">
+          <span>字号</span>
+          <button id="fsDown" class="ui-btn ui-btn--sm ui-btn--outline" type="button">A-</button>
+          <span id="fsVal"></span>
+          <button id="fsUp" class="ui-btn ui-btn--sm ui-btn--outline" type="button">A+</button>
+        </div>
+        <div class="line"><span>行距</span><div class="ui-seg" id="lhSeg"><button type="button" data-v="1.6">紧凑</button><button type="button" data-v="1.9">适中</button><button type="button" data-v="2.2">宽松</button></div></div>
+        <div class="line"><span>字体</span><div class="ui-seg" id="fontSeg"><button type="button" data-v="sans">黑体</button><button type="button" data-v="serif">宋体</button></div></div>
+        <div class="line"><span>背景</span><div class="ui-seg" id="bgSeg"><button type="button" data-v="auto">默认</button><button type="button" data-v="paper">纸张</button><button type="button" data-v="green">护眼</button></div></div>
+      </div>
+      <article id="page" tabindex="-1">
+        <h2 id="pTitle"></h2>
+        <div id="pBody"></div>
+        <div class="pend" id="pEnd" hidden>
+          <button id="nextBig" class="ui-btn ui-btn--outline" type="button">下一章</button>
+          <span class="muted" id="endHint"></span>
+        </div>
+      </article>
+      <div class="rfoot">
+        <button id="prev" class="ui-btn ui-btn--sm" type="button"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>上一章</button>
+        <span class="muted" id="rProg"></span>
+        <button id="next" class="ui-btn ui-btn--sm" type="button">下一章<svg class="i" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg></button>
+      </div>
+    </section>
+
+    <script src="enso-ui.js"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const store = {
+        get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+        set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+      };
+
+      // 宿主限制每个插件每秒 10 次 UI 调用：排队限速，正文优先
+      const queue = [];
+      let pumping = false;
+      const call = (method, args, priority = 1) =>
+        new Promise((resolve, reject) => {
+          queue.push({ method, args, priority, resolve, reject, tries: 0 });
+          queue.sort((a, b) => a.priority - b.priority);
+          pump();
+        });
+      async function pump() {
+        if (pumping) return;
+        pumping = true;
+        while (queue.length) {
+          const job = queue.shift();
+          enso.call(job.method, job.args).then(job.resolve, async (e) => {
+            if (/频繁|RATE_LIMITED|连续失败|CIRCUIT/.test(e.message) && job.tries++ < 20) {
+              await sleep(/连续失败|CIRCUIT/.test(e.message) ? 3000 : 400);
+              queue.unshift(job);
+              pump();
+            } else job.reject(e);
+          });
+          await sleep(120);
+        }
+        pumping = false;
+      }
+
+      // ---------- 封面 ----------
+      const covers = new Map();
+      const coverQueue = [];
+      let coverBusy = 0;
+      const observer = new IntersectionObserver((entries) => {
+        for (const en of entries) if (en.isIntersecting) { observer.unobserve(en.target); coverQueue.push(en.target); }
+        drainCovers();
+      }, { rootMargin: '200px' });
+      function drainCovers() {
+        while (coverBusy < 2 && coverQueue.length) {
+          const el = coverQueue.shift();
+          const url = el.dataset.cover;
+          coverBusy++;
+          (covers.has(url) ? Promise.resolve(covers.get(url)) : call('cover', { url }, 2).catch(() => null))
+            .then((data) => {
+              if (data) { covers.set(url, data); el.style.backgroundImage = `url("${data}")`; }
+            })
+            .finally(() => { coverBusy--; drainCovers(); });
+        }
+      }
+      function setCover(img, url) {
+        img.style.backgroundImage = '';
+        delete img.dataset.cover;
+        if (!url) return;
+        img.dataset.cover = url;
+        if (covers.has(url)) img.style.backgroundImage = `url("${covers.get(url)}")`;
+        else observer.observe(img);
+      }
+
+      const wan = (n) => (n >= 10000 ? `${(n / 10000).toFixed(n >= 1e6 ? 0 : 1)}万字` : n ? `${n}字` : '');
+      const ago = (at) => {
+        const m = Math.floor((Date.now() - at) / 60000);
+        if (m < 1) return '刚刚';
+        if (m < 60) return `${m} 分钟前`;
+        if (m < 1440) return `${Math.floor(m / 60)} 小时前`;
+        return `${Math.floor(m / 1440)} 天前`;
+      };
+      const pct = (h) => (h.total ? Math.min(100, ((h.index + (h.ratio || 0)) / h.total) * 100) : 0);
+
+      function card(b, badge, onclick) {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.title = b.abstract || b.title;
+        const img = document.createElement('div');
+        img.className = 'img';
+        if (badge) {
+          const s = document.createElement('span');
+          s.className = 'badge';
+          s.textContent = badge;
+          img.append(s);
+        }
+        setCover(img, b.cover);
+        const t = document.createElement('div');
+        t.className = 't';
+        t.textContent = b.title;
+        el.append(img, t);
+        if (b.author) {
+          const a = document.createElement('div');
+          a.className = 'a';
+          a.textContent = b.author;
+          el.append(a);
+        }
+        el.onclick = onclick ?? (() => openBook(b));
+        return el;
+      }
+
+      // ---------- 阅读记录（存在主进程，所有会话共用）：hist 进历史，fav 进书架 ----------
+      let shelf = [];
+      const entryOf = (id) => shelf.find((h) => h.id === id);
+      const tidy = () => (shelf = shelf.filter((h) => h.hist || h.fav));
+      async function pullShelf() {
+        const list = await call('shelf', { list: true }, 0).catch(() => null);
+        if (Array.isArray(list)) shelf = list;
+        return list;
+      }
+      function putShelf(e) {
+        shelf = [{ ...e, hist: true, fav: Boolean(entryOf(e.id)?.fav) }, ...shelf.filter((h) => h.id !== e.id)];
+        call('shelf', { put: e }, 1).catch(() => {});
+      }
+      function setFav(on) {
+        const h = entryOf(book.id);
+        const e = h ?? { id: book.id, title: book.title, author: book.author, cover: book.cover, finished: book.finished, total: cat.rows.length, index: 0, ratio: 0, at: Date.now(), hist: false };
+        e.fav = on;
+        if (!h && on) shelf.push(e);
+        tidy();
+        call('shelf', { fav: e }, 1).catch(() => {});
+        renderFavBtn();
+      }
+      const resume = (h) => () => openBook(h, { read: true });
+      function renderRecent() {
+        const list = shelf.filter((h) => h.hist).slice(0, 6);
+        $('recent').hidden = !list.length;
+        $('recentGrid').replaceChildren(...list.map((h) => card(h, `${Math.round(pct(h))}%`, resume(h))));
+        ensoUI.stagger($('recentGrid'));
+        $('listTitle').textContent = feed.q ? `搜索：${feed.q}` : '推荐';
+      }
+      const LISTS = {
+        fav: { list: 'shelfList', clear: 'clearShelf', empty: '书架是空的，在书籍详情里点「加入书架」', tip: '移出书架' },
+        hist: { list: 'histList', clear: 'clearHist', empty: '还没有读过的书', tip: '删除这条记录' },
+      };
+      function renderList(kind) {
+        const { list, clear, empty: hint, tip } = LISTS[kind];
+        const items = shelf.filter((h) => h[kind]);
+        $(clear).hidden = !items.length;
+        if (!items.length) {
+          const empty = document.createElement('div');
+          empty.className = 'ui-empty';
+          empty.innerHTML =
+            '<svg class="i" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z" /><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5" /></svg><span></span>';
+          empty.querySelector('span').textContent = hint;
+          $(list).replaceChildren(empty);
+          return;
+        }
+        $(list).replaceChildren(
+          ...items.map((h) => {
+            const row = document.createElement('div');
+            row.className = 'row card';
+            row.dataset.fill = '';
+            const img = document.createElement('div');
+            img.className = 'img';
+            setCover(img, h.cover);
+            const info = document.createElement('div');
+            info.className = 'info';
+            const t = document.createElement('div');
+            t.className = 't';
+            t.textContent = h.title;
+            const meta = document.createElement('div');
+            meta.className = 'muted';
+            meta.textContent = h.chapter ? `读到 ${h.chapter} · ${ago(h.at)}` : '还没开始读';
+            const sub = document.createElement('div');
+            sub.className = 'muted';
+            sub.textContent = [h.author, !h.total ? '' : h.chapter ? `${h.index + 1} / ${h.total} 章` : `共 ${h.total} 章`, h.finished ? '完结' : ''].filter(Boolean).join(' · ');
+            const prog = document.createElement('div');
+            prog.className = 'prog';
+            prog.hidden = !h.chapter;
+            const bar = document.createElement('i');
+            bar.style.width = `${pct(h)}%`;
+            prog.append(bar);
+            info.append(t, meta, sub, prog);
+            const x = document.createElement('button');
+            x.type = 'button';
+            x.className = 'x ui-btn ui-btn--icon ui-btn--sm';
+            x.dataset.tip = tip;
+            x.setAttribute('aria-label', tip);
+            x.innerHTML = '<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>';
+            x.onclick = (e) => {
+              e.stopPropagation();
+              h[kind] = false;
+              tidy();
+              call('shelf', kind === 'fav' ? { fav: { id: h.id, fav: false } } : { unhist: h.id }, 1).catch(() => {});
+              ensoUI.leave(row).then(() => { if (!shelf.some((r) => r[kind])) renderList(kind); });
+            };
+            row.append(img, info, x);
+            row.onclick = resume(h);
+            return row;
+          })
+        );
+      }
+
+      // 沙箱没有 confirm()：点两次确认
+      function twice(btn, label, confirmText, action) {
+        let armed = 0;
+        btn.onclick = () => {
+          if (Date.now() - armed > 3000) {
+            armed = Date.now();
+            btn.textContent = confirmText;
+            setTimeout(() => (btn.textContent = label), 3000);
+            return;
+          }
+          armed = 0;
+          btn.textContent = label;
+          action();
+        };
+      }
+      for (const kind of ['fav', 'hist']) {
+        twice($(LISTS[kind].clear), '清空', '确认清空', () => {
+          for (const h of shelf) h[kind] = false;
+          tidy();
+          call('shelf', { clear: kind }, 1).catch(() => {});
+          renderList(kind);
+        });
+      }
+      const size = (n) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
+      async function refreshCache() {
+        const info = await call('cache', {}, 1).catch(() => null);
+        $('cacheInfo').textContent = info ? `缓存 ${size(info.bytes)} · ${info.chapters} 章正文 · ${info.covers} 张封面` : '缓存信息暂时取不到';
+        $('clearCache').hidden = !info?.bytes;
+      }
+      twice($('clearCache'), '清理缓存', '确认清理', async () => {
+        texts.clear();
+        await call('cache', { clear: true }, 2).catch(() => {});
+        refreshCache();
+      });
+
+      // ---------- 书城 ----------
+      let feed = { method: 'discover', q: '', cursor: '', seen: new Set(), token: 0 };
+      function skeleton(n) {
+        const el = document.createElement('div');
+        el.className = 'grid skel';
+        el.style.marginTop = '12px';
+        el.setAttribute('aria-label', '加载中');
+        for (let i = 0; i < n; i++) {
+          const c = document.createElement('div');
+          c.innerHTML = '<div class="img ui-skeleton"></div><div class="line ui-skeleton"></div>';
+          el.append(c);
+        }
+        return el;
+      }
+      async function loadFeed(reset) {
+        if (reset) {
+          feed = { method: feed.method, q: feed.q, cursor: '', seen: new Set(), token: feed.token + 1 };
+          $('grid').replaceChildren();
+        }
+        const token = feed.token;
+        $('homeError').textContent = '';
+        $('homeError').className = 'ui-empty';
+        $('more').hidden = true;
+        const status = skeleton(reset ? 6 : 3);
+        $('grid').after(status);
+        const start = $('grid').children.length;
+        try {
+          const page = await call(feed.method, { q: feed.q, cursor: feed.cursor || undefined });
+          if (token !== feed.token) return;
+          for (const b of page.items) {
+            if (feed.seen.has(b.id)) continue;
+            feed.seen.add(b.id);
+            $('grid').append(card(b, b.score ? `${b.score}分` : ''));
+          }
+          [...$('grid').children].slice(start).forEach((el, i) => el.style.setProperty('--i', i));
+          feed.cursor = page.cursor;
+          $('more').hidden = !page.hasMore;
+          if (!$('grid').children.length) $('homeError').textContent = feed.q ? '没有搜到结果' : '没有内容';
+        } catch (e) {
+          if (token === feed.token) { $('homeError').className = 'error'; $('homeError').textContent = e.message; $('more').hidden = false; }
+        } finally {
+          status.remove();
+        }
+      }
+      $('q').addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.isComposing) return;
+        const q = $('q').value.trim();
+        feed.method = q ? 'search' : 'discover';
+        feed.q = q;
+        renderRecent();
+        loadFeed(true);
+      });
+      $('more').onclick = () => loadFeed(false);
+
+      // ---------- 页面切换 ----------
+      let tab = 'home';
+      function show(view) {
+        if (!$('reader').hidden && view !== 'reader') saveProgress();
+        for (const id of ['home', 'shelfView', 'histView', 'book', 'reader']) $(id).hidden = id !== view;
+        if (view === 'home' || view === 'shelfView' || view === 'histView') tab = view;
+        $('nav').hidden = view === 'book' || view === 'reader';
+        $('toHome').setAttribute('aria-pressed', String(view === 'home'));
+        $('toShelf').setAttribute('aria-pressed', String(view === 'shelfView'));
+        $('toHist').setAttribute('aria-pressed', String(view === 'histView'));
+        ensoUI.seg($('tabs'));
+        $('settings').hidden = true;
+        if (view === 'home') renderRecent();
+        if (view === 'shelfView') renderList('fav');
+        if (view === 'histView') { renderList('hist'); refreshCache(); }
+        window.scrollTo(0, 0);
+      }
+      $('toHome').onclick = () => {
+        if (tab !== 'home') return show('home');
+        $('q').value = '';
+        feed.method = 'discover';
+        feed.q = '';
+        renderRecent();
+        loadFeed(true);
+      };
+      $('toShelf').onclick = () => show('shelfView');
+      $('toHist').onclick = () => show('histView');
+      $('allHist').onclick = () => show('histView');
+      $('bookBack').onclick = () => show(tab);
+
+      // ---------- 详情与目录 ----------
+      let book = null;
+      let cat = { id: null };
+      let reversed = false;
+      function loadCatalog(id) {
+        if (cat.id === id && cat.p) return cat.p;
+        const c = { id, rows: [], vols: [], book: null };
+        cat = c;
+        c.p = (async () => {
+          let from = 0;
+          do {
+            const r = await call('catalog', { bookId: id, from }, 0);
+            if (from === 0) Object.assign(c, { book: r.book, vols: r.vols ?? [] });
+            c.rows.push(...r.rows);
+            from = r.next;
+          } while (from != null);
+          return c;
+        })();
+        c.p.catch(() => { if (cat === c) cat = { id: null }; });
+        return c.p;
+      }
+      function renderFacts(b) {
+        $('bookTitle').textContent = b.title;
+        $('bookName').textContent = b.title;
+        $('bookAuthor').textContent = b.author ? `${b.author} 著` : '';
+        const total = cat.id === b.id && cat.rows.length ? `${cat.rows.length} 章` : '';
+        $('bookMeta').textContent = [b.category, b.finished == null ? '' : b.finished ? '完结' : '连载', wan(b.words), total].filter(Boolean).join(' · ');
+        $('bookStat').replaceChildren();
+        if (b.score) {
+          const s = document.createElement('span');
+          s.className = 'score';
+          s.textContent = `${b.score} 分`;
+          $('bookStat').append(s);
+        }
+        if (b.reads) $('bookStat').append(`${b.score ? ' · ' : ''}${b.reads}`);
+        $('abs').textContent = b.abstract || '';
+        setCover($('bookCover'), b.cover);
+      }
+      function renderReadBtn() {
+        const h = book && entryOf(book.id);
+        const row = h && cat.rows[h.index];
+        $('readBtn').disabled = !cat.rows.length;
+        $('readBtn').textContent = row ? '继续阅读' : '开始阅读';
+        $('readHint').textContent = row ? `读到 ${row[1]} · ${Math.round(pct({ ...h, total: cat.rows.length }))}%` : cat.book?.last ? `最新：${cat.book.last}` : '';
+        renderFavBtn();
+      }
+      function renderFavBtn() {
+        const on = Boolean(book && entryOf(book.id)?.fav);
+        $('favBtn').textContent = on ? '已在书架' : '加入书架';
+        $('favBtn').setAttribute('aria-pressed', String(on));
+      }
+      $('favBtn').onclick = () => book && setFav(!entryOf(book.id)?.fav);
+      function renderToc() {
+        const h = entryOf(book.id);
+        const at = h ? h.index : -1;
+        const vols = new Map(cat.vols.map(([i, name]) => [i, name]));
+        const groups = [];
+        cat.rows.forEach(([, title], i) => {
+          if (vols.has(i) || !groups.length) {
+            const g = { head: null, items: [] };
+            if (vols.has(i)) {
+              g.head = document.createElement('div');
+              g.head.className = 'vol';
+              g.head.textContent = vols.get(i);
+            }
+            groups.push(g);
+          }
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.dataset.fill = '';
+          b.dataset.i = i;
+          b.textContent = title || `第${i + 1}章`;
+          if (i < at) b.classList.add('seen');
+          if (i === at) b.classList.add('on');
+          b.onclick = () => openChapter(i, i === at ? h.ratio : 0);
+          groups.at(-1).items.push(b);
+        });
+        // 倒序时按卷倒、卷内也倒
+        if (reversed) groups.reverse().forEach((g) => g.items.reverse());
+        $('toc').replaceChildren(...groups.flatMap((g) => (g.head ? [g.head, ...g.items] : g.items)));
+        $('tocTitle').textContent = `目录 · 共 ${cat.rows.length} 章`;
+        $('order').hidden = cat.rows.length < 2;
+        $('order').textContent = reversed ? '正序' : '倒序';
+        focusToc();
+      }
+      function focusToc() {
+        const on = $('toc').querySelector('button.on');
+        if (on) on.scrollIntoView({ block: 'center' });
+        else $('toc').scrollTop = 0;
+      }
+      $('order').onclick = () => {
+        reversed = !reversed;
+        renderToc();
+        if (!$('toc').querySelector('button.on')) $('toc').scrollTop = 0;
+      };
+      $('abs').onclick = () => $('abs').classList.toggle('open');
+
+      async function openBook(b, { read = false } = {}) {
+        book = b;
+        reversed = false;
+        renderFacts(b);
+        $('abs').classList.remove('open');
+        $('bookError').textContent = '';
+        $('readBtn').disabled = true;
+        $('readHint').textContent = '';
+        renderFavBtn();
+        $('tocTitle').textContent = '目录';
+        $('order').hidden = true;
+        const sk = document.createElement('div');
+        sk.innerHTML = '<div class="ui-skeleton" style="height:14px;margin:10px 8px"></div>'.repeat(8);
+        $('toc').replaceChildren(sk);
+        show('book');
+        let c;
+        try {
+          c = await loadCatalog(b.id);
+        } catch (e) {
+          if (book === b) { $('bookError').textContent = e.message; $('toc').replaceChildren(); }
+          return;
+        }
+        if (book !== b) return;
+        book = { ...b, ...c.book };
+        renderFacts(book);
+        renderReadBtn();
+        if (!c.rows.length) {
+          $('bookError').textContent = '这本书还没有可读的章节';
+          $('toc').replaceChildren();
+          return;
+        }
+        renderToc();
+        const h = entryOf(book.id);
+        if (read && h) openChapter(Math.min(h.index, c.rows.length - 1), h.ratio);
+      }
+      $('readBtn').onclick = () => {
+        const h = entryOf(book.id);
+        if (h && cat.rows[h.index]) openChapter(h.index, h.ratio);
+        else openChapter(0);
+      };
+
+      // ---------- 阅读器 ----------
+      const page = $('page');
+      const texts = new Map();
+      let reading = null;
+      let readToken = 0;
+      let lastAt = 0;
+      function fetchChapter(bookId, itemId, priority) {
+        const key = `${bookId}/${itemId}`;
+        if (texts.has(key)) return texts.get(key);
+        const p = (async () => {
+          let at = 0;
+          let title = '';
+          const paragraphs = [];
+          do {
+            const r = await call('chapter', { bookId, itemId, at }, priority);
+            title = r.title;
+            paragraphs.push(...r.paragraphs);
+            at = r.next;
+          } while (at != null);
+          return { title, paragraphs };
+        })();
+        texts.set(key, p);
+        p.catch(() => texts.delete(key));
+        while (texts.size > 30) texts.delete(texts.keys().next().value);
+        return p;
+      }
+
+      const maxScroll = () => Math.max(0, page.scrollHeight - page.clientHeight);
+      const ratioNow = () => (maxScroll() ? Math.min(1, page.scrollTop / maxScroll()) : 0);
+      function renderFoot() {
+        if (!reading) return;
+        const total = cat.rows.length;
+        $('prev').disabled = reading.i <= 0;
+        $('next').disabled = reading.i >= total - 1;
+        const r = reading.ready ? ratioNow() : reading.ratio;
+        $('rProg').textContent = `${reading.i + 1} / ${total} · ${Math.round(r * 100)}%`;
+      }
+
+      async function openChapter(i, ratio = 0) {
+        const row = cat.rows[i];
+        if (!row || !book) return;
+        if (reading?.ready && reading.i !== i) saveProgress();
+        const token = ++readToken;
+        const b = book;
+        reading = { i, ratio, ready: false };
+        if ($('reader').hidden) show('reader');
+        $('settings').hidden = true;
+        $('rChapter').textContent = row[1];
+        $('rBook').textContent = b.title;
+        $('pTitle').textContent = row[1];
+        $('pEnd').hidden = true;
+        $('pBody').innerHTML = '<div class="ui-skeleton"></div>'.repeat(10);
+        page.scrollTop = 0;
+        renderFoot();
+        page.focus({ preventScroll: true });
+        let ch;
+        try {
+          ch = await fetchChapter(b.id, row[0], 0);
+        } catch (e) {
+          if (token !== readToken) return;
+          const err = document.createElement('div');
+          err.className = 'error';
+          err.textContent = e.message;
+          const retry = document.createElement('button');
+          retry.type = 'button';
+          retry.className = 'ui-btn ui-btn--sm ui-btn--outline';
+          retry.textContent = '重试';
+          retry.onclick = () => openChapter(i, ratio);
+          $('pBody').replaceChildren(err, retry);
+          return;
+        }
+        if (token !== readToken) return;
+        $('pTitle').textContent = ch.title || row[1];
+        $('pBody').replaceChildren(
+          ...ch.paragraphs.map((t) => {
+            const p = document.createElement('p');
+            p.textContent = t;
+            return p;
+          })
+        );
+        const last = i >= cat.rows.length - 1;
+        $('pEnd').hidden = false;
+        $('nextBig').hidden = last;
+        $('endHint').textContent = last ? (book.finished ? '全书完' : '已读到最新一章') : '';
+        page.scrollTop = ratio * maxScroll();
+        reading.ready = true;
+        renderFoot();
+        saveProgress();
+        // 预取下一章
+        const next = cat.rows[i + 1];
+        if (next) fetchChapter(b.id, next[0], 2).catch(() => {});
+      }
+
+      function saveProgress() {
+        if (!book || !reading?.ready) return;
+        const row = cat.rows[reading.i];
+        if (!row) return;
+        reading.ratio = ratioNow();
+        lastAt = Date.now();
+        putShelf({
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          cover: book.cover,
+          finished: book.finished,
+          total: cat.rows.length,
+          index: reading.i,
+          itemId: row[0],
+          chapter: row[1],
+          ratio: reading.ratio,
+          at: lastAt,
+        });
+      }
+
+      let scrollTimer = 0;
+      let footFrame = 0;
+      page.addEventListener('scroll', () => {
+        if (!reading?.ready) return;
+        footFrame ||= requestAnimationFrame(() => { footFrame = 0; renderFoot(); });
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(saveProgress, 800);
+      });
+      window.addEventListener('pagehide', saveProgress);
+      const step = (d) => reading && cat.rows[reading.i + d] && openChapter(reading.i + d);
+      $('prev').onclick = () => step(-1);
+      $('next').onclick = () => step(1);
+      $('nextBig').onclick = () => step(1);
+      $('readerBack').onclick = () => {
+        show('book');
+        renderReadBtn();
+        renderToc();
+      };
+      $('tocBtn').onclick = $('readerBack').onclick;
+      document.addEventListener('keydown', (e) => {
+        if ($('reader').hidden || e.metaKey || e.ctrlKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        else if (e.key === 'Escape') { if (!$('settings').hidden) $('settings').hidden = true; else $('readerBack').click(); }
+        // 读到底再按空格 / PageDown 翻到下一章
+        else if ((e.key === ' ' || e.key === 'PageDown') && !e.shiftKey && reading?.ready && page.scrollTop >= maxScroll() - 2) { e.preventDefault(); step(1); }
+      });
+
+      // ---------- 阅读设置 ----------
+      const prefs = { fs: 17, lh: '1.9', font: 'sans', bg: 'auto', ...store.get('prefs', {}) };
+      function applyPrefs() {
+        prefs.fs = Math.min(26, Math.max(13, Number(prefs.fs) || 17));
+        page.style.setProperty('--fs', `${prefs.fs}px`);
+        page.style.setProperty('--lh', prefs.lh);
+        page.dataset.font = prefs.font;
+        page.dataset.bg = prefs.bg;
+        $('fsVal').textContent = prefs.fs;
+        for (const [seg, key] of [['lhSeg', 'lh'], ['fontSeg', 'font'], ['bgSeg', 'bg']]) {
+          for (const b of $(seg).children) if (b.dataset.v) b.setAttribute('aria-pressed', String(b.dataset.v === prefs[key]));
+          if (!$('settings').hidden) ensoUI.seg($(seg));
+        }
+        store.set('prefs', prefs);
+      }
+      // 改排版时保持阅读位置
+      function keepPlace(fn) {
+        const r = ratioNow();
+        fn();
+        applyPrefs();
+        if (reading?.ready) page.scrollTop = r * maxScroll();
+      }
+      $('fsDown').onclick = () => keepPlace(() => prefs.fs--);
+      $('fsUp').onclick = () => keepPlace(() => prefs.fs++);
+      for (const [seg, key] of [['lhSeg', 'lh'], ['fontSeg', 'font'], ['bgSeg', 'bg']]) {
+        $(seg).addEventListener('click', (e) => {
+          const v = e.target.closest('button')?.dataset.v;
+          if (v) keepPlace(() => (prefs[key] = v));
+        });
+      }
+      $('setBtn').onclick = (e) => {
+        e.stopPropagation();
+        const s = $('settings');
+        s.hidden = !s.hidden;
+        if (!s.hidden) {
+          ensoUI.pop(s, $('setBtn'));
+          for (const seg of ['lhSeg', 'fontSeg', 'bgSeg']) ensoUI.seg($(seg));
+        }
+      };
+      document.addEventListener('click', (e) => {
+        if (!$('settings').hidden && !$('settings').contains(e.target)) $('settings').hidden = true;
+      });
+
+      // ---------- 跨会话接力：面板重新露面时同步书架与阅读位置 ----------
+      let adopting = false;
+      async function adopt() {
+        if (adopting) return;
+        adopting = true;
+        const list = await pullShelf();
+        adopting = false;
+        if (!list) return;
+        if (!$('home').hidden) renderRecent();
+        if (!$('shelfView').hidden) renderList('fav');
+        if (!$('histView').hidden) renderList('hist');
+        if (!book) return;
+        const h = entryOf(book.id);
+        if (!$('book').hidden && cat.id === book.id && cat.rows.length) { renderReadBtn(); renderToc(); }
+        if (!$('reader').hidden && h && h.at > lastAt && cat.rows[h.index] && (h.index !== reading?.i || Math.abs(h.ratio - ratioNow()) > 0.01)) {
+          if (h.index === reading?.i && reading.ready) { page.scrollTop = h.ratio * maxScroll(); lastAt = h.at; }
+          else openChapter(h.index, h.ratio);
+        }
+      }
+      // display:none 的面板不跑 rAF：长时间断帧后恢复，说明面板重新露面
+      let lastFrame = performance.now();
+      requestAnimationFrame(function tick(t) {
+        if (t - lastFrame > 1000) adopt();
+        lastFrame = t;
+        requestAnimationFrame(tick);
+      });
+
+      ensoUI.tooltip();
+      ensoUI.fill($('toc'));
+      ensoUI.fill($('shelfList'));
+      ensoUI.fill($('histList'));
+      applyPrefs();
+      ensoUI.seg($('tabs'));
+      pullShelf().then(renderRecent);
+      loadFeed(true);
+    </script>
+  </body>
+</html>

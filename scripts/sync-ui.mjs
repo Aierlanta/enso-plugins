@@ -9,6 +9,7 @@ export const UI_FILES = ['enso-ui.css', 'enso-ui.js'];
 export const UI_PACKAGES = [
   'enso.context',
   'enso.example.notes',
+  'enso.fanqie',
   'enso.github',
   'enso.hongguo',
   'enso.kanban',
