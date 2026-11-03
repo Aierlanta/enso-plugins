@@ -30,7 +30,7 @@ out/v1/                          本地构建产物，不提交
 | 红果短剧 | `enso.hongguo` | 0.2.6 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
 | Kanban | `enso.kanban` | 1.0.1 | 官方 | 项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。 |
 | Scheduler | `enso.scheduler` | 1.0.1 | 官方 | 定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。 |
-| Telegram | `enso.telegram` | 0.2.0 | 社区 | 用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。 |
+| Telegram | `enso.telegram` | 0.2.1 | 官方 | 用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。 |
 <!-- plugins:end -->
 
 ## 贡献插件
