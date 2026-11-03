@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.telegram",
+  "name": "Telegram",
+  "version": "0.2.0",
+  "icon": "icon.svg",
+  "description": "用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊 @、插话、远程停止和双向同步。",
+  "engines": {
+    "enso": ">=0.2.13"
+  },
+  "main": "main.mjs",
+  "resident": true,
+  "permissions": [
+    "agent.tool",
+    "agent.observe",
+    "agent.inject",
+    "process.background",
+    "net.fetch",
+    "ui.view",
+    "ui.openExternal"
+  ],
+  "net": {
+    "domains": [
+      "api.telegram.org"
+    ]
+  },
+  "contributes": {
+    "agentTools": [
+      {
+        "name": "telegram_reply",
+        "description": "主动向本会话绑定的 Telegram 聊天发一条消息（如长任务的中途进度）。回复 Telegram 消息时不需要调用：本轮最终回复会自动发回。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "要发送的纯文本"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    ],
+    "events": [
+      {
+        "event": "agent_end"
+      },
+      {
+        "event": "tool_call"
+      },
+      {
+        "event": "input"
+      }
+    ],
+    "configuration": [
+      {
+        "key": "botToken",
+        "title": "Bot Token",
+        "description": "从 @BotFather 获取",
+        "secret": true
+      }
+    ],
+    "views": [
+      {
+        "id": "telegram",
+        "title": "Telegram",
+        "entry": "view.html"
+      }
+    ],
+    "methods": [
+      {
+        "name": "state",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "pair",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "unbind",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "sync",
+        "timeoutMs": 15000
+      }
+    ]
+  }
+}
