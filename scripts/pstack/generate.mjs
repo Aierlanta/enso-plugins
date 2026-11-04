@@ -206,6 +206,7 @@ function render() {
   readme.bytes = Buffer.from(
     `> EnsoCode 版 pstack，生成自 [cursor/plugins pstack ${version}](${source})，作者 Lauren Tan，MIT 协议。` +
       'pstack 的 skill 只在输入框选了「pstack · poteto-mode」预设的会话里加载，这类会话的每个任务都会先走 poteto-mode。' +
+      '在输入框按钮里为某个会话打开后，该会话的每条消息自动展开 poteto-mode。' +
       `Cursor 名称在 EnsoCode 里的对应见 [${ADAPTER}](${ADAPTER})。` +
       `不要手改，在 enso-plugins 仓库运行 \`${COMMAND}\` 重新生成。\n\n${text(readme.bytes)}`
   );
@@ -229,9 +230,11 @@ function render() {
     name: 'pstack',
     version: previous,
     icon: 'icon.svg',
-    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。`,
+    description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。在输入框按钮里为某个会话打开后，该会话的每条消息自动展开 poteto-mode。`,
     engines: { enso: ENSO_RANGE },
-    permissions: [],
+    main: 'main.mjs',
+    renderer: 'ui.js',
+    permissions: ['agent.intercept', 'ui.slot'],
     contributes: {
       skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
       presets: [
@@ -251,10 +254,17 @@ function render() {
         tools: 'all',
         modelMode: 'agent_pick',
       })),
+      methods: [
+        { name: 'session', timeoutMs: 2000 },
+        { name: 'toggle', timeoutMs: 2000 },
+      ],
+      events: [{ event: 'input', mode: 'intercept' }],
     },
   };
   files.set('enso-plugin.json', { bytes: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`), executable: false });
   files.set('icon.svg', file(join(HERE, 'icon.svg')));
+  files.set('main.mjs', file(join(HERE, 'auto', 'main.mjs')));
+  files.set('ui.js', file(join(HERE, 'auto', 'ui.js')));
   return files;
 }
 
