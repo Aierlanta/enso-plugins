@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-04T07:39:05.414Z",
-  "sequence": 35,
+  "generatedAt": "2026-11-04T11:50:40.862Z",
+  "sequence": 36,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -390,7 +390,7 @@
     {
       "id": "enso.pstack",
       "name": "pstack",
-      "description": "Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。",
+      "description": "Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack」预设的会话里加载。在输入框按钮里为某个会话打开后，该会话的每条消息自动展开 poteto-mode。",
       "tier": "official",
       "tags": [
         "skills",
@@ -400,7 +400,7 @@
       ],
       "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
-      "latest": "0.2.1",
+      "latest": "0.3.0",
       "versions": [
         {
           "version": "0.1.0",
@@ -431,6 +431,20 @@
           "sha256": "21d72a155f4477583b69449929bab18049366c88262f57b357d760f4c4890eb2",
           "size": 810484,
           "publishedAt": "2026-11-04T07:03:59.658Z"
+        },
+        {
+          "version": "0.3.0",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "agent.intercept",
+            "ui.slot"
+          ],
+          "path": "packages/enso.pstack/0.3.0.zip",
+          "sha256": "d3c99ae83ffa0bfd6dec9601e06ef313a03c7d4c8a8ae1e842c78a592361ef7f",
+          "size": 816057,
+          "publishedAt": "2026-11-04T11:50:40.862Z"
         }
       ]
     },
