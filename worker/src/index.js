@@ -50,9 +50,44 @@ async function indexFile(env, ctx, key, contentType) {
   return fromBucket(env, key, 'public, max-age=300', contentType);
 }
 
+let listedIdsCache = { at: 0, ids: null };
+
+/** 当前索引里登记的全部插件 id（R2 里那份，5 分钟内的结果复用） */
+async function listedPackageIds(env) {
+  const now = Date.now();
+  if (listedIdsCache.ids && now - listedIdsCache.at < 300_000) return listedIdsCache.ids;
+  if (!env.BUCKET) return null;
+  try {
+    const object = await env.BUCKET.get('v1/index.json');
+    if (!object) return null;
+    const index = await object.json();
+    if (!Array.isArray(index.plugins)) return null;
+    const ids = new Set(index.plugins.map((plugin) => plugin.id));
+    listedIdsCache = { at: now, ids };
+    return ids;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 只以当前索引为准：索引里没登记的包一律不提供。
+ * R2 里残留的旧对象、以及 cf.cacheTtl 挂在源站 URL 上的缓存都绕不过这道判断，
+ * 所以下架的包不必额外维护名单，也不会被缓存写回。
+ * 读不到索引时放行——宁可多给，也不要因为一次读失败把所有包打成 404。
+ */
+async function isRetiredPackage(env, key) {
+  const match = /^v1\/packages\/([^/]+)\//.exec(key);
+  if (!match) return false;
+  const ids = await listedPackageIds(env);
+  if (!ids) return false;
+  return !ids.has(match[1]);
+}
+
 /** 包不可变：R2 没有时从源站取一次并写入 R2 */
 async function packageFile(env, ctx, key) {
   const cacheControl = 'public, max-age=31536000, immutable';
+  if (await isRetiredPackage(env, key)) return text(404, 'not found', { 'cache-control': 'public, max-age=300' });
   const cached = await fromBucket(env, key, cacheControl, 'application/zip');
   if (cached.status !== 404) return cached;
   const bytes = await fromOrigin(env, key, 86400);
