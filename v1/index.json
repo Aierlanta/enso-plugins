@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-04T07:35:22.642Z",
+  "sequence": 34,
+  "plugins": [
+    {
+      "id": "dsh.bce",
+      "name": "BCE Prompt Enhance",
+      "description": "Composer wand that incrementally indexes the current project through the configured bce-tool MCP and rewrites the draft. Same interaction as dsh-bce, hosted by EnsoCode.",
+      "tier": "community",
+      "tags": [
+        "composer",
+        "mcp"
+      ],
+      "homepage": "https://github.com/linqiu919/dsh-bce",
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/dsh.bce.svg",
+      "latest": "0.1.2",
+      "versions": [
+        {
+          "version": "0.1.2",
+          "engines": {
+            "enso": ">=0.2.13"
+          },
+          "permissions": [
+            "ui.slot",
+            "composer.draft",
+            "mcp.call",
+            "ui.clipboard"
+          ],
+          "path": "packages/dsh.bce/0.1.2.zip",
+          "sha256": "5a740b50ec89973d485a9acd5ea8dc5927cf7b1eb9f127261cb7f40dc8474af3",
+          "size": 29928,
+          "publishedAt": "2026-11-02T11:41:28.960Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.context",
+      "name": "Context Window",
+      "description": "侧栏里看当前会话的上下文窗口：各部分占多少、还剩多少、提示词缓存命中率。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "observability"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.context.svg",
+      "latest": "0.1.2",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.0"
+          },
+          "permissions": [
+            "ui.view",
+            "agent.observe"
+          ],
+          "path": "packages/enso.context/0.1.0.zip",
+          "sha256": "0c47bf445c2e64fc8a0040d5c9286e5c54a32db03ad1b372d819e71351f106c1",
+          "size": 25456,
+          "publishedAt": "2026-11-02T14:10:24.017Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.0"
+          },
+          "permissions": [
+            "ui.view",
+            "agent.observe"
+          ],
+          "path": "packages/enso.context/0.1.1.zip",
+          "sha256": "09abc53068cee0b399a1f5dbb6f479c7e31b83a03f5e6f8a36d031f77b04030d",
+          "size": 25905,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "0.1.2",
+          "engines": {
+            "enso": ">=0.2.0"
+          },
+          "permissions": [
+            "ui.view",
+            "agent.observe"
+          ],
+          "path": "packages/enso.context/0.1.2.zip",
+          "sha256": "019b9814b49bfa7737552e060cc6a7152be3a50f34cecaa1506df0a77439c591",
+          "size": 53021,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.example.notes",
+      "name": "Notes",
+      "description": "侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "notes"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.example.notes.svg",
+      "latest": "1.0.2",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [
+            "ui.view",
+            "composer.draft"
+          ],
+          "path": "packages/enso.example.notes/1.0.0.zip",
+          "sha256": "0c7ed8772be386c2b128d210f6b722ed62526344c05e2c19306c2908c7d2bda1",
+          "size": 6558,
+          "publishedAt": "2026-11-02T11:33:20.468Z"
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [
+            "ui.view",
+            "composer.draft"
+          ],
+          "path": "packages/enso.example.notes/1.0.1.zip",
+          "sha256": "6b0dd980d65939eba7b5062a22aefd8cb64562346a4764b33c29c77a2de06976",
+          "size": 7067,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "1.0.2",
+          "permissions": [
+            "ui.view",
+            "composer.draft"
+          ],
+          "path": "packages/enso.example.notes/1.0.2.zip",
+          "sha256": "1fad8fcfe7185ac123f6c5024577908e87369cf46bd23c086a457d941868d3c6",
+          "size": 33220,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.example.wordstats",
+      "name": "Word Stats",
+      "description": "统计项目里文本文件的字数、行数与高频词，结果以卡片展示；提供条形图代码块。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "tools"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.example.wordstats.svg",
+      "latest": "1.0.2",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [
+            "agent.tool",
+            "fs.read",
+            "ui.slot"
+          ],
+          "path": "packages/enso.example.wordstats/1.0.0.zip",
+          "sha256": "3975a090c68f9baf3ac83e7f4e02969750d69382606225c2be07f547517f6cc6",
+          "size": 5798,
+          "publishedAt": "2026-11-02T11:33:20.468Z"
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [
+            "agent.tool",
+            "fs.read",
+            "ui.slot"
+          ],
+          "path": "packages/enso.example.wordstats/1.0.1.zip",
+          "sha256": "704d44c220f48e79bf0b77d9e7b51186dc165d979c6c181c2d22ff75b3d27fdb",
+          "size": 6231,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "1.0.2",
+          "permissions": [
+            "agent.tool",
+            "fs.read",
+            "ui.slot"
+          ],
+          "path": "packages/enso.example.wordstats/1.0.2.zip",
+          "sha256": "75d82be1dd29eea4a8d1a47c90e7957f733a098fd48a2214d2bb293861c2bd98",
+          "size": 7713,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.fanqie",
+      "name": "番茄小说",
+      "description": "在侧栏里浏览、搜索并阅读番茄免费小说（基于 openfanqie 匿名 SDK）。仅供学习研究。",
+      "tier": "community",
+      "tags": [
+        "ui",
+        "reading"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.fanqie.svg",
+      "latest": "0.1.1",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.fanqie/0.1.0.zip",
+          "sha256": "492924176eedc40947de5eec1032ef25c950abc160c4672e4b234a87858de98a",
+          "size": 156368,
+          "publishedAt": "2026-11-03T14:45:04.303Z"
+        },
+        {
+          "version": "0.1.1",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.fanqie/0.1.1.zip",
+          "sha256": "dce68127b8a9541e888ae6de1af44d24c98765dd4aa9a2d1a3850d557c44dc2d",
+          "size": 157952,
+          "publishedAt": "2026-11-04T03:04:56.311Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.github",
+      "name": "GitHub",
+      "description": "在侧栏查看、回复、关闭和重开当前项目的 GitHub issue 与 PR；会话里的 agent 也能调用。支持设备码登录，已登录的 gh CLI 可直接复用。",
+      "tier": "official",
+      "tags": [
+        "github",
+        "productivity"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.github.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.github/0.1.0.zip",
+          "sha256": "e045b37a42c8b8f1feee8310066a1c90c6abffd03848b39faa88b915deefb0f3",
+          "size": 54276,
+          "publishedAt": "2026-11-03T05:51:45.162Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.hongguo",
+      "name": "红果短剧",
+      "description": "在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。",
+      "tier": "community",
+      "tags": [
+        "ui",
+        "video"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.hongguo.svg",
+      "latest": "0.2.9",
+      "versions": [
+        {
+          "version": "0.2.4",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.4.zip",
+          "sha256": "1a57b14ced5ace15df1e2354ced970e5314c1382b9628e3ffaae8db32ae3ddb8",
+          "size": 7742494,
+          "publishedAt": "2026-11-02T11:42:54.180Z"
+        },
+        {
+          "version": "0.2.5",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.5.zip",
+          "sha256": "b288482d3cf4f2b0cd24410a5e7c3d566681577c585e8f1e0e8368efee0a5efc",
+          "size": 7742468,
+          "publishedAt": "2026-11-02T11:57:56.902Z"
+        },
+        {
+          "version": "0.2.6",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.6.zip",
+          "sha256": "a3f58d6e948b6857f7657478e736be2a708eec70ef47c9313ff02fd61e24327a",
+          "size": 7742929,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "0.2.7",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.7.zip",
+          "sha256": "b74e2a3b73f80253d8984b7be7f18535f7ae6d981994a3af80ef3b8451ee89d0",
+          "size": 7774763,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "0.2.8",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.8.zip",
+          "sha256": "7b41c54882f008d5cc33ab4ac555d248b6e55f045d09ff9fb2eb8de71b90819a",
+          "size": 7778291,
+          "publishedAt": "2026-11-03T05:10:39.136Z"
+        },
+        {
+          "version": "0.2.9",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.9.zip",
+          "sha256": "c6761307d1eba78d6d4bdd31942334e08b645e67412c75f0a0536da0e146c886",
+          "size": 7778755,
+          "publishedAt": "2026-11-03T05:46:28.304Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.kanban",
+      "name": "Kanban",
+      "description": "项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "productivity"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.kanban.svg",
+      "latest": "1.0.2",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [
+            "ui.view",
+            "agent.tool",
+            "agent.inject",
+            "composer.draft",
+            "session.read",
+            "session.focus",
+            "session.create"
+          ],
+          "path": "packages/enso.kanban/1.0.0.zip",
+          "sha256": "9c02b5242ae0f2d0f870e2faf4144b1e3a9debc77f338fa5df01e6ecf12cef60",
+          "size": 41913,
+          "publishedAt": "2026-11-02T14:10:24.017Z"
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [
+            "ui.view",
+            "agent.tool",
+            "agent.inject",
+            "composer.draft",
+            "session.read",
+            "session.focus",
+            "session.create"
+          ],
+          "path": "packages/enso.kanban/1.0.1.zip",
+          "sha256": "cca3a730d19fe781432bd2487c6dbe8c92533db75520ef8cf152f3aa1e005172",
+          "size": 42368,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "1.0.2",
+          "permissions": [
+            "ui.view",
+            "agent.tool",
+            "agent.inject",
+            "composer.draft",
+            "session.read",
+            "session.focus",
+            "session.create"
+          ],
+          "path": "packages/enso.kanban/1.0.2.zip",
+          "sha256": "777a390c2ab29fa6ccdd3fa0c73242a7de523a9c6032adcc8b8ad29db1dde1df",
+          "size": 70392,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.pstack",
+      "name": "pstack",
+      "description": "Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。",
+      "tier": "official",
+      "tags": [
+        "skills",
+        "workflow",
+        "agents",
+        "principles"
+      ],
+      "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
+      "latest": "0.2.1",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "permissions": [],
+          "path": "packages/enso.pstack/0.1.0.zip",
+          "sha256": "663387e194d05be4134d3f98b46d80bc0639eb1051f50bfc1d5b62ba79b5f9ff",
+          "size": 808944,
+          "publishedAt": "2026-11-03T16:47:52.188Z"
+        },
+        {
+          "version": "0.2.0",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [],
+          "path": "packages/enso.pstack/0.2.0.zip",
+          "sha256": "8f945cefa386a8dbf219b4a0fcf0c724786d6f20d3a323353face1af5aa5482f",
+          "size": 810272,
+          "publishedAt": "2026-11-04T02:25:40.542Z"
+        },
+        {
+          "version": "0.2.1",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [],
+          "path": "packages/enso.pstack/0.2.1.zip",
+          "sha256": "21d72a155f4477583b69449929bab18049366c88262f57b357d760f4c4890eb2",
+          "size": 810484,
+          "publishedAt": "2026-11-04T07:03:59.658Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.scheduler",
+      "name": "Scheduler",
+      "description": "定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "automation"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.scheduler.svg",
+      "latest": "1.0.2",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [
+            "ui.view",
+            "process.background",
+            "agent.inject",
+            "ui.notify"
+          ],
+          "path": "packages/enso.scheduler/1.0.0.zip",
+          "sha256": "68470e911944976b289c4f504d3757ec64544f56480d40de86a0b28732a3de53",
+          "size": 37103,
+          "publishedAt": "2026-11-02T12:47:28.873Z"
+        },
+        {
+          "version": "1.0.1",
+          "permissions": [
+            "ui.view",
+            "process.background",
+            "agent.inject",
+            "ui.notify"
+          ],
+          "path": "packages/enso.scheduler/1.0.1.zip",
+          "sha256": "9cc8670de9115dda2d75389463ed4e09b9b7c0a14a84fa076f652dc106f7eb81",
+          "size": 37549,
+          "publishedAt": "2026-11-02T14:32:07.781Z"
+        },
+        {
+          "version": "1.0.2",
+          "permissions": [
+            "ui.view",
+            "process.background",
+            "agent.inject",
+            "ui.notify"
+          ],
+          "path": "packages/enso.scheduler/1.0.2.zip",
+          "sha256": "37b9ab66e0346f0e954eb358c074de7622a7b7c0a4ba46728a8a2ba89f91a705",
+          "size": 63076,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.telegram",
+      "name": "Telegram",
+      "description": "用 Telegram Bot 远程使用 EnsoCode 会话：配对后发消息即进入会话，执行进度原位更新，回复以富文本发回；支持图片、群聊绑定、成员白名单与群聊上下文、插话、远程停止和双向同步。",
+      "tier": "official",
+      "tags": [
+        "remote",
+        "chat"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.telegram.svg",
+      "latest": "0.3.0",
+      "versions": [
+        {
+          "version": "0.2.0",
+          "engines": {
+            "enso": ">=0.2.13"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.observe",
+            "agent.inject",
+            "process.background",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.telegram/0.2.0.zip",
+          "sha256": "8064fe6fc6f8fad3b8e16a9f5a1016d769568ea43846178a9f782a332da0eeb2",
+          "size": 32750,
+          "publishedAt": "2026-11-03T01:48:25.761Z"
+        },
+        {
+          "version": "0.2.1",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.observe",
+            "agent.inject",
+            "process.background",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.telegram/0.2.1.zip",
+          "sha256": "6b02adddfeb9367e8a44d7cd7e164a9eff9d76a0912e8edc0f6ebfb1fdb315a2",
+          "size": 32750,
+          "publishedAt": "2026-11-03T01:56:32.018Z"
+        },
+        {
+          "version": "0.2.2",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.observe",
+            "agent.inject",
+            "process.background",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.telegram/0.2.2.zip",
+          "sha256": "4ac7edb7416cac8f038297d540c293956c9ce95ce948838e062142060b7e4c8c",
+          "size": 57076,
+          "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "0.3.0",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.observe",
+            "agent.inject",
+            "session.read",
+            "session.create",
+            "process.background",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.telegram/0.3.0.zip",
+          "sha256": "2a2cd5ee9e1de7224f11ee6956bb2a049d7894213854b13b23e719b4c706f585",
+          "size": 79243,
+          "publishedAt": "2026-11-03T14:45:04.303Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.translate",
+      "name": "双语对照翻译",
+      "description": "把思考过程和回复正文译成目标语言，原文下面紧跟译文。代码、链接、路径和公式保持原样。",
+      "tier": "official",
+      "tags": [
+        "ui",
+        "translate"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.translate.svg",
+      "latest": "0.1.1",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "net.fetch",
+            "ui.slot"
+          ],
+          "path": "packages/enso.translate/0.1.0.zip",
+          "sha256": "a850521157a0429bb6272b9436dc4be0f7ed2d1714b7f30b88d5e9889f3a19b6",
+          "size": 26645,
+          "publishedAt": "2026-11-03T17:35:34.392Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "net.fetch",
+            "ui.slot"
+          ],
+          "path": "packages/enso.translate/0.1.1.zip",
+          "sha256": "4eed41c8a669c1069985bb77cab2eb0622138f25e8e441780689c20dd826b0d7",
+          "size": 27116,
+          "publishedAt": "2026-11-04T03:04:56.311Z"
+        }
+      ]
+    }
+  ]
+}
