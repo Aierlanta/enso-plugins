@@ -2,9 +2,12 @@
   "schemaVersion": 1,
   "id": "enso.pstack",
   "name": "pstack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "icon": "icon.svg",
   "description": "Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。",
+  "engines": {
+    "enso": ">=0.2.15"
+  },
   "permissions": [],
   "contributes": {
     "skills": [
@@ -134,7 +137,27 @@
           "skills/poteto"
         ],
         "mcpServers": [],
+        "agentTypes": [
+          "pstack:poteto-agent",
+          "pstack:comment-sicko"
+        ],
         "systemPromptTail": "prompts/poteto.md"
+      }
+    ],
+    "agentTypes": [
+      {
+        "name": "pstack:poteto-agent",
+        "description": "Delegate subagent for code-writing and helper tasks spawned during a poteto-mode run, not the runner itself. Pass the role's model when the subagent tool lists models. Always put the absolute path of pstack's skills/poteto-mode/SKILL.md in the brief.",
+        "systemPrompt": "agents/poteto-agent.md",
+        "tools": "all",
+        "modelMode": "agent_pick"
+      },
+      {
+        "name": "pstack:comment-sicko",
+        "description": "A deranged comment-hater that savors deletion and condemns workaround code. Deletes comments in the scoped files or diff and flags workaround code with MUST KILL; never writes application code.",
+        "systemPrompt": "agents/comment-sicko.md",
+        "tools": "all",
+        "modelMode": "agent_pick"
       }
     ]
   }

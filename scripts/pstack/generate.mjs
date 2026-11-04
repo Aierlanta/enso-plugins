@@ -59,16 +59,27 @@ const PRESET_SKILL = 'skills/poteto';
 const PRESET_TAIL = 'prompts/poteto.md';
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-// 预设管不到 agentTypes，子代理改由 worker 读 agents/*.md；正文读不到上游 frontmatter，也不知道 pstack 装在哪
+// 子代理类型只在 poteto 预设生效时下发（Enso >=0.2.15 的 presets.agentTypes），agent_pick 让主 agent 按角色选模型。
+// 正文读不到上游 frontmatter，也不知道 pstack 装在哪
 const AGENTS = {
-  'poteto-agent': [
-    [
-      "search `~/.cursor/plugins/` for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `.cursor-plugin/plugin.json` has the highest `version`.",
-      "search `extension-plugins/packages/enso.pstack/` in EnsoCode's app data folder (`~/Library/Application Support/enso-code/` on macOS) for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `enso-plugin.json` has the highest `version`.",
+  'poteto-agent': {
+    description:
+      "Delegate subagent for code-writing and helper tasks spawned during a poteto-mode run, not the runner itself. Pass the role's model when the subagent tool lists models. Always put the absolute path of pstack's skills/poteto-mode/SKILL.md in the brief.",
+    replace: [
+      [
+        "search `~/.cursor/plugins/` for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `.cursor-plugin/plugin.json` has the highest `version`.",
+        "search `extension-plugins/packages/enso.pstack/` in EnsoCode's app data folder (`~/Library/Application Support/enso-code/` on macOS) for a file whose path ends in `skills/poteto-mode/SKILL.md`. If more than one file matches, use the copy whose `enso-plugin.json` has the highest `version`.",
+      ],
     ],
-  ],
-  'comment-sicko': [],
+  },
+  'comment-sicko': {
+    description:
+      'A deranged comment-hater that savors deletion and condemns workaround code. Deletes comments in the scoped files or diff and flags workaround code with MUST KILL; never writes application code.',
+    replace: [],
+  },
 };
+const AGENT_TYPE = (agent) => `pstack:${agent}`;
+const ENSO_RANGE = '>=0.2.15';
 const AGENT_LINE =
   'In EnsoCode, read `docs/harness/enso.md` in the pstack folder once before you start. It maps the Cursor names in pstack to EnsoCode. ' +
   "The pstack folder holds `skills/poteto-mode/SKILL.md`. Use the path your parent gave you, else find it under `extension-plugins/packages/enso.pstack/` in EnsoCode's app data folder.";
@@ -176,7 +187,7 @@ function render() {
     const entry = files.get(`skills/${skill}/SKILL.md`);
     if (wrap) entry.bytes = Buffer.from(text(entry.bytes).replace(/^(# .*)\n+/m, `$1\n\n${SKILL_LINE}\n\n`));
   }
-  for (const [agent, replace] of Object.entries(AGENTS)) {
+  for (const [agent, { replace }] of Object.entries(AGENTS)) {
     let body = readFileSync(join(PSTACK, 'agents', `${agent}.md`), 'utf8');
     body = body.slice(frontmatter(body)?.[0].length ?? 0);
     for (const [from, to] of replace) {
@@ -219,6 +230,7 @@ function render() {
     version: previous,
     icon: 'icon.svg',
     description: `Lauren Tan 的 pstack ${version}（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 ${skills.length} 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack · poteto-mode」预设的会话里加载。`,
+    engines: { enso: ENSO_RANGE },
     permissions: [],
     contributes: {
       skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
@@ -228,9 +240,17 @@ function render() {
           name: 'pstack · poteto-mode',
           skills: [...skills.map((skill) => `skills/${skill}`), PRESET_SKILL],
           mcpServers: [],
+          agentTypes: Object.keys(AGENTS).map(AGENT_TYPE),
           systemPromptTail: PRESET_TAIL,
         },
       ],
+      agentTypes: Object.entries(AGENTS).map(([agent, { description }]) => ({
+        name: AGENT_TYPE(agent),
+        description,
+        systemPrompt: `agents/${agent}.md`,
+        tools: 'all',
+        modelMode: 'agent_pick',
+      })),
     },
   };
   files.set('enso-plugin.json', { bytes: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`), executable: false });
