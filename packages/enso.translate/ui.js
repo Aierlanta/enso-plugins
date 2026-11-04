@@ -3,32 +3,36 @@ const KANA = /[\p{Script=Hiragana}\p{Script=Katakana}]/u;
 const HANGUL = /\p{Script=Hangul}/u;
 const CYRILLIC = /\p{Script=Cyrillic}/u;
 const LATIN = /\p{Script=Latin}/u;
-const LETTER = /\p{L}/u;
 const LATIN_LANGS = new Set(['英文', '法文', '德文', '西班牙文']);
 
-/** 分母只算字母，不含数字、空白和标点。 */
+function scriptOf(ch) {
+  if (HAN.test(ch)) return 'han';
+  if (KANA.test(ch)) return 'kana';
+  if (HANGUL.test(ch)) return 'hangul';
+  if (CYRILLIC.test(ch)) return 'cyrillic';
+  if (LATIN.test(ch)) return 'latin';
+  return /\p{L}/u.test(ch) ? 'other' : null;
+}
+
+/** 拉丁、西里尔字母按词计，其余按字计，免得中文句里夹几个英文词就被判成外文。 */
 export function isTargetLanguage(text, target) {
+  const n = { han: 0, kana: 0, hangul: 0, cyrillic: 0, latin: 0, other: 0 };
   let total = 0;
-  let han = 0;
-  let kana = 0;
-  let hangul = 0;
-  let cyrillic = 0;
-  let latin = 0;
+  let prev = null;
   for (const ch of String(text ?? '')) {
-    if (!LETTER.test(ch)) continue;
-    total += 1;
-    if (HAN.test(ch)) han += 1;
-    else if (KANA.test(ch)) kana += 1;
-    else if (HANGUL.test(ch)) hangul += 1;
-    else if (CYRILLIC.test(ch)) cyrillic += 1;
-    else if (LATIN.test(ch)) latin += 1;
+    const script = scriptOf(ch);
+    if (script && !(script === prev && (script === 'latin' || script === 'cyrillic'))) {
+      n[script] += 1;
+      total += 1;
+    }
+    prev = script;
   }
   if (total === 0) return false;
-  if (target === '中文') return han / total >= 0.5 && kana === 0;
-  if (target === '日文') return kana > 0;
-  if (target === '韩文') return hangul / total >= 0.5;
-  if (target === '俄文') return cyrillic / total >= 0.5;
-  if (LATIN_LANGS.has(target)) return latin / total >= 0.5;
+  if (target === '中文') return n.han / total >= 0.5 && n.kana === 0;
+  if (target === '日文') return n.kana > 0;
+  if (target === '韩文') return n.hangul / total >= 0.5;
+  if (target === '俄文') return n.cyrillic / total >= 0.5;
+  if (LATIN_LANGS.has(target)) return n.latin / total >= 0.5;
   return false;
 }
 
@@ -55,7 +59,7 @@ export function segment(text, streaming, targetLanguage = '中文') {
     if (!source) return;
     blocks.push({
       source,
-      kind: kind === 'code' ? 'code' : isTargetLanguage(source, targetLanguage) ? 'skip' : 'prose',
+      kind: kind === 'code' ? 'code' : prepareSource(source, targetLanguage) ? 'prose' : 'skip',
     });
   };
 
@@ -320,6 +324,11 @@ export function translationKey(model, target, text) {
   return `${model}\0${target}\0${text}`;
 }
 
+export function isUnchanged(source, translated) {
+  const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
+  return norm(source) === norm(translated);
+}
+
 export function createMessageVisibility() {
   const overrides = new Map();
   const listeners = new Map();
@@ -528,6 +537,7 @@ export function onLoad(enso) {
     }, [key, cacheText, target]);
 
     if (entry?.status === 'done') {
+      if (isUnchanged(cacheText, entry.text)) return null;
       const restored = slots ? restore(entry.text, slots) : entry.text;
       if (restored == null) {
         if (!entry.warned) {

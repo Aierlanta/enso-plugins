@@ -4,6 +4,7 @@ import { activate, normalizeSettings, translate } from '../packages/enso.transla
 import {
   createMessageVisibility,
   createQueue,
+  isUnchanged,
   leafPlan,
   prepareSource,
   protect,
@@ -25,9 +26,9 @@ test('空行分段；围栏含空行仍是一段且不参与前后分段', () =>
 });
 
 test('汉字占比过半的段跳过，未闭合围栏整段视为代码', () => {
-  assert.deepEqual(segment('这是中文段落，不要翻译它。\n\nOK 好', false), [
+  assert.deepEqual(segment('这是中文段落，不要翻译它。\n\nOK, sounds 好', false), [
     { source: '这是中文段落，不要翻译它。', kind: 'skip', final: true },
-    { source: 'OK 好', kind: 'prose', final: true },
+    { source: 'OK, sounds 好', kind: 'prose', final: true },
   ]);
   assert.deepEqual(segment('done\n\n```py\nprint(1)', false), [
     { source: 'done', kind: 'prose', final: true },
@@ -57,6 +58,27 @@ test('思考分段按目标语言跳过', () => {
   assert.equal(segment('OK 好', false, '英文')[0].kind, 'skip');
   assert.equal(segment('这是テスト', false, '中文')[0].kind, 'prose');
   assert.equal(segment('これはテスト', false, '日文')[0].kind, 'skip');
+});
+
+test('译文与原文只差空白时视为未变化', () => {
+  assert.equal(isUnchanged('run ⟦0⟧  now\n', 'run ⟦0⟧ now'), true);
+  assert.equal(isUnchanged('run ⟦0⟧ now', '运行 ⟦0⟧'), false);
+});
+
+test('中文句里夹英文词、命令、代码和路径时不翻译', () => {
+  const zh = [
+    '需要执行 ls 命令。',
+    '先跑 git status 再看 npm install 输出',
+    '用 TypeScript 重写 React 组件',
+    '我来看看 packages/enso.translate/ui.js 的 isTargetLanguage 逻辑',
+    '运行 `pnpm --filter @enso/web build:prod` 看结果',
+  ];
+  for (const text of zh) {
+    assert.equal(prepareSource(text, '中文'), null, text);
+    assert.equal(segment(text, false)[0].kind, 'skip', text);
+  }
+  assert.equal(segment('The user wants 中文 output.', false)[0].kind, 'prose');
+  assert.equal(prepareSource('Let me check the ls output.', '中文')?.text, 'Let me check the ls output.');
 });
 
 function fakeEnso(fetch) {
@@ -272,10 +294,10 @@ test('只剩占位符和标点，或已经是目标语言时跳过', () => {
   assert.equal(prepareSource('', '中文'), null);
   assert.equal(prepareSource('   ', '中文'), null);
 
-  assert.equal(prepareSource('Hello 世界', '中文')?.text, 'Hello 世界');
+  assert.equal(prepareSource('Say hello to the 世界', '中文')?.text, 'Say hello to the 世界');
   assert.equal(prepareSource('这是テスト', '中文')?.text, '这是テスト');
-  assert.equal(prepareSource('ab你好', '中文'), null);
-  assert.equal(prepareSource('ab你好', '英文'), null);
+  assert.equal(prepareSource('ab cd 你好', '中文'), null);
+  assert.equal(prepareSource('ab cd 你好', '英文'), null);
   assert.equal(prepareSource('東京都', '日文')?.text, '東京都');
   assert.equal(prepareSource('see `code` please', '中文')?.text, 'see ⟦0⟧ please');
 });
