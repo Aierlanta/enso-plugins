@@ -11,11 +11,16 @@ import { buildRegisterKeyContent, decryptRegisteredKey } from './crypt/book.js';
 
 // 业务错误：服务端 code != 0。
 export class ApiError extends Error {
-  constructor(code, message, path) {
-    super(message || ('请求失败 code=' + code));
+  constructor(code, message, path, context = {}) {
+    const where = path ? ' @ ' + path : '';
+    const body = context.body ? ' | ' + String(context.body).replace(/\s+/g, ' ').slice(0, 400) : '';
+    super((message || '请求失败') + ' (code=' + code + ')' + where + body);
     this.name = 'ApiError';
     this.code = code;
     this.path = path;
+    this.status = context.status;
+    // 原始响应体，排查服务端拒绝时最有用
+    this.body = context.body;
   }
 }
 
@@ -210,13 +215,20 @@ export class Client {
 
   async #readResponse(res, path, parseJSON) {
     const buf = Buffer.from(await res.arrayBuffer());
-    if (!res.ok) throw new ApiError(res.status, 'HTTP ' + res.status, path);
+    const bodyText = buf.toString('utf8');
+    if (!res.ok) {
+      throw new ApiError(res.status, 'HTTP ' + res.status, path, { status: res.status, body: bodyText });
+    }
     if (!parseJSON) return buf;
     let json;
-    try { json = JSON.parse(buf.toString('utf8')); } catch { throw new ApiError(-1, '响应不是 JSON', path); }
+    try {
+      json = JSON.parse(bodyText);
+    } catch {
+      throw new ApiError(-1, '响应不是 JSON', path, { status: res.status, body: bodyText });
+    }
     const code = json.code;
     if (code !== undefined && code !== 0 && code !== '0') {
-      throw new ApiError(code, json.message || '', path);
+      throw new ApiError(code, json.message || json.msg || '', path, { status: res.status, body: bodyText });
     }
     return json.data !== undefined ? json.data : json;
   }

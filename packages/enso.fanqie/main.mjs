@@ -76,8 +76,9 @@ export function activate(enso) {
   let client = new FanqieClient({ profilePath });
   const catalogs = new Map();
 
-  // 匿名设备用一阵后接口会返回空响应：换一台新设备重试一次
-  const stale = (e) => e?.name === 'ApiError' && e.code === -1;
+  // 匿名设备用一阵后会被服务端限制：部分接口返回空响应（-1），正文接口返回 110 ERROR。
+  // 两种情况都视为设备失效，换一台新设备重试一次。
+  const stale = (e) => e?.name === 'ApiError' && (e.code === -1 || e.code === 110);
   const renew = async (used) => {
     if (client !== used) return;
     await rm(profilePath, { force: true });
