@@ -38,8 +38,8 @@ The `subagent` tool schema lists the valid `model` values. Each is `<provider>/<
 | `claude-<family>-<version>-<effort>[-fast]`, such as `claude-opus-5-5-xhigh` | `model`: the listed value whose part after the last `/` is `claude-<family>-<version>` or starts with it, such as `Max/claude-opus-5-5`, and `thinking: "<effort>"`. Drop `-fast`. |
 | A `grok-*`, `gpt-*`, or other slug, such as `grok-4.7-xhigh-fast` | Same rule. Strip the effort and `-fast`, then pick the listed value whose part after the last `/` starts with the rest, such as `grok-4.7`. With no match, use the `inherit-parent` row and say so. |
 | `auto` or `inherit-parent` | Pass the listed value whose part after the last `/` equals `$PI_MODEL`, else the first listed value, and say so. Alias entries in a panel list still count toward its fan-out. |
-| The `subagent` tool lists no `model` values | Omit `model` for `pstack:*` types; they run on the session model. |
-| The `pstack-models.mdc` rule, `~/.cursor/rules/pstack-models.mdc` | `~/.agents/pstack-models.md`. EnsoCode does not load it into the session, so `read` it the first time a skill needs a role's model. If the file or the role's line is missing, use the skill's default slug. |
+| The `subagent` tool lists no `model` values | Omit both `agent_type` and `model`; the subagent runs on the session model. Say so once. |
+| The `pstack-models.mdc` rule, `~/.cursor/rules/pstack-models.mdc` | `~/.agents/pstack-models.md`. EnsoCode does not load it into the session, so `read` it the first time a skill needs a role's model, once per session. A missing file is normal and means `/skill:setup-pstack` has not run, so do not retry or search for it. If the file or the role's line is missing, use the skill's default slug, and tell the user once that `/skill:setup-pstack` sets the models. |
 | A role value `<model> <effort>`, such as `Max/claude-opus-5-5 xhigh` | `model: "Max/claude-opus-5-5"` and `thinking: "xhigh"`. The effort is the last token, and a model value may contain spaces. |
 
 ## setup-pstack
