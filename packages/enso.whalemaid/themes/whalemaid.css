@@ -1,0 +1,331 @@
+:root {
+  --font-family-sans: Georgia, "Songti SC", "Times New Roman", serif;
+  --radius: 0.75rem;
+  --wm-navy: #1c326b;
+  --wm-indigo: #526aa8;
+  --wm-gold: #c5a468;
+  --wm-veil: color-mix(in oklch, var(--background) 84%, transparent);
+  --wm-bubble: color-mix(in oklch, #f8f6f0 92%, var(--background));
+  --wm-edge: color-mix(in oklch, var(--wm-gold) 70%, var(--border));
+}
+
+.dark {
+  --wm-veil: color-mix(in oklch, var(--background) 80%, transparent);
+  --wm-bubble: color-mix(in oklch, var(--wm-navy) 72%, var(--background));
+}
+
+::selection {
+  background: color-mix(in oklch, var(--wm-gold) 45%, transparent);
+}
+
+/* 宫殿画在 ::before 上，盖过应用自己那层背景 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("assets/palace-day.webp") center / cover no-repeat;
+}
+
+.dark [data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  background-image: url("assets/palace-night.webp");
+}
+
+/* 对话卡片半透明，宫殿透出来，正文仍可读 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) [data-enso="main"] {
+  background: var(--wm-veil);
+}
+
+/*
+ * 对话两侧的女仆挂在 timeline 上：timeline 是对话列断点所查询的容器，
+ * 这里用同一组断点算出列宽 --wm-col，女仆宽度取两侧留白，留白不够就不出场。
+ */
+[data-enso="timeline"]:has([data-enso="message-user"])::before,
+[data-enso="timeline"]:has([data-enso="message-user"])::after {
+  --wm-w: min(230px, (100cqw - var(--wm-col)) / 2 - 16px);
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--wm-w);
+  height: min(var(--wm-w) * 1.8, 100% - 12px);
+  pointer-events: none;
+  background: center bottom / contain no-repeat;
+  opacity: 0.82;
+}
+
+[data-enso="timeline"]:has([data-enso="message-user"])::before {
+  left: 6px;
+  background-image: url("assets/maid-left.webp");
+}
+
+[data-enso="timeline"]:has([data-enso="message-user"])::after {
+  right: 14px;
+  background-image: url("assets/maid-right.webp");
+}
+
+[data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 42rem; }
+@container (min-width: 56rem) {
+  [data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 48rem; }
+}
+@container (min-width: 72rem) {
+  [data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 56rem; }
+}
+@container (min-width: 84rem) {
+  [data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 64rem; }
+}
+@container (min-width: 96rem) {
+  [data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 72rem; }
+}
+@container (min-width: 112rem) {
+  [data-enso="timeline"]::before, [data-enso="timeline"]::after { --wm-col: 80rem; }
+}
+
+/* 列宽取值与 enso-chat-col 的 max-w 断点一致；timeline 窄于 1040px 时女仆不足 112px 宽，干脆不放 */
+@container (max-width: 1039px) {
+  [data-enso="timeline"]:has([data-enso="message-user"])::before,
+  [data-enso="timeline"]:has([data-enso="message-user"])::after {
+    display: none;
+  }
+}
+
+html.enso-chat-wide [data-enso="timeline"]:has([data-enso="message-user"])::before,
+html.enso-chat-wide [data-enso="timeline"]:has([data-enso="message-user"])::after {
+  display: none;
+}
+
+.dark [data-enso="timeline"]::before,
+.dark [data-enso="timeline"]::after {
+  filter: brightness(0.84) saturate(0.92);
+}
+
+/* 没打开对话：两位女仆完整亮相，徽饰压在标题上方 */
+[data-enso="main"]:not(:has([data-enso="timeline"])) {
+  background:
+    url("assets/crest.webp") no-repeat center calc(50% - 150px) / 150px auto,
+    url("assets/maid-standing.webp") no-repeat left 6% bottom / auto 62%,
+    url("assets/maid-notebook.webp") no-repeat right 6% bottom / auto 62%,
+    var(--wm-veil);
+}
+
+/* 新对话还没有消息：托腮欢迎 */
+[data-enso="timeline"]:not(:has([data-enso="message-user"]))::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  bottom: 8px;
+  width: 150px;
+  height: 150px;
+  background: url("assets/chibi-delighted.webp") center / contain no-repeat;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 蝴蝶结坐在输入框上沿正中，整段留在框外，不压字，也不压上面的待办条 */
+[data-enso="composer"] {
+  position: relative;
+  margin-top: 36px;
+  border-color: var(--wm-edge);
+  border-radius: 22px;
+}
+
+[data-enso="composer"]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  width: 64px;
+  height: 36px;
+  translate: -50% 0;
+  background: url("assets/bow.webp") center bottom / contain no-repeat;
+  pointer-events: none;
+  z-index: 3;
+  transition: translate 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-enso="composer"]:focus-within::before {
+  translate: -50% -5px;
+}
+
+/* 侧栏是实色海军蓝，浅色字。宫殿只留在主区后面，不透进会话列表 */
+[data-enso="sidebar"] {
+  --foreground: #e7ecf7;
+  --color-foreground: #e7ecf7;
+  --muted-foreground: #b7c4e0;
+  --color-muted-foreground: #b7c4e0;
+  --subtle-foreground: #8ea0c4;
+  --color-subtle-foreground: #8ea0c4;
+  --muted: rgb(255 255 255 / 0.1);
+  --color-muted: rgb(255 255 255 / 0.1);
+  --border: rgb(211 180 119 / 0.45);
+  --color-border: rgb(211 180 119 / 0.45);
+  position: relative;
+  color: #e7ecf7;
+  background:
+    url("assets/chibi-sleepy.webp") no-repeat center bottom 48px / 72px auto,
+    radial-gradient(circle at 50% 12%, rgb(91 119 188 / 0.32), transparent 34%),
+    linear-gradient(180deg, #102456, #071433);
+  box-shadow: inset -1px 0 rgb(255 245 215 / 0.72);
+}
+
+.dark [data-enso="sidebar"] {
+  background:
+    url("assets/chibi-sleepy.webp") no-repeat center bottom 48px / 72px auto,
+    radial-gradient(circle at 50% 12%, rgb(91 119 188 / 0.22), transparent 34%),
+    linear-gradient(180deg, #0c1c44, #050e28);
+}
+
+/* 用户气泡：瓷白配金边，暗色海军蓝配金边 */
+[data-enso="message-user"] > div:not(:last-child) {
+  background: var(--wm-bubble);
+  border: 1px solid var(--wm-edge);
+  border-radius: 16px 16px 6px 16px;
+}
+
+[data-enso="message-assistant"] blockquote {
+  border-left-color: var(--wm-gold);
+}
+
+[data-enso="message-assistant"] :not(pre) > code {
+  background: color-mix(in oklch, var(--wm-indigo) 14%, var(--background));
+  border-color: var(--wm-edge);
+}
+
+/* 思考块：认真的小脸。思考中靠图标的 animate-pulse 判断，类名变了只是不再晃 */
+[data-enso="thinking"] {
+  position: relative;
+  padding-left: 30px;
+}
+
+[data-enso="thinking"]::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -6px;
+  width: 30px;
+  height: 32px;
+  background: url("assets/chibi-determined.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
+[data-enso="thinking"]:has(.animate-pulse)::before {
+  animation: wm-nod 1.4s ease-in-out infinite;
+}
+
+@keyframes wm-nod {
+  50% {
+    translate: 0 2px;
+  }
+}
+
+/* 代码块右上角的盾徽 */
+[data-enso="code-block"] {
+  border-color: var(--wm-edge);
+  border-radius: 12px;
+}
+
+[data-enso="code-block"]::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: -14px;
+  width: 22px;
+  height: 30px;
+  background: url("assets/shield.webp") center / contain no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 待办条上沿的金线 */
+[data-enso="todo"] {
+  position: relative;
+  border-color: var(--wm-edge);
+}
+
+[data-enso="todo"]::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--wm-gold), transparent);
+  pointer-events: none;
+}
+
+/* 右侧面板：转圈晕乎乎的小女仆 */
+[data-enso="side-panel"]::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 96px;
+  height: 86px;
+  background: url("assets/chibi-dizzy.webp") center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 5;
+}
+
+/* 会话标签栏：当前标签底下一条金线 */
+[data-enso="session-tabs"] {
+  position: relative;
+}
+
+[data-enso="session-tabs"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--wm-gold), transparent);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* 标题栏中间的蕾丝垂饰 */
+[data-enso="title-bar"] {
+  position: relative;
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"]) [data-enso="title-bar"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 220px;
+  height: 56px;
+  translate: -50% 0;
+  background: url("assets/swag.webp") center top / contain no-repeat;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* 设置窗口：导航底部的小女仆，内容区顶部的铭牌 */
+[data-enso="settings-nav"] {
+  background: url("assets/chibi-sleepy.webp") no-repeat center bottom 6px / 84px auto;
+}
+
+[data-enso="settings-content"] {
+  background: url("assets/ribbon-banner.webp") no-repeat right 20px bottom 16px / 130px auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enso="composer"]::before {
+    transition: none;
+  }
+
+  [data-enso="composer"]:focus-within::before {
+    translate: -50% 0;
+  }
+
+  [data-enso="thinking"]:has(.animate-pulse)::before {
+    animation: none;
+  }
+}

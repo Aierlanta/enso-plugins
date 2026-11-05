@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.whalemaid",
+  "name": "深海女仆工坊",
+  "version": "0.1.0",
+  "description": "鲸鱼娘女仆主题：深海蓝配金色描边，水晶宫殿作背景，两位女仆站在对话两侧，输入框系着蝴蝶结。美术 CC BY-NC-SA 4.0，禁止商用。",
+  "icon": "icon.svg",
+  "engines": { "enso": ">=0.2.16" },
+  "permissions": [],
+  "contributes": {
+    "themes": [
+      {
+        "id": "whalemaid",
+        "name": "深海女仆工坊",
+        "path": "themes/whalemaid.json",
+        "css": "themes/whalemaid.css"
+      }
+    ]
+  }
+}
