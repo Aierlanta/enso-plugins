@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T04:22:43.428Z",
-  "sequence": 39,
+  "generatedAt": "2026-11-05T05:58:04.027Z",
+  "sequence": 40,
   "plugins": [
     {
       "id": "dsh.bce",
       "name": "BCE Prompt Enhance",
-      "description": "Composer wand that incrementally indexes the current project through the configured bce-tool MCP and rewrites the draft. Same interaction as dsh-bce, hosted by EnsoCode.",
+      "description": "Better Context Engine 提示词增强：增量索引项目，精准补全代码上下文，让提问更清楚、回答更准确。",
       "tier": "community",
       "tags": [
         "composer",
@@ -14,7 +14,7 @@
       ],
       "homepage": "https://github.com/linqiu919/dsh-bce",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/dsh.bce.svg",
-      "latest": "0.1.4",
+      "latest": "0.1.5",
       "versions": [
         {
           "version": "0.1.2",
@@ -47,6 +47,22 @@
           "sha256": "74d9adf5fc1d5dc04318648ba382588e9f07faff4438f0f9f1d7e0980797d443",
           "size": 43289,
           "publishedAt": "2026-11-05T04:19:54.787Z"
+        },
+        {
+          "version": "0.1.5",
+          "engines": {
+            "enso": ">=0.2.13"
+          },
+          "permissions": [
+            "ui.slot",
+            "composer.draft",
+            "mcp.call",
+            "ui.clipboard"
+          ],
+          "path": "packages/dsh.bce/0.1.5.zip",
+          "sha256": "f3ab3f21e3ae9d4182904468ab1ddf8d9bcaf2578821db383241fb7a0b06e9ec",
+          "size": 43146,
+          "publishedAt": "2026-11-05T05:58:04.027Z"
         }
       ]
     },
