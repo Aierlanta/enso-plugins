@@ -21,6 +21,7 @@ EnsoCode 官方插件市场的源仓库 · [浏览插件](https://enso-plugins.j
 - [Worker](#worker)
 - [外部插件](#外部插件)
 - [下架](#下架)
+- [友链](#友链)
 
 ## 插件列表
 
@@ -207,3 +208,7 @@ cd worker && npx wrangler deploy
 把插件 id 加入 `registry/delisted.json`（数组），并删除 `packages/<id>/`。
 
 下一次发布时插件会从索引中消失；已发布的 zip 仍留在 `dist`，已安装的用户不受影响。
+
+## 友链
+
+- [Linux.Do](https://linux.do/) — 与社区一起分享、讨论、关注开发进展。
