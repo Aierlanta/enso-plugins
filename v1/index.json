@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T05:58:04.027Z",
-  "sequence": 40,
+  "generatedAt": "2026-11-05T08:10:02.345Z",
+  "sequence": 41,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -428,7 +428,7 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.nailong.svg",
-      "latest": "0.1.0",
+      "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -440,6 +440,17 @@
           "sha256": "d120ef1eed3c5f37005a528c6d65f53814c3d0def7a7ae3a2faa5a1756cf0400",
           "size": 1793513,
           "publishedAt": "2026-11-05T02:01:33.303Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.nailong/0.1.1.zip",
+          "sha256": "406fa32c3bf0f7423ab8ef7e40c17f78144d511836dba08ef5c8afc85aff72b5",
+          "size": 1793728,
+          "publishedAt": "2026-11-05T08:10:02.345Z"
         }
       ]
     },
