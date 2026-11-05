@@ -9,32 +9,49 @@ const STYLE = `
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius, 8px);
   background: transparent;
-  color: var(--muted-foreground);
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
 }
-.pstack-auto:hover {
-  background: var(--muted);
-  color: var(--foreground);
+.pstack-auto .potato {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  pointer-events: none;
+  filter: grayscale(1);
+  opacity: 0.45;
+  transition: filter 0.15s, opacity 0.15s, transform 0.15s;
 }
-.pstack-auto[data-on='true'] {
-  background: color-mix(in oklab, var(--primary) 14%, transparent);
-  color: var(--primary);
+.pstack-auto:hover .potato {
+  opacity: 0.72;
+  transform: scale(1.08);
 }
-.pstack-auto svg {
-  width: 14px;
-  height: 14px;
+.pstack-auto:active .potato {
+  transform: scale(0.94);
+}
+.pstack-auto[data-on='true'] .potato {
+  filter: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pstack-auto .potato {
+    transition: none;
+  }
+  .pstack-auto:hover .potato,
+  .pstack-auto:active .potato {
+    transform: none;
+  }
 }
 `;
 
-const ICON = [
-  'M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z',
-  'M20 3v4',
-  'M22 5h-4',
-  'M4 17v2',
-  'M5 18H3',
+const POTATO =
+  'M119 1C127 1 139 2 146 4C153 6 158 9 163 13C168 17 172 20 176 26C180 33 186 44 189 52C192 60 193 63 193 74C194 85 194 106 192 119C190 132 187 141 183 150C179 159 175 166 169 173C163 181 153 190 145 195C138 201 131 203 124 206C117 209 111 211 103 212C95 213 85 214 78 214C71 214 66 213 59 211C52 209 42 205 35 200C28 195 21 189 16 182C11 175 6 167 4 159C2 151 1 142 2 133C4 124 6 113 13 103C20 93 36 81 43 71C51 61 52 52 58 43C64 35 70 26 77 20C84 14 93 9 100 6C107 3 111 1 119 1Z';
+
+const EYES = [
+  [143, 53, 11, 7.2, -24],
+  [75, 91, 10, 6.6, -18],
+  [154, 110, 9, 6.2, -12],
+  [40, 139, 9.5, 6.4, -20],
+  [110, 155, 11.5, 7, -16],
 ];
 
 export function onLoad(enso) {
@@ -96,16 +113,22 @@ export function onLoad(enso) {
       },
       h(
         'svg',
-        {
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 2,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-          'aria-hidden': true,
-        },
-        ICON.map((d) => h('path', { key: d, d }))
+        { className: 'potato', viewBox: '0 0 229 240', 'aria-hidden': true },
+        h('defs', null, h('clipPath', { id: 'pstack-potato' }, h('path', { d: POTATO }))),
+        h('path', { fill: '#E19D3D', d: POTATO }),
+        h('ellipse', { cx: 118, cy: 72, rx: 86, ry: 58, fill: '#F6BE67', clipPath: 'url(#pstack-potato)' }),
+        h('path', { fill: 'none', stroke: '#5C2C0C', strokeWidth: 15, strokeLinejoin: 'round', d: POTATO }),
+        EYES.map(([cx, cy, rx, ry, rot]) =>
+          h('ellipse', {
+            key: cx,
+            cx,
+            cy,
+            rx,
+            ry,
+            fill: '#964C0F',
+            transform: `rotate(${rot} ${cx} ${cy})`,
+          })
+        )
       )
     );
   }
