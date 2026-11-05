@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T08:18:11.921Z",
-  "sequence": 43,
+  "generatedAt": "2026-11-05T09:13:11.156Z",
+  "sequence": 44,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -762,6 +762,31 @@
           "sha256": "4eed41c8a669c1069985bb77cab2eb0622138f25e8e441780689c20dd826b0d7",
           "size": 27116,
           "publishedAt": "2026-11-04T03:04:56.311Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.whalemaid",
+      "name": "深海女仆工坊",
+      "description": "鲸鱼娘女仆主题：深海蓝配金色描边，水晶宫殿作背景，两位女仆站在对话两侧，输入框系着蝴蝶结。美术 CC BY-NC-SA 4.0，禁止商用。",
+      "tier": "official",
+      "tags": [
+        "theme"
+      ],
+      "homepage": "https://github.com/Small-tailqwq/dsh-deep-whale",
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.whalemaid.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.whalemaid/0.1.0.zip",
+          "sha256": "e295e91faaa8db59ddeb187a93ee5da62bb2a0e894229e48f81598c7f4889112",
+          "size": 656884,
+          "publishedAt": "2026-11-05T09:13:11.156Z"
         }
       ]
     }
