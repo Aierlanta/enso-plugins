@@ -1,0 +1,229 @@
+:root {
+  --radius: 0.875rem;
+  --nw-yellow: #f4cf36;
+  --nw-green: #71b853;
+  --nw-leaf: #3e6b14;
+  --nw-bubble: color-mix(in oklch, var(--nw-yellow) 32%, var(--background));
+  --nw-edge: color-mix(in oklch, var(--nw-green) 42%, var(--border));
+  --nw-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nw-peek: url("assets/peek.webp");
+  --nw-think: url("assets/think.gif");
+  --nw-think-still: url("assets/think-still.webp");
+  --nw-crawl: url("assets/crawl.gif");
+  --nw-idle: url("assets/idle.gif");
+  --nw-laugh: url("assets/laugh.gif");
+  --nw-hover: url("assets/hover.gif");
+  --nw-belly: url("assets/belly.gif");
+  --nw-listen: url("assets/listen.gif");
+  --nw-wordmark: url("assets/wordmark.webp");
+}
+
+.dark {
+  --nw-bubble: color-mix(in oklch, var(--nw-yellow) 15%, var(--background));
+  --nw-edge: color-mix(in oklch, var(--nw-green) 34%, var(--border));
+  --nw-wordmark: url("assets/wordmark-light.webp");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nw-think: url("assets/think-still.webp");
+    --nw-crawl: url("assets/crawl-still.webp");
+    --nw-idle: url("assets/idle-still.webp");
+    --nw-laugh: url("assets/laugh-still.webp");
+    --nw-hover: url("assets/hover-still.webp");
+    --nw-belly: url("assets/belly-still.webp");
+    --nw-listen: url("assets/listen-still.webp");
+  }
+}
+
+::selection {
+  background: color-mix(in oklch, var(--nw-yellow) 55%, transparent);
+}
+
+/* 主窗口的荷叶斑点画布。画在 ::before 上，盖过应用自己的背景层 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) {
+  position: relative;
+  isolation: isolate;
+  --nw-dot: color-mix(in oklch, var(--nw-green) 16%, transparent);
+}
+
+.dark [data-enso="canvas"]:has([data-enso="sidebar"]) {
+  --nw-dot: color-mix(in oklch, var(--nw-green) 12%, transparent);
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, var(--nw-dot) 0 6px, transparent 7px) 0 0 / 72px 72px,
+    radial-gradient(circle at 75% 72%, var(--nw-dot) 0 3.5px, transparent 4.5px) 0 0 / 44px 44px;
+}
+
+/* 侧栏底部：奶蛙趴着往前爬 */
+[data-enso="sidebar"] {
+  background: var(--nw-crawl) no-repeat center bottom 56px / min(150px, 80%) auto;
+}
+
+/* 空白主区：站着的奶蛙和字标 */
+[data-enso="main"]:not(:has([data-enso="timeline"])) {
+  background:
+    var(--nw-idle) no-repeat center calc(50% - 120px) / 150px auto,
+    var(--nw-wordmark) no-repeat center calc(50% + 78px) / 150px auto,
+    var(--background);
+}
+
+/* 新对话还没有消息：捧腹大笑 */
+[data-enso="timeline"]:not(:has([data-enso="message-user"]))::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  bottom: 12px;
+  width: 132px;
+  height: 132px;
+  background: var(--nw-laugh) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 用户消息：奶黄气泡 */
+[data-enso="message-user"] > div:not(:last-child) {
+  background: var(--nw-bubble);
+  border: 1px solid var(--nw-edge);
+  border-radius: 18px 18px 6px 18px;
+}
+
+[data-enso="message-assistant"] blockquote {
+  border-left-color: var(--nw-green);
+}
+
+[data-enso="message-assistant"] :not(pre) > code {
+  background: var(--nw-bubble);
+  border-color: var(--nw-edge);
+}
+
+/* 托腮思考：思考中才动，历史里的思考块停在第一帧。思考中靠图标的 animate-pulse 判断，类名变了只会退回静态 */
+[data-enso="thinking"] {
+  position: relative;
+  padding-left: 36px;
+}
+
+[data-enso="thinking"]::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  width: 34px;
+  height: 34px;
+  background: var(--nw-think-still) center / contain no-repeat;
+  pointer-events: none;
+}
+
+[data-enso="thinking"]:has(.animate-pulse)::before {
+  background-image: var(--nw-think);
+}
+
+/* 代码块上沿探出的小奶蛙 */
+[data-enso="code-block"] {
+  border-radius: 12px;
+}
+
+[data-enso="code-block"]::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: -22px;
+  width: 30px;
+  height: 30px;
+  background: var(--nw-hover) center / contain no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 时间线里的待办：捧腹大笑 */
+[data-enso="todo"] {
+  position: relative;
+  border-color: var(--nw-edge);
+}
+
+[data-enso="todo"]:not(:has(+ * [data-enso="composer"]))::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: -40px;
+  width: 52px;
+  height: 52px;
+  background: var(--nw-belly) center / contain no-repeat;
+  pointer-events: none;
+}
+
+[data-enso="composer"] {
+  position: relative;
+  border-color: var(--nw-edge);
+}
+
+/* 探头挂在输入区最上面那一条。task、todo 都在它下面，不会挡住 */
+.enso-chat-col > :first-child {
+  position: relative;
+  isolation: isolate;
+}
+
+.enso-chat-col > :first-child::before {
+  content: "";
+  position: absolute;
+  right: 72px;
+  bottom: calc(100% - 6px);
+  width: 150px;
+  height: 80px;
+  background: var(--nw-peek) center bottom / contain no-repeat;
+  pointer-events: none;
+  z-index: -1;
+  transform-origin: center bottom;
+  transition: transform 320ms var(--nw-spring);
+}
+
+.enso-chat-col:focus-within > :first-child::before {
+  transform: translateY(-6px) scale(1.04);
+}
+
+/* 状态行左边的小奶蛙 */
+[data-enso="status-line"]::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  translate: 0 -50%;
+  background: var(--nw-hover) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 右侧面板：奶蛙在角落里侧耳倾听 */
+[data-enso="side-panel"] {
+  position: relative;
+}
+
+[data-enso="side-panel"]::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 84px;
+  height: 84px;
+  background: var(--nw-listen) center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enso-chat-col > :first-child::before {
+    transition: none;
+  }
+
+  .enso-chat-col:focus-within > :first-child::before {
+    transform: none;
+  }
+}
