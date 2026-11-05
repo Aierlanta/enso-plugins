@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T09:13:11.156Z",
-  "sequence": 44,
+  "generatedAt": "2026-11-05T15:04:36.844Z",
+  "sequence": 45,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -166,6 +166,28 @@
           "sha256": "1fad8fcfe7185ac123f6c5024577908e87369cf46bd23c086a457d941868d3c6",
           "size": 33220,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.example.sagefocus",
+      "name": "Sage Focus · 鼠尾草·专注（仅深色模式）",
+      "description": "仅在深色模式下生效，浅色模式沿用 Enso 默认配色。低饱和暖灰绿主题，不修改编辑器语法高亮或终端配色。",
+      "tier": "community",
+      "tags": [
+        "theme",
+        "dark"
+      ],
+      "icon": "https://raw.githubusercontent.com/J3n5en/enso-plugins/main/packages/enso.example.sagefocus/assets/icon.svg",
+      "latest": "1.0.3",
+      "versions": [
+        {
+          "version": "1.0.3",
+          "permissions": [],
+          "path": "packages/enso.example.sagefocus/1.0.3.zip",
+          "sha256": "48176cdcc688878bef64db23f09ba70bfc7f339dd763ef213aa1c119e2722298",
+          "size": 9214,
+          "publishedAt": "2026-11-05T15:04:36.844Z"
         }
       ]
     },
