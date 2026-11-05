@@ -174,6 +174,11 @@
   border-color: var(--nl-edge);
 }
 
+/* 负 z-index 的探头关在这一层里：只会被输入框挡住，不会掉到消息列表后面 */
+:has(> [data-enso="composer"]) {
+  isolation: isolate;
+}
+
 [data-enso="composer"]::before,
 [data-enso="todo"]:has(+ * [data-enso="composer"])::before {
   content: "";
@@ -186,6 +191,10 @@
   pointer-events: none;
   transform-origin: center bottom;
   transition: transform 320ms var(--nl-spring);
+}
+
+[data-enso="composer"]::before {
+  z-index: -1;
 }
 
 [data-enso="todo"] + * [data-enso="composer"]::before {
