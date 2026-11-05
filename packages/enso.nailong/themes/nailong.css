@@ -168,19 +168,18 @@
   pointer-events: none;
 }
 
-/* 输入框后面探头；有待办条时改到待办条上 */
 [data-enso="composer"] {
   position: relative;
   border-color: var(--nl-edge);
 }
 
-/* 负 z-index 的探头关在这一层里：只会被输入框挡住，不会掉到消息列表后面 */
-:has(> [data-enso="composer"]) {
+/* 探头挂在输入区最上面那一条。task、todo 都在它下面，不会挡住 */
+.enso-chat-col > :first-child {
+  position: relative;
   isolation: isolate;
 }
 
-[data-enso="composer"]::before,
-[data-enso="todo"]:has(+ * [data-enso="composer"])::before {
+.enso-chat-col > :first-child::before {
   content: "";
   position: absolute;
   right: 72px;
@@ -189,19 +188,12 @@
   height: 66px;
   background: var(--nl-peek) center bottom / contain no-repeat;
   pointer-events: none;
+  z-index: -1;
   transform-origin: center bottom;
   transition: transform 320ms var(--nl-spring);
 }
 
-[data-enso="composer"]::before {
-  z-index: -1;
-}
-
-[data-enso="todo"] + * [data-enso="composer"]::before {
-  display: none;
-}
-
-[data-enso="composer"]:focus-within::before {
+.enso-chat-col:focus-within > :first-child::before {
   transform: translateY(-5px) scale(1.04);
 }
 
@@ -237,12 +229,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-enso="composer"]::before,
-  [data-enso="todo"]::before {
+  .enso-chat-col > :first-child::before {
     transition: none;
   }
 
-  [data-enso="composer"]:focus-within::before {
+  .enso-chat-col:focus-within > :first-child::before {
     transform: none;
   }
 }
