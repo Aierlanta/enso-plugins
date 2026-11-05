@@ -1,0 +1,239 @@
+@font-face {
+  font-family: "Nailong Rounded";
+  src: url("assets/rounded-medium.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --font-family-sans: "Nailong Rounded", "Inter", system-ui, sans-serif;
+  --radius: 0.875rem;
+  --nl-yellow: #ffd23f;
+  --nl-orange: #ff9b0f;
+  --nl-brown: #754113;
+  --nl-bubble: color-mix(in oklch, var(--nl-yellow) 30%, var(--background));
+  --nl-edge: color-mix(in oklch, var(--nl-orange) 38%, var(--border));
+  --nl-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nl-peek: url("assets/peek.webp");
+  --nl-busy: url("assets/busy.webp");
+  --nl-busy-still: url("assets/busy-still.webp");
+  --nl-lying: url("assets/lying.webp");
+  --nl-welcome: url("assets/welcome.webp");
+  --nl-yay: url("assets/yay.webp");
+  --nl-bombloong: url("assets/bombloong-typing.webp");
+  --nl-wordmark: url("assets/wordmark.webp");
+}
+
+.dark {
+  --nl-bubble: color-mix(in oklch, var(--nl-yellow) 16%, var(--background));
+  --nl-edge: color-mix(in oklch, var(--nl-yellow) 30%, var(--border));
+  --nl-wordmark: url("assets/wordmark-white.webp");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nl-busy: url("assets/busy-still.webp");
+    --nl-lying: url("assets/lying-still.webp");
+    --nl-welcome: url("assets/welcome-still.webp");
+    --nl-yay: url("assets/yay-still.webp");
+    --nl-bombloong: url("assets/bombloong-typing-still.webp");
+  }
+}
+
+::selection {
+  background: color-mix(in oklch, var(--nl-yellow) 55%, transparent);
+}
+
+/* 主窗口的奶酪斑点画布。画在 ::before 上，盖过应用自己的背景层 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) {
+  position: relative;
+  isolation: isolate;
+  --nl-dot: color-mix(in oklch, var(--nl-orange) 15%, transparent);
+}
+
+.dark [data-enso="canvas"]:has([data-enso="sidebar"]) {
+  --nl-dot: color-mix(in oklch, var(--nl-yellow) 10%, transparent);
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, var(--nl-dot) 0 6px, transparent 7px) 0 0 / 72px 72px,
+    radial-gradient(circle at 75% 72%, var(--nl-dot) 0 3.5px, transparent 4.5px) 0 0 / 44px 44px;
+}
+
+/* 侧栏底部：奶龙躺在云上 */
+[data-enso="sidebar"] {
+  background:
+    var(--nl-lying) no-repeat center bottom 64px / min(150px, 80%) auto,
+    url("assets/cloud.webp") no-repeat center bottom 40px / min(250px, 100%) auto;
+}
+
+.dark [data-enso="sidebar"] {
+  background: var(--nl-lying) no-repeat center bottom 52px / min(150px, 80%) auto;
+}
+
+/* 空白主区：挥手的奶龙和字标 */
+[data-enso="main"]:not(:has([data-enso="timeline"])) {
+  background:
+    url("assets/wave.webp") no-repeat center calc(50% - 130px) / 170px auto,
+    var(--nl-wordmark) no-repeat center calc(50% + 72px) / 150px auto,
+    var(--background);
+}
+
+/* 新对话还没有消息：热烈欢迎 */
+[data-enso="timeline"]:not(:has([data-enso="message-user"]))::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  bottom: 12px;
+  width: 132px;
+  height: 132px;
+  background: var(--nl-welcome) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 用户消息：奶黄气泡 */
+[data-enso="message-user"] > div:not(:last-child) {
+  background: var(--nl-bubble);
+  border: 1px solid var(--nl-edge);
+  border-radius: 18px 18px 6px 18px;
+}
+
+[data-enso="message-assistant"] blockquote {
+  border-left-color: var(--nl-orange);
+}
+
+[data-enso="message-assistant"] :not(pre) > code {
+  background: var(--nl-bubble);
+  border-color: var(--nl-edge);
+}
+
+/* 「在忙」：思考中才动，历史里的思考块停在第一帧。思考中靠图标的 animate-pulse 判断，类名变了只会退回静态 */
+[data-enso="thinking"] {
+  position: relative;
+  padding-left: 36px;
+}
+
+[data-enso="thinking"]::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  width: 34px;
+  height: 34px;
+  background: var(--nl-busy-still) center / contain no-repeat;
+  pointer-events: none;
+}
+
+[data-enso="thinking"]:has(.animate-pulse)::before {
+  background-image: var(--nl-busy);
+}
+
+/* 代码块上沿探出的小脸 */
+[data-enso="code-block"] {
+  border-radius: 12px;
+}
+
+[data-enso="code-block"]::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  background: url("assets/peek-face.webp") center / contain no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 时间线里的待办：好耶 */
+[data-enso="todo"] {
+  position: relative;
+  border-color: var(--nl-edge);
+}
+
+[data-enso="todo"]:not(:has(+ * [data-enso="composer"]))::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: -30px;
+  width: 44px;
+  height: 44px;
+  background: var(--nl-yay) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 输入框后面探头；有待办条时改到待办条上 */
+[data-enso="composer"] {
+  position: relative;
+  border-color: var(--nl-edge);
+}
+
+[data-enso="composer"]::before,
+[data-enso="todo"]:has(+ * [data-enso="composer"])::before {
+  content: "";
+  position: absolute;
+  right: 72px;
+  bottom: calc(100% - 4px);
+  width: 84px;
+  height: 66px;
+  background: var(--nl-peek) center bottom / contain no-repeat;
+  pointer-events: none;
+  transform-origin: center bottom;
+  transition: transform 320ms var(--nl-spring);
+}
+
+[data-enso="todo"] + * [data-enso="composer"]::before {
+  display: none;
+}
+
+[data-enso="composer"]:focus-within::before {
+  transform: translateY(-5px) scale(1.04);
+}
+
+/* 状态行左边的小脸 */
+[data-enso="status-line"]::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  translate: 0 -50%;
+  background: url("assets/peek-face.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* 右侧面板：暴暴龙在角落里敲键盘 */
+[data-enso="side-panel"] {
+  position: relative;
+}
+
+[data-enso="side-panel"]::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 72px;
+  height: 72px;
+  background: var(--nl-bombloong) center / contain no-repeat;
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enso="composer"]::before,
+  [data-enso="todo"]::before {
+    transition: none;
+  }
+
+  [data-enso="composer"]:focus-within::before {
+    transform: none;
+  }
+}
