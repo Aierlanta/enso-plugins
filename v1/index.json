@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T02:01:33.303Z",
-  "sequence": 37,
+  "generatedAt": "2026-11-05T04:19:54.787Z",
+  "sequence": 38,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -14,7 +14,7 @@
       ],
       "homepage": "https://github.com/linqiu919/dsh-bce",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/dsh.bce.svg",
-      "latest": "0.1.2",
+      "latest": "0.1.4",
       "versions": [
         {
           "version": "0.1.2",
@@ -31,6 +31,22 @@
           "sha256": "5a740b50ec89973d485a9acd5ea8dc5927cf7b1eb9f127261cb7f40dc8474af3",
           "size": 29928,
           "publishedAt": "2026-11-02T11:41:28.960Z"
+        },
+        {
+          "version": "0.1.4",
+          "engines": {
+            "enso": ">=0.2.13"
+          },
+          "permissions": [
+            "ui.slot",
+            "composer.draft",
+            "mcp.call",
+            "ui.clipboard"
+          ],
+          "path": "packages/dsh.bce/0.1.4.zip",
+          "sha256": "74d9adf5fc1d5dc04318648ba382588e9f07faff4438f0f9f1d7e0980797d443",
+          "size": 43289,
+          "publishedAt": "2026-11-05T04:19:54.787Z"
         }
       ]
     },
@@ -424,7 +440,7 @@
       ],
       "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
-      "latest": "0.3.1",
+      "latest": "0.3.2",
       "versions": [
         {
           "version": "0.1.0",
@@ -483,6 +499,20 @@
           "sha256": "b137266d52b2a5e3d32279074ba22bb32b2d5af441adc06c620e7972082f0494",
           "size": 816920,
           "publishedAt": "2026-11-05T02:01:33.303Z"
+        },
+        {
+          "version": "0.3.2",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "agent.intercept",
+            "ui.slot"
+          ],
+          "path": "packages/enso.pstack/0.3.2.zip",
+          "sha256": "73d1820df33e495ffc43fe51f5e31a04cc729077d955d0598ee140330f0eaef6",
+          "size": 817865,
+          "publishedAt": "2026-11-05T04:19:54.787Z"
         }
       ]
     },
