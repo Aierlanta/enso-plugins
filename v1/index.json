@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T15:04:58.758Z",
-  "sequence": 46,
+  "generatedAt": "2026-11-05T16:29:00.476Z",
+  "sequence": 47,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -438,6 +438,28 @@
           "sha256": "777a390c2ab29fa6ccdd3fa0c73242a7de523a9c6032adcc8b8ad29db1dde1df",
           "size": 70392,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.monokaipro",
+      "name": "Monokai Pro",
+      "description": "Monokai Pro 风格深浅双色主题：炭黑/暖白画布，粉强调色，偏精致专业。",
+      "tier": "community",
+      "tags": [
+        "theme",
+        "ui"
+      ],
+      "icon": "https://raw.githubusercontent.com/J3n5en/enso-plugins/main/packages/enso.monokaipro/assets/icon.svg",
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "permissions": [],
+          "path": "packages/enso.monokaipro/1.0.0.zip",
+          "sha256": "f646ccefec09c51fe9530f3f6d874541bc98f168701f5c5c9b0d02189085fff3",
+          "size": 2378,
+          "publishedAt": "2026-11-05T16:29:00.476Z"
         }
       ]
     },
