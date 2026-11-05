@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T15:04:36.844Z",
-  "sequence": 45,
+  "generatedAt": "2026-11-05T15:04:58.758Z",
+  "sequence": 46,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -809,6 +809,38 @@
           "sha256": "e295e91faaa8db59ddeb187a93ee5da62bb2a0e894229e48f81598c7f4889112",
           "size": 656884,
           "publishedAt": "2026-11-05T09:13:11.156Z"
+        }
+      ]
+    },
+    {
+      "id": "yce.enhance",
+      "name": "YCE Prompt Enhance",
+      "description": "YCE 提示词增强：复用宿主已配置的 yce-mcp，在输入框一键将模糊草稿改写为清晰、结构化的提示词。",
+      "tier": "community",
+      "tags": [
+        "composer",
+        "mcp",
+        "prompt"
+      ],
+      "homepage": "https://github.com/xiamuwnagwang/enso-yce",
+      "icon": "https://cdn.jsdelivr.net/gh/xiamuwnagwang/enso-yce@907b2a26275c8de77277b2e807ca9fdf08967e8e/icon.svg",
+      "latest": "0.1.1",
+      "versions": [
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.13"
+          },
+          "permissions": [
+            "ui.slot",
+            "composer.draft",
+            "mcp.call",
+            "ui.clipboard"
+          ],
+          "path": "packages/yce.enhance/0.1.1.zip",
+          "sha256": "d8550cc383316e7dc1d55c3950f1a59ca95ee2e126f5f241897cebf89fd61339",
+          "size": 80091,
+          "publishedAt": "2026-11-05T15:04:58.758Z"
         }
       ]
     }
