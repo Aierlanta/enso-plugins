@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T08:15:36.759Z",
-  "sequence": 42,
+  "generatedAt": "2026-11-05T08:18:11.921Z",
+  "sequence": 43,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -462,6 +462,30 @@
           "sha256": "ed7b21c14b8af9492499b7b66f0ea1da2c75d88a94654e483981b84235a4f712",
           "size": 1793496,
           "publishedAt": "2026-11-05T08:15:36.759Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.naiwa",
+      "name": "奶蛙",
+      "description": "奶蛙主题：荷叶绿配奶黄，奶蛙在输入框后面探头、在侧栏爬行、思考时托腮，干完活就捧腹大笑。",
+      "tier": "official",
+      "tags": [
+        "theme"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.naiwa.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.naiwa/0.1.0.zip",
+          "sha256": "a3a09ba19bee7d528f2d7cf60c29e8fa55cb145aea016a1b2bcc81b4f63b1a13",
+          "size": 712308,
+          "publishedAt": "2026-11-05T08:18:11.921Z"
         }
       ]
     },
