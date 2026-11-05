@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-04T11:50:40.862Z",
-  "sequence": 36,
+  "generatedAt": "2026-11-05T02:01:33.303Z",
+  "sequence": 37,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -388,6 +388,30 @@
       ]
     },
     {
+      "id": "enso.nailong",
+      "name": "奶龙",
+      "description": "奶龙主题：奶油黄配巧克力棕，奶龙在输入框后面探头、在侧栏躺平、思考时「在忙」。",
+      "tier": "official",
+      "tags": [
+        "theme"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.nailong.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.nailong/0.1.0.zip",
+          "sha256": "d120ef1eed3c5f37005a528c6d65f53814c3d0def7a7ae3a2faa5a1756cf0400",
+          "size": 1793513,
+          "publishedAt": "2026-11-05T02:01:33.303Z"
+        }
+      ]
+    },
+    {
       "id": "enso.pstack",
       "name": "pstack",
       "description": "Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack」预设的会话里加载。在输入框按钮里为某个会话打开后，该会话的每条消息自动展开 poteto-mode。",
@@ -400,7 +424,7 @@
       ],
       "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
-      "latest": "0.3.0",
+      "latest": "0.3.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -445,6 +469,20 @@
           "sha256": "d3c99ae83ffa0bfd6dec9601e06ef313a03c7d4c8a8ae1e842c78a592361ef7f",
           "size": 816057,
           "publishedAt": "2026-11-04T11:50:40.862Z"
+        },
+        {
+          "version": "0.3.1",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "agent.intercept",
+            "ui.slot"
+          ],
+          "path": "packages/enso.pstack/0.3.1.zip",
+          "sha256": "b137266d52b2a5e3d32279074ba22bb32b2d5af441adc06c620e7972082f0494",
+          "size": 816920,
+          "publishedAt": "2026-11-05T02:01:33.303Z"
         }
       ]
     },
