@@ -124,7 +124,7 @@ export default function Studio() {
     if (!packed.ok) return setErrors(packed.errors);
     download(zipStore(packed.files), `${draft.id}-${draft.version}.zip`);
     toast.success('已导出插件包', {
-      description: `解压后在 EnsoCode 设置 → 插件 → 安装目录中选择解压出的文件夹，启用后在外观里选择「${draft.name}」。${draft.css?.trim() ? '带高级 CSS，安装时需要同意「修改界面样式」。' : ''}`,
+      description: `解压后在 EnsoCode 设置 → 插件 → 从压缩包安装中选择这个文件，启用后在外观里选择「${draft.name}」。${draft.css?.trim() ? '带高级 CSS，安装时需要同意「修改界面样式」。' : ''}`,
       duration: 10000,
     });
   };
