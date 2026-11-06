@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T10:59:12.902Z",
-  "sequence": 52,
+  "generatedAt": "2026-11-06T15:10:04.900Z",
+  "sequence": 53,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -846,6 +846,38 @@
           "sha256": "2a2cd5ee9e1de7224f11ee6956bb2a049d7894213854b13b23e719b4c706f585",
           "size": 79243,
           "publishedAt": "2026-11-03T14:45:04.303Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.tgclient",
+      "name": "Telegram 客户端",
+      "description": "在侧栏里用手机号登录自己的 Telegram 账号，像官方客户端一样聊天：会话列表与聊天分组、论坛话题、实时收发、相册、边下边播视频、表情与贴纸面板、编辑、回复、表情回应、已读详情、切换发言身份、机器人按钮与键盘、新消息系统通知；附带 Agent 工具，可查聊天、读写消息、订阅新消息。支持 socks5 与 MTProxy 代理。",
+      "tier": "official",
+      "tags": [
+        "chat",
+        "telegram"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.tgclient.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.inject",
+            "ui.view",
+            "ui.notify",
+            "ui.openExternal",
+            "process.background"
+          ],
+          "path": "packages/enso.tgclient/0.1.0.zip",
+          "sha256": "dec177fd831e59567bf180c0071f9badf5ff8b7dd01453a6327deb5a3d5f31ec",
+          "size": 1308642,
+          "publishedAt": "2026-11-06T15:10:04.900Z"
         }
       ]
     },
