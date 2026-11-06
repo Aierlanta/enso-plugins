@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T04:22:11.082Z",
-  "sequence": 48,
+  "generatedAt": "2026-11-06T08:50:16.583Z",
+  "sequence": 49,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -472,7 +472,7 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.nailong.svg",
-      "latest": "0.1.2",
+      "latest": "0.1.4",
       "versions": [
         {
           "version": "0.1.0",
@@ -506,6 +506,17 @@
           "sha256": "ed7b21c14b8af9492499b7b66f0ea1da2c75d88a94654e483981b84235a4f712",
           "size": 1793496,
           "publishedAt": "2026-11-05T08:15:36.759Z"
+        },
+        {
+          "version": "0.1.4",
+          "engines": {
+            "enso": ">=0.3.3"
+          },
+          "permissions": [],
+          "path": "packages/enso.nailong/0.1.4.zip",
+          "sha256": "554c8a687adf82a71b6eec01026c83007f14d2158f2c82461125305ffad5f986",
+          "size": 1791196,
+          "publishedAt": "2026-11-06T08:50:16.583Z"
         }
       ]
     },
@@ -518,7 +529,7 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.naiwa.svg",
-      "latest": "0.1.0",
+      "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -530,6 +541,17 @@
           "sha256": "a3a09ba19bee7d528f2d7cf60c29e8fa55cb145aea016a1b2bcc81b4f63b1a13",
           "size": 712308,
           "publishedAt": "2026-11-05T08:18:11.921Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.naiwa/0.1.1.zip",
+          "sha256": "ad58586a8ff3f2bcea20fa7287b0c2d4e967b254f0c8f567584ecb61be2064de",
+          "size": 712306,
+          "publishedAt": "2026-11-06T08:50:16.583Z"
         }
       ]
     },
@@ -833,7 +855,7 @@
       ],
       "homepage": "https://github.com/Small-tailqwq/dsh-deep-whale",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.whalemaid.svg",
-      "latest": "0.1.0",
+      "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -845,6 +867,17 @@
           "sha256": "e295e91faaa8db59ddeb187a93ee5da62bb2a0e894229e48f81598c7f4889112",
           "size": 656884,
           "publishedAt": "2026-11-05T09:13:11.156Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.whalemaid/0.1.1.zip",
+          "sha256": "ef758a982d7055178f3883b4879027b859cf8dae1731fe1134678b2c0396f1ae",
+          "size": 656867,
+          "publishedAt": "2026-11-06T08:50:16.583Z"
         }
       ]
     },
