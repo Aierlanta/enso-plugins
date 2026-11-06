@@ -13,7 +13,6 @@
   --nl-brown: #754113;
   --nl-bubble: color-mix(in oklch, var(--nl-yellow) 30%, var(--background));
   --nl-edge: color-mix(in oklch, var(--nl-orange) 38%, var(--border));
-  --nl-yay: url("assets/yay.webp");
   --nl-wordmark: url("assets/wordmark.webp");
 }
 
@@ -21,12 +20,6 @@
   --nl-bubble: color-mix(in oklch, var(--nl-yellow) 16%, var(--background));
   --nl-edge: color-mix(in oklch, var(--nl-yellow) 30%, var(--border));
   --nl-wordmark: url("assets/wordmark-white.webp");
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --nl-yay: url("assets/yay-still.webp");
-  }
 }
 
 ::selection {
@@ -94,21 +87,9 @@
   border-radius: 12px;
 }
 
-/* 时间线里的待办：好耶 */
+/* 时间线里的待办：好耶图走 todo-corner 槽位 */
 [data-enso="todo"] {
-  position: relative;
   border-color: var(--nl-edge);
-}
-
-[data-enso="todo"]:not(:has(+ * [data-enso="composer"]))::after {
-  content: "";
-  position: absolute;
-  right: 6px;
-  top: -30px;
-  width: 44px;
-  height: 44px;
-  background: var(--nl-yay) center / contain no-repeat;
-  pointer-events: none;
 }
 
 [data-enso="composer"] {

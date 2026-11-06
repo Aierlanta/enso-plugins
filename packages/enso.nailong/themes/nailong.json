@@ -28,6 +28,7 @@
     "composer-peek": { "src": "assets/peek.webp" },
     "thinking": { "src": "assets/busy.webp", "still": "assets/busy-still.webp" },
     "code-corner": { "src": "assets/peek-face.webp" },
+    "todo-corner": { "src": "assets/yay.webp", "still": "assets/yay-still.webp" },
     "status-icon": { "src": "assets/peek-face.webp" },
     "panel-corner": {
       "src": "assets/bombloong-typing.webp",
