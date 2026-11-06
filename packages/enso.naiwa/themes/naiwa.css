@@ -163,13 +163,13 @@
   border-color: var(--nw-edge);
 }
 
-/* 探头挂在输入区最上面那一条。task、todo 都在它下面，不会挡住 */
-.enso-chat-col > :first-child {
+/* 探头挂在输入区最上面那一条。时间线每一行也带 enso-chat-col，所以只认装着输入框的那一列 */
+.enso-chat-col:has([data-enso="composer"]) > :first-child {
   position: relative;
   isolation: isolate;
 }
 
-.enso-chat-col > :first-child::before {
+.enso-chat-col:has([data-enso="composer"]) > :first-child::before {
   content: "";
   position: absolute;
   right: 72px;
@@ -183,7 +183,7 @@
   transition: transform 320ms var(--nw-spring);
 }
 
-.enso-chat-col:focus-within > :first-child::before {
+.enso-chat-col:has([data-enso="composer"]):focus-within > :first-child::before {
   transform: translateY(-6px) scale(1.04);
 }
 
@@ -219,11 +219,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .enso-chat-col > :first-child::before {
+  .enso-chat-col:has([data-enso="composer"]) > :first-child::before {
     transition: none;
   }
 
-  .enso-chat-col:focus-within > :first-child::before {
+  .enso-chat-col:has([data-enso="composer"]):focus-within > :first-child::before {
     transform: none;
   }
 }

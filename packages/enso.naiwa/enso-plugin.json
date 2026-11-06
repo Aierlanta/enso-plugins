@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "enso.naiwa",
   "name": "奶蛙",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "奶蛙主题：荷叶绿配奶黄，奶蛙在输入框后面探头、在侧栏爬行、思考时托腮，干完活就捧腹大笑。",
   "icon": "icon.svg",
   "engines": { "enso": ">=0.2.16" },
