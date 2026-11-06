@@ -1,0 +1,43 @@
+{
+  "light": {
+    "canvas": "#FFF4E2",
+    "surface": "#FFFBF4",
+    "sunken": "#FFF0DA",
+    "border": "#F5DDBA",
+    "borderStrong": "#E8B577",
+    "text": "#4A2A12",
+    "textMuted": "#7A4E2A",
+    "textSubtle": "#8A6542",
+    "accent": "#B84E0A"
+  },
+  "dark": {
+    "canvas": "#1E140E",
+    "surface": "#291C14",
+    "sunken": "#22170F",
+    "border": "#43301F",
+    "borderStrong": "#6B4B30",
+    "text": "#FFF2E2",
+    "textMuted": "#EED2B3",
+    "textSubtle": "#B9967A",
+    "accent": "#FFA53C"
+  },
+  "assets": {
+    "sidebar-footer": {
+      "src": "assets/pair-idle.webp",
+      "still": "assets/pair-idle-still.webp",
+      "states": {
+        "running": "assets/pair-run.webp",
+        "waiting": "assets/pair-wait.webp",
+        "error": "assets/pair-fail.webp"
+      }
+    },
+    "empty-main": { "src": "assets/pair-wave.webp" },
+    "welcome": { "src": "assets/lumei-jump.webp", "still": "assets/lumei-jump-still.webp" },
+    "composer-peek": { "src": "assets/lulu-peek.webp" },
+    "thinking": { "src": "assets/lulu-think.webp", "still": "assets/lulu-think-still.webp" },
+    "code-corner": { "src": "assets/lumei-face.webp" },
+    "todo-corner": { "src": "assets/lumei-wave.webp", "still": "assets/lumei-wave-still.webp" },
+    "status-icon": { "src": "assets/lulu-face.webp" },
+    "panel-corner": { "src": "assets/lumei-wait.webp", "still": "assets/lumei-wait-still.webp" }
+  }
+}

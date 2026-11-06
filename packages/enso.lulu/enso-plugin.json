@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.lulu",
+  "name": "噜噜和噜妹",
+  "version": "0.1.0",
+  "description": "噜噜和噜妹主题：奶油橘底配焦糖棕，两人在侧栏并排，噜噜在输入框后探头，思考时托腮。",
+  "icon": "icon.svg",
+  "engines": { "enso": ">=0.3.3" },
+  "permissions": [],
+  "contributes": {
+    "themes": [
+      {
+        "id": "lulu",
+        "name": "噜噜和噜妹",
+        "path": "themes/lulu.json",
+        "css": "themes/lulu.css"
+      }
+    ]
+  }
+}

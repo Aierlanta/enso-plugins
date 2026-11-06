@@ -1,0 +1,78 @@
+:root {
+  --lu-orange: #ff9a1f;
+  --lu-yellow: #ffc93c;
+  --lu-pink: #f7b6c6;
+  --lu-bubble: color-mix(in oklch, var(--lu-pink) 34%, var(--background));
+  --lu-edge: color-mix(in oklch, var(--lu-orange) 38%, var(--border));
+  --lu-wordmark: url("assets/wordmark.webp");
+}
+
+.dark {
+  --lu-bubble: color-mix(in oklch, var(--lu-pink) 18%, var(--background));
+  --lu-edge: color-mix(in oklch, var(--lu-yellow) 28%, var(--border));
+  --lu-wordmark: url("assets/wordmark-dark.webp");
+}
+
+::selection {
+  background: color-mix(in oklch, var(--lu-orange) 24%, color-mix(in oklch, var(--lu-yellow) 62%, transparent));
+}
+
+/* 斑点画在 ::before 上，才能盖过应用自己的背景层 */
+[data-enso="canvas"]:has([data-enso="sidebar"]) {
+  position: relative;
+  isolation: isolate;
+  --lu-dot: color-mix(in oklch, var(--lu-orange) 16%, transparent);
+  --lu-dot-pink: color-mix(in oklch, var(--lu-pink) 42%, transparent);
+}
+
+.dark [data-enso="canvas"]:has([data-enso="sidebar"]) {
+  --lu-dot: color-mix(in oklch, var(--lu-orange) 12%, transparent);
+  --lu-dot-pink: color-mix(in oklch, var(--lu-pink) 20%, transparent);
+}
+
+[data-enso="canvas"]:has([data-enso="sidebar"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, var(--lu-dot) 0 6px, transparent 7px) 0 0 / 72px 72px,
+    radial-gradient(circle at 75% 72%, var(--lu-dot-pink) 0 3.5px, transparent 4.5px) 0 0 / 44px 44px;
+}
+
+/* 字标和动图必须写在同一条 background 里，单独再写会盖掉槽位图 */
+[data-enso="main"]:not(:has([data-enso="timeline"])) {
+  background:
+    var(--enso-asset-empty-main) no-repeat center calc(50% - 86px) / 220px auto,
+    var(--lu-wordmark) no-repeat center calc(50% + 62px) / 168px auto,
+    var(--background);
+}
+
+[data-enso="message-user"] > div:not(:last-child) {
+  background: var(--lu-bubble);
+  border: 1px solid var(--lu-edge);
+  border-radius: 18px 18px 6px 18px;
+}
+
+[data-enso="message-assistant"] blockquote {
+  border-left-color: var(--lu-orange);
+}
+
+[data-enso="message-assistant"] :not(pre) > code {
+  background: color-mix(in oklch, var(--lu-orange) 16%, var(--background));
+  border-color: var(--lu-edge);
+}
+
+[data-enso="code-block"] {
+  border-radius: 12px;
+}
+
+[data-enso="todo"] {
+  border-color: var(--lu-edge);
+}
+
+[data-enso="composer"] {
+  position: relative;
+  border-color: var(--lu-edge);
+}
