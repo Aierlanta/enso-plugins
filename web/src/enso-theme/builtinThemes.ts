@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/builtinThemes.ts@e4cf8ca311de4e8f75874b018aec0ff2899027ee 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/builtinThemes.ts@3916fe5ae7f317c33855be043e4a725f36b14479 同步，勿手改
 import type { BuiltinThemeId, ThemeDefinition } from './types';
 
 export const DEFAULT_THEME_KEY: BuiltinThemeId = 'enso';

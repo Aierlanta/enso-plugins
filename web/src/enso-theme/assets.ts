@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/assets.ts@e4cf8ca311de4e8f75874b018aec0ff2899027ee 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/assets.ts@3916fe5ae7f317c33855be043e4a725f36b14479 同步，勿手改
 import type {
   ThemeAsset,
   ThemeAssetSlot,
@@ -54,6 +54,10 @@ const SLOTS: Record<ThemeAssetSlot, { state: 'session' | 'activity'; css: string
   'code-corner': {
     state: 'session',
     css: `[data-enso="code-block"]::after{${overlay('code-corner', 'right:20px;top:-13px;width:24px;height:24px;z-index:1')}}`,
+  },
+  'todo-corner': {
+    state: 'session',
+    css: `[data-enso="todo"]{position:relative}[data-enso="todo"]:not(:has(+ * [data-enso="composer"]))::after{${overlay('todo-corner', 'right:6px;top:-30px;width:44px;height:44px')}}`,
   },
   'status-icon': {
     state: 'session',

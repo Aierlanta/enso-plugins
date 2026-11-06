@@ -57,6 +57,7 @@ export const SLOTS: readonly { slot: ThemeAssetSlot; label: string; hint: string
   { slot: 'composer-peek', label: '输入框探头', hint: '从输入框上沿探头，聚焦时弹起' },
   { slot: 'thinking', label: '思考中', hint: '思考块左侧；静帧用于思考结束后' },
   { slot: 'code-corner', label: '代码块角标', hint: '代码块右上沿' },
+  { slot: 'todo-corner', label: '待办角标', hint: '时间线里待办卡片的右上沿' },
   { slot: 'status-icon', label: '状态行图标', hint: '状态行左侧' },
   { slot: 'panel-corner', label: '右面板角落', hint: '右侧面板右下角' },
 ];

@@ -165,7 +165,8 @@ test('能导入 deflate 压缩、带顶层目录的奶龙 zip', async (t) => {
   const imported = await draftFromPlugin([...entries.keys()], async (path) => entries.get(path));
   assert.ok(imported.ok, imported.ok ? '' : imported.error);
   assert.equal(imported.draft.id, 'enso.nailong');
-  assert.equal(Object.keys(imported.draft.assets).length, 8);
+  assert.equal(Object.keys(imported.draft.assets).length, 9);
+  assert.equal(imported.draft.assets['todo-corner'].still.name, 'yay-still.webp');
   assert.equal(imported.draft.assets.thinking.still.name, 'busy-still.webp');
   assert.ok(imported.warnings.some((w) => w.includes('url()')), 'CSS 引用了槽位外的文件要提示');
 });

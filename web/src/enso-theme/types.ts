@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/types.ts@e4cf8ca311de4e8f75874b018aec0ff2899027ee 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/types.ts@3916fe5ae7f317c33855be043e4a725f36b14479 同步，勿手改
 export type ThemeMode = 'light' | 'dark';
 
 export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark'];
@@ -36,6 +36,7 @@ export type ThemeAssetSlot =
   | 'composer-peek'
   | 'thinking'
   | 'code-corner'
+  | 'todo-corner'
   | 'status-icon'
   | 'panel-corner';
 
