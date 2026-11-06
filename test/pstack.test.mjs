@@ -61,6 +61,14 @@ test('斜杠开头和子代理的消息不改写', async () => {
   });
 });
 
+test('其它 /skill: 开头时仍叠加 poteto-mode', async () => {
+  await withDir(async (dir) => {
+    const p = await harness(dir);
+    await p.toggle('s');
+    assert.deepEqual(p.input('/skill:diffs hi', { sessionId: 's' }), wrapped('/skill:diffs hi'));
+  });
+});
+
 test('非 pstack 预设打不开，切离 pstack 预设后关闭', async () => {
   await withDir(async (dir) => {
     const p = await harness(dir);

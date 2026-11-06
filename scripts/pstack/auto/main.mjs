@@ -25,8 +25,10 @@ export function withSession(on, sessionId, enabled) {
 export function inputAction(on, ctx, data) {
   const text = data?.text;
   if (typeof text !== 'string' || ctx?.agent || !on.includes(ctx?.sessionId)) return undefined;
-  if (text.trimStart().startsWith('/')) return undefined;
-  return { action: 'transform', text: PREFIX + text };
+  const head = text.trimStart();
+  if (/^\/skill:poteto-mode(?:\s|$)/.test(head)) return undefined;
+  if (head.startsWith('/') && !head.startsWith('/skill:')) return undefined;
+  return { action: 'transform', text: PREFIX + head };
 }
 
 async function readState(dir) {
