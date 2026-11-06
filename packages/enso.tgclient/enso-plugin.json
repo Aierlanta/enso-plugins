@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.tgclient",
+  "name": "Telegram 客户端",
+  "version": "0.1.0",
+  "icon": "icon.svg",
+  "description": "在侧栏里用手机号登录自己的 Telegram 账号，像官方客户端一样聊天：会话列表与聊天分组、论坛话题、实时收发、相册、边下边播视频、表情与贴纸面板、编辑、回复、表情回应、已读详情、切换发言身份、机器人按钮与键盘、新消息系统通知；附带 Agent 工具，可查聊天、读写消息、订阅新消息。支持 socks5 与 MTProxy 代理。",
+  "engines": {
+    "enso": ">=0.2.14"
+  },
+  "main": "main.mjs",
+  "resident": true,
+  "permissions": [
+    "agent.tool",
+    "agent.inject",
+    "ui.view",
+    "ui.notify",
+    "ui.openExternal",
+    "process.background"
+  ],
+  "contributes": {
+    "configuration": [
+      {
+        "key": "proxy",
+        "title": "代理（可选）",
+        "description": "socks5://127.0.0.1:7890、socks5://user:pass@host:port，或 MTProxy 链接 tg://proxy?server=…&port=…&secret=…；修改后打开侧栏会自动重连"
+      },
+      {
+        "key": "notify",
+        "title": "新消息系统通知",
+        "description": "未静音的聊天收到新消息时弹系统通知；正在看的聊天不提醒",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "views": [
+      {
+        "id": "tgclient",
+        "title": "Telegram",
+        "entry": "view.html"
+      }
+    ],
+    "methods": [
+      {
+        "name": "state",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "login",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "code",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "password",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "cancel",
+        "timeoutMs": 10000
+      },
+      {
+        "name": "logout",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "reconnect",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "poll",
+        "timeoutMs": 40000
+      },
+      {
+        "name": "dialogs",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "history",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "send",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "edit",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "react",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "reactionList",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "press",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "stickers",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "stickerThumbs",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "sendSticker",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "read",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "readers",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "sendAs",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "setSendAs",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "avatars",
+        "timeoutMs": 60000
+      },
+      {
+        "name": "media",
+        "timeoutMs": 120000
+      },
+      {
+        "name": "download",
+        "timeoutMs": 120000
+      },
+      {
+        "name": "upload",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "sendFile",
+        "timeoutMs": 120000
+      },
+      {
+        "name": "stage",
+        "timeoutMs": 120000
+      },
+      {
+        "name": "sendAlbum",
+        "timeoutMs": 120000
+      },
+      {
+        "name": "remove",
+        "timeoutMs": 30000
+      },
+      {
+        "name": "open",
+        "timeoutMs": 10000
+      },
+      {
+        "name": "watches",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "unwatch",
+        "timeoutMs": 15000
+      },
+      {
+        "name": "topics",
+        "timeoutMs": 30000
+      }
+    ],
+    "agentTools": [
+      {
+        "name": "tg_list_chats",
+        "description": "List the user's Telegram chats (most recent first) with id, title, type, unread/mention counts, muted flag and last message preview. Requires the user to be logged in via the Telegram sidebar.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Default 30, max 100"
+            },
+            "unreadOnly": {
+              "type": "boolean",
+              "description": "Only chats with unread messages or mentions"
+            },
+            "archived": {
+              "type": "boolean",
+              "description": "List archived chats instead"
+            }
+          }
+        }
+      },
+      {
+        "name": "tg_search_chats",
+        "description": "Search Telegram chats, contacts, groups and public channels by name or @username. Returns id, title, type, username and whether the user has joined.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Default 20, max 50"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      {
+        "name": "tg_list_topics",
+        "description": "List topics of a forum group (chats with topics), most recent first: id, title, unread/mention counts, pinned, closed, last message. Use the topic id with tg_get_messages / tg_send_message.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Chat id, @username, t.me link, or chat title"
+            },
+            "query": {
+              "type": "string",
+              "description": "Optional filter by topic title"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Default 30, max 100"
+            }
+          },
+          "required": [
+            "chat"
+          ]
+        },
+        "timeoutMs": 30000
+      },
+      {
+        "name": "tg_get_messages",
+        "description": "Read recent messages of a Telegram chat, oldest first. Each message has id, time, sender, text, media summary, replyTo, reactions, and topic/topicTitle in forum groups. Does not mark the chat as read. Pass olderBefore from the result as `before` to page back.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Chat id (from tg_list_chats / tg_search_chats), @username, t.me link, exact or partial chat title, or \"me\" for Saved Messages"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Default 30, max 100"
+            },
+            "before": {
+              "type": "integer",
+              "description": "Only messages with id lower than this"
+            },
+            "topic": {
+              "type": "integer",
+              "description": "Optional forum topic id (from tg_list_topics; 1 = General); omit to read all topics mixed"
+            }
+          },
+          "required": [
+            "chat"
+          ]
+        }
+      },
+      {
+        "name": "tg_search_messages",
+        "description": "Full-text search Telegram messages, within one chat or across all chats (newest first). Global results include chat id and title.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "chat": {
+              "type": "string",
+              "description": "Optional; omit to search all chats. Chat id (from tg_list_chats / tg_search_chats), @username, t.me link, exact or partial chat title, or \"me\" for Saved Messages"
+            },
+            "from": {
+              "type": "string",
+              "description": "Optional sender (id/@username/title), only with chat"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Default 20, max 100"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      {
+        "name": "tg_send_message",
+        "description": "Send a text message as the user's own Telegram account. Only send when the user explicitly asked to, to the chat they meant. Supports Telegram markdown (**bold**, __italic__, `code`, [text](url)).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Chat id (from tg_list_chats / tg_search_chats), @username, t.me link, exact or partial chat title, or \"me\" for Saved Messages"
+            },
+            "text": {
+              "type": "string"
+            },
+            "replyTo": {
+              "type": "integer",
+              "description": "Optional message id to reply to"
+            },
+            "topic": {
+              "type": "integer",
+              "description": "Forum topic id to post in (from tg_list_topics; 1 or omitted = General)"
+            }
+          },
+          "required": [
+            "chat",
+            "text"
+          ]
+        },
+        "timeoutMs": 30000
+      },
+      {
+        "name": "tg_mark_read",
+        "description": "Mark all messages in a Telegram chat as read.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Chat id (from tg_list_chats / tg_search_chats), @username, t.me link, exact or partial chat title, or \"me\" for Saved Messages"
+            }
+          },
+          "required": [
+            "chat"
+          ]
+        },
+        "timeoutMs": 30000
+      },
+      {
+        "name": "tg_wait_messages",
+        "description": "Block until new incoming Telegram messages arrive (long poll), then return them. Watches one chat, or all unmuted chats if chat is omitted. Pass the returned cursor to the next call so no message is missed between calls. Returns timeout:true if nothing arrived.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Optional; omit for all unmuted chats. Chat id, @username, t.me link, or chat title"
+            },
+            "directOnly": {
+              "type": "boolean",
+              "description": "Only private chats, @mentions of the user and replies to the user"
+            },
+            "includeMuted": {
+              "type": "boolean",
+              "description": "Also include muted chats (ignored when chat is given)"
+            },
+            "timeoutSec": {
+              "type": "integer",
+              "description": "Default 60, max 540"
+            },
+            "cursor": {
+              "type": "integer",
+              "description": "cursor from the previous tg_wait_messages result"
+            }
+          }
+        },
+        "timeoutMs": 600000
+      },
+      {
+        "name": "tg_watch",
+        "description": "Subscribe this session to new incoming Telegram messages: they are batched (~3s) and delivered into this conversation as a follow-up that starts a new turn, even while idle. One watch per session; calling again replaces it. Use tg_unwatch to stop. Requires the user to enable cross-session message delivery for this plugin in settings.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "chat": {
+              "type": "string",
+              "description": "Optional; omit for all unmuted chats. Chat id, @username, t.me link, or chat title"
+            },
+            "directOnly": {
+              "type": "boolean",
+              "description": "Only private chats, @mentions of the user and replies to the user"
+            },
+            "includeMuted": {
+              "type": "boolean",
+              "description": "Also include muted chats (ignored when chat is given)"
+            },
+            "note": {
+              "type": "string",
+              "description": "Standing instruction repeated with every delivery, e.g. what to do with the messages"
+            }
+          }
+        },
+        "timeoutMs": 30000
+      },
+      {
+        "name": "tg_unwatch",
+        "description": "Stop the tg_watch subscription of this session.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  }
+}

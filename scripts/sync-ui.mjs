@@ -15,6 +15,7 @@ export const UI_PACKAGES = [
   'enso.kanban',
   'enso.scheduler',
   'enso.telegram',
+  'enso.tgclient',
 ];
 
 /** 返回与 shared/ 不一致的副本，供 validate 报错 */

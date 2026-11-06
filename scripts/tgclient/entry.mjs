@@ -1,0 +1,11 @@
+export { TelegramClient, Api } from 'telegram';
+export { StringSession } from 'telegram/sessions/index.js';
+export { NewMessage } from 'telegram/events/index.js';
+export { EditedMessage } from 'telegram/events/EditedMessage.js';
+export { DeletedMessage } from 'telegram/events/DeletedMessage.js';
+export { Raw } from 'telegram/events/Raw.js';
+export { CustomFile } from 'telegram/client/uploads.js';
+export { computeCheck } from 'telegram/Password.js';
+export { getPeerId } from 'telegram/Utils.js';
+export { returnBigInt } from 'telegram/Helpers.js';
+export { Dialog } from 'telegram/tl/custom/dialog.js';

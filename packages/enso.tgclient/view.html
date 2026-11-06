@@ -1,0 +1,1965 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="enso-ui.css" />
+    <style>
+      html, body { height: 100%; }
+      body { overflow: hidden; font-size: 13px; }
+      #app { height: 100%; display: flex; flex-direction: column; }
+      [hidden] { display: none !important; }
+      .m { color: var(--muted-foreground); font-size: 11.5px; }
+      .err { color: var(--destructive); font-size: 12px; word-break: break-word; }
+      .grow { flex: 1; min-width: 0; }
+      .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      a[data-href], .link { color: var(--brand); cursor: pointer; text-decoration: none; }
+      a[data-href]:hover { text-decoration: underline; }
+      svg { flex: none; }
+
+      /* 登录 */
+      #auth { flex: 1; overflow: auto; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; }
+      .auth { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+      .logo { width: 64px; height: 64px; border-radius: 50%; margin: 6px auto 0; background: linear-gradient(135deg, #37aee2, #1e96c8); display: grid; place-items: center; }
+      .auth h1 { margin: 0; font-size: 16px; font-weight: 600; text-align: center; }
+      .auth p { margin: 0; text-align: center; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field .ui-input { width: 100%; }
+      .ui-btn--block { width: 100%; height: 34px; }
+      .center { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 40px; text-align: center; }
+
+      /* 主界面 */
+      #main { flex: 1; display: flex; min-height: 0; }
+      #list { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+      #chat { flex: 1; display: none; flex-direction: column; min-width: 0; position: relative; }
+      body.open #list { display: none; }
+      body.open #chat { display: flex; }
+      @media (min-width: 640px) {
+        #list { flex: none; width: 300px; border-right: 1px solid var(--border); display: flex !important; }
+        #chat { display: flex; }
+        .back, .wbtn.inchat { display: none !important; }
+      }
+      .bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); min-height: 48px; }
+      .bar > .ui-btn { flex: none; }
+      .bar .ui-input { flex: 1; min-width: 0; height: 30px; border-radius: 999px; padding: 0 12px; }
+      .banner { padding: 6px 10px; font-size: 12px; background: color-mix(in oklch, var(--warning) 16%, transparent); display: flex; gap: 8px; align-items: center; }
+      #dialogs { flex: 1; overflow-y: auto; padding: 4px; }
+      .ftabs { display: flex; gap: 2px; padding: 0 6px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+      .ftabs::-webkit-scrollbar { display: none; }
+      .ftab { flex-shrink: 0; display: flex; align-items: center; gap: 5px; padding: 8px 10px 7px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted-foreground); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+      .ftab:hover { color: var(--foreground); }
+      .ftab.on { color: var(--primary); border-bottom-color: var(--primary); }
+      .fbadge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--muted-foreground); color: var(--background); font-size: 10.5px; line-height: 16px; text-align: center; }
+      .ftab.on .fbadge { background: var(--primary); color: var(--primary-foreground); }
+      .dlg { display: flex; gap: 10px; align-items: center; width: 100%; padding: 7px 8px; border: 0; background: none; color: inherit; font: inherit; text-align: left; border-radius: var(--radius-md); cursor: pointer; }
+      .dlg:hover { background: var(--hover, var(--muted)); }
+      .dlg.active { background: color-mix(in oklch, var(--brand) 16%, transparent); }
+      .dlg-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .dlg-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+      .dlg-title { font-weight: 600; flex: 1; min-width: 0; }
+      .dlg-time { font-size: 11px; color: var(--muted-foreground); flex: none; display: flex; gap: 2px; align-items: center; }
+      .dlg-last { flex: 1; min-width: 0; color: var(--muted-foreground); font-size: 12px; }
+      .dlg-last b { color: var(--foreground); font-weight: 500; }
+      .badge { flex: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; }
+      .badge.muted { background: var(--muted-foreground); }
+      .badge.at { padding: 0; }
+      .pin { color: var(--muted-foreground); }
+      .av { width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 15px; overflow: hidden; position: relative; user-select: none; }
+      .av img { width: 100%; height: 100%; object-fit: cover; }
+      .av.sm { width: 32px; height: 32px; font-size: 12.5px; }
+      .av.xs { width: 28px; height: 28px; font-size: 11px; }
+      .av .dot { position: absolute; right: 1px; bottom: 1px; width: 10px; height: 10px; border-radius: 50%; background: #22c55e; border: 2px solid var(--background); }
+
+      /* 聊天 */
+      .chat-title { font-weight: 600; }
+      #msgs { flex: 1; overflow-y: auto; padding: 8px 10px 4px; display: flex; flex-direction: column; gap: 2px;
+        background: color-mix(in oklch, var(--brand) 4%, transparent); }
+      .sep { align-self: center; margin: 8px 0 4px; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; background: color-mix(in oklch, var(--foreground) 9%, transparent); color: var(--muted-foreground); }
+      .svc { align-self: center; margin: 4px 0; padding: 3px 10px; border-radius: 999px; font-size: 12px; max-width: 90%; text-align: center; background: color-mix(in oklch, var(--foreground) 9%, transparent); color: var(--muted-foreground); }
+      .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; position: relative; }
+      .msg.out { flex-direction: row-reverse; }
+      .msg.gap { margin-top: 6px; }
+      .msg .avslot { width: 32px; flex: none; }
+      .bubble { max-width: min(78%, 480px); min-width: 56px; padding: 5px 9px 4px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow-xs); word-break: break-word; overflow-wrap: anywhere; position: relative; }
+      .col { display: flex; flex-direction: column; gap: 3px; max-width: min(78%, 480px); min-width: 0; }
+      .msg.out .col { align-items: flex-end; }
+      .col .bubble { max-width: 100%; }
+      .reacts { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0 1px; }
+      .rx { display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 8px; border-radius: 999px; border: 0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; background: color-mix(in oklch, var(--brand) 14%, transparent); color: var(--brand); }
+      .rx.me { background: var(--brand); color: #fff; }
+      .rx span { font-size: 14px; line-height: 1; }
+      .kb { display: flex; flex-direction: column; gap: 3px; align-self: stretch; min-width: 160px; }
+      .kb-row { display: flex; gap: 3px; }
+      .kbb { flex: 1; min-width: 0; padding: 6px 14px; border: 0; border-radius: 8px; font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; color: var(--foreground); background: color-mix(in oklch, var(--brand) 14%, var(--card)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; position: relative; }
+      .kbb:hover { background: color-mix(in oklch, var(--brand) 26%, var(--card)); }
+      .kbb i { position: absolute; right: 5px; top: 2px; font-style: normal; font-size: 10px; opacity: .6; }
+      .kbb.busy { opacity: .5; pointer-events: none; }
+      #rkbd { border-top: 1px solid var(--border); padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 4px; max-height: 210px; overflow-y: auto; }
+      #rkbd .kbb { padding: 9px 8px; }
+      #panel { border-top: 1px solid var(--border); height: 280px; display: flex; flex-direction: column; }
+      .ptabs { display: flex; gap: 4px; padding: 6px 8px; overflow-x: auto; flex: none; scrollbar-width: none; }
+      .ptabs + .ptabs { padding-top: 0; border-bottom: 1px solid var(--border); }
+      .ptab { flex: none; height: 26px; max-width: 120px; padding: 0 10px; border-radius: 999px; border: 0; background: none; color: var(--muted-foreground); font: inherit; font-size: 12px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ptab:hover { color: var(--foreground); }
+      .ptab.on { background: var(--muted); color: var(--foreground); font-weight: 600; }
+      .pbody { flex: 1; overflow-y: auto; padding: 2px 8px 8px; }
+      .ehead { font-size: 11.5px; color: var(--muted-foreground); margin: 8px 2px 2px; }
+      .egrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); }
+      .egrid button, #picker button { height: 34px; border: 0; background: none; font-size: 22px; line-height: 1; cursor: pointer; border-radius: 8px; padding: 0; overflow: hidden; transition: transform .1s; }
+      .egrid button:hover, #picker button:hover { background: var(--muted); transform: scale(1.12); }
+      .sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 4px; padding-top: 6px; }
+      .sgrid button { aspect-ratio: 1; border: 0; background: none; border-radius: 8px; cursor: pointer; padding: 4px; display: grid; place-items: center; font-size: 26px; min-width: 0; }
+      .sgrid button:hover { background: var(--muted); }
+      .sgrid img { width: 100%; height: 100%; object-fit: contain; }
+      #picker { position: fixed; z-index: 15; background: var(--popover, var(--card)); border: 1px solid var(--border); box-shadow: 0 8px 28px rgba(0,0,0,.2); border-radius: 14px; padding: 6px; width: 266px; max-height: 196px; overflow-y: auto; display: grid; grid-template-columns: repeat(7, 1fr); }
+      .pop { position: fixed; z-index: 16; background: var(--popover, var(--card)); border: 1px solid var(--border); box-shadow: 0 8px 28px rgba(0,0,0,.2); border-radius: 12px; padding: 4px; width: 248px; max-height: calc(100vh - 12px); overflow-y: auto; }
+      .pop .mi { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: 0; background: none; color: var(--foreground); font: inherit; font-size: 13px; text-align: left; border-radius: 8px; cursor: pointer; }
+      .pop .mi:hover { background: var(--muted); }
+      .pop .mi.danger { color: var(--destructive); }
+      .pop .mi > svg { flex: none; opacity: .7; }
+      .pop .chk { margin-left: auto; color: var(--primary); font-weight: 600; }
+      .pop .qr { display: flex; gap: 1px; padding: 2px 2px 4px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+      .pop .qr button { flex: 1; height: 32px; border: 0; background: none; font-size: 19px; line-height: 1; border-radius: 8px; cursor: pointer; padding: 0; }
+      .pop .qr button:hover { background: var(--muted); transform: scale(1.1); }
+      .wbtn { position: relative; color: var(--primary); }
+      .wbtn.warn { color: var(--destructive); }
+      .wbtn b { position: absolute; right: -2px; top: -2px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: currentColor; font-size: 9.5px; line-height: 14px; font-weight: 600; }
+      .wbtn b::after { content: attr(data-n); color: var(--background); }
+      .pop.wide { width: 300px; }
+      .pop .wt { padding: 8px 10px; border-radius: 8px; font-size: 12.5px; }
+      .pop .wt + .wt { border-top: 1px solid var(--border); border-radius: 0; }
+      .pop .wt .h { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+      .pop .wt .h button { margin-left: auto; flex: none; }
+      .pop .wt .m { font-size: 11.5px; margin-top: 3px; }
+      .pop .wt .note { margin-top: 4px; padding: 4px 7px; border-radius: 6px; background: var(--muted); font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+      .pop .wt .err { margin-top: 4px; color: var(--destructive); font-size: 12px; }
+      .ui-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid color-mix(in oklch, var(--muted-foreground) 30%, transparent); border-top-color: var(--primary); flex: none; }
+      #list > .bar { position: relative; }
+      #list.syncing > .bar::after { content: ''; position: absolute; left: 0; bottom: -1px; height: 2px; width: 30%; background: var(--primary); animation: sync 1.1s ease-in-out infinite; }
+      @keyframes sync { from { left: -30%; } to { left: 100%; } }
+      #topics { flex: 1; overflow-y: auto; padding: 4px; }
+      .ttabs .ftab { gap: 4px; }
+      .ttabs .ti { font-weight: 700; }
+      .ttabs .tlist { color: var(--muted-foreground); padding-left: 4px; padding-right: 4px; }
+      .ttag { font-size: 11.5px; font-weight: 600; cursor: pointer; margin-bottom: 2px; }
+      .ttag:hover { text-decoration: underline; }
+      .av.tp { border-radius: 30%; font-size: 17px; }
+      .tback { flex: none; }
+      .pop .line { height: 1px; background: var(--border); margin: 4px 0; }
+      .pop .rd { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 12.5px; color: var(--muted-foreground); }
+      .pop .rd .ui-spin { width: 12px; height: 12px; }
+      .pop .rlist { max-height: 216px; overflow-y: auto; }
+      .pop .ru { display: flex; align-items: center; gap: 8px; padding: 5px 10px; font-size: 13px; }
+      .pop .ru .t { margin-left: auto; padding-left: 6px; font-size: 11.5px; color: var(--muted-foreground); white-space: nowrap; }
+      .av.xs { width: 26px; height: 26px; font-size: 11px; }
+      #sendas { padding: 0; }
+      .dlg-more { display: grid; place-items: center; padding: 14px; }
+      #composer .ui-btn--icon.on { color: var(--brand); }
+      .acts svg { width: 13px; height: 13px; }
+      .msg.out .bubble { background: color-mix(in oklch, var(--brand) 20%, var(--card)); }
+      .msg.in.tail .bubble { border-bottom-left-radius: 4px; }
+      .msg.out.tail .bubble { border-bottom-right-radius: 4px; }
+      .bubble.bare { background: none !important; box-shadow: none; padding: 0; }
+      .bubble.flash { animation: flash 1.2s var(--ease-out); }
+      @keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--brand) 50%, transparent); } }
+      .who { font-weight: 600; font-size: 12.5px; margin-bottom: 1px; }
+      .fwd { font-size: 12px; color: var(--brand); margin-bottom: 2px; }
+      .rq { display: flex; flex-direction: column; border-left: 3px solid var(--brand); padding: 1px 8px; margin: 2px 0 4px; border-radius: 4px; background: color-mix(in oklch, var(--brand) 10%, transparent); cursor: pointer; font-size: 12px; min-width: 0; }
+      .rq b { color: var(--brand); font-weight: 600; }
+      .text { white-space: pre-wrap; line-height: 1.45; }
+      .text code { font: 12px/1.4 var(--font-mono); padding: 0 3px; border-radius: 4px; background: color-mix(in oklch, var(--foreground) 8%, transparent); }
+      .text pre { margin: 4px 0; padding: 6px 8px; border-radius: 6px; background: color-mix(in oklch, var(--foreground) 8%, transparent); overflow-x: auto; white-space: pre; }
+      .text pre code { background: none; padding: 0; }
+      .text .bq { display: block; border-left: 3px solid var(--brand); padding-left: 8px; }
+      .spoiler { background: var(--muted-foreground); color: transparent; border-radius: 3px; cursor: pointer; }
+      .spoiler.show { background: none; color: inherit; }
+      .meta { float: right; margin: 6px 0 -4px 8px; font-size: 10.5px; color: var(--muted-foreground); display: inline-flex; align-items: center; gap: 2px; user-select: none; }
+      .bubble.bare .meta, .media-only .meta { position: absolute; right: 6px; bottom: 6px; margin: 0; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; }
+      .tick { color: var(--brand); }
+      .media { position: relative; border-radius: 10px; overflow: hidden; background: color-mix(in oklch, var(--foreground) 8%, transparent); margin: 2px -5px 4px; max-width: calc(100% + 10px); cursor: pointer; }
+      .media img, .media video { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .media.sticker { background: none; max-width: 150px; margin: 0; }
+      .media.sticker img, .media.sticker video { object-fit: contain; }
+      .media.round { border-radius: 50%; max-width: 200px; }
+      .media-only .media { margin: -2px -6px -1px; max-width: calc(100% + 12px); }
+      .album { display: grid; gap: 2px; border-radius: 10px; overflow: hidden; margin: 2px -5px 4px; max-width: calc(100% + 10px); }
+      .media-only .album { margin: -2px -6px -1px; max-width: calc(100% + 12px); }
+      .album .arow { display: flex; gap: 2px; }
+      .bubble .album .media { margin: 0; max-width: none; border-radius: 0; min-width: 0; }
+      .album-files { display: grid; gap: 6px; }
+      .play { position: absolute; inset: 0; margin: auto; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; display: grid; place-items: center; pointer-events: none; }
+      .dur { position: absolute; left: 6px; top: 6px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: 10.5px; }
+      .file { display: flex; gap: 10px; align-items: center; margin: 2px 0 4px; min-width: 200px; }
+      .ficon { width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; flex: none; cursor: pointer; border: 0; }
+      .wp { display: flex; flex-direction: column; gap: 1px; border-left: 3px solid var(--brand); padding: 2px 8px; margin: 4px 0; border-radius: 4px; background: color-mix(in oklch, var(--brand) 8%, transparent); font-size: 12px; cursor: pointer; }
+      .wp .site { color: var(--brand); font-weight: 600; }
+      .wp img { margin-top: 4px; border-radius: 6px; max-height: 160px; object-fit: cover; }
+      audio { width: 230px; height: 36px; margin: 2px 0; }
+      .acts { display: none; align-self: center; gap: 2px; }
+      .msg:hover .acts { display: flex; }
+      .acts button { width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--card); color: var(--muted-foreground); box-shadow: var(--shadow-xs); display: grid; place-items: center; cursor: pointer; }
+      .acts button:hover { color: var(--foreground); }
+      .acts button.danger { color: #fff; background: var(--destructive); }
+      .older { align-self: center; margin: 4px 0; }
+      .empty-chat { margin: auto; color: var(--muted-foreground); text-align: center; }
+
+      .tray { border-top: 1px solid var(--border); padding: 6px 10px; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+      .tray .grow { display: flex; flex-direction: column; border-left: 3px solid var(--brand); padding-left: 8px; }
+      .tray b { color: var(--brand); }
+      .chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+      .chip { display: inline-flex; gap: 4px; align-items: center; padding: 2px 8px; border-radius: 999px; background: var(--muted); max-width: 100%; }
+      .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+      #composer { display: flex; align-items: flex-end; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--border); }
+      #input { flex: 1; resize: none; min-height: 34px; max-height: 160px; padding: 7px 10px; font: inherit; line-height: 1.4; border-radius: 17px; }
+      #composer .ui-btn--icon { width: 34px; height: 34px; border-radius: 50%; flex: none; }
+      .readonly { padding: 12px; text-align: center; border-top: 1px solid var(--border); color: var(--muted-foreground); }
+
+      #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: grid; place-items: center; z-index: 10; cursor: zoom-out; }
+      .lb-load { display: grid; justify-items: center; gap: 10px; color: #fff; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+      .lb-load .ui-spin { border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+      .lb-bar { position: fixed; left: 0; right: 0; top: 0; height: 3px; background: rgba(255,255,255,.15); pointer-events: none; }
+      .lb-bar i { display: block; height: 100%; width: 0; background: #fff; transition: width .2s; }
+      .lb-nav { position: fixed; top: 50%; transform: translateY(-50%); width: 40px; height: 56px; border: 0; border-radius: 10px; background: rgba(255,255,255,.12); color: #fff; font-size: 30px; line-height: 1; cursor: pointer; }
+      .lb-nav:hover { background: rgba(255,255,255,.24); }
+      .lb-nav.prev { left: 8px; } .lb-nav.next { right: 8px; }
+      .lb-count { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: 12px; font-variant-numeric: tabular-nums; }
+      #lightbox img, #lightbox video { max-width: 96vw; max-height: 92vh; object-fit: contain; }
+      .toast { position: fixed; left: 50%; top: 58px; transform: translateX(-50%); background: var(--foreground); color: var(--background); padding: 6px 12px; border-radius: 999px; font-size: 12px; z-index: 20; max-width: 90vw; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <section id="auth"><div class="center"><div class="ui-spin"></div></div></section>
+      <section id="main" hidden>
+        <aside id="list">
+          <div class="bar">
+            <div id="me"></div>
+            <input id="search" class="ui-input" placeholder="搜索" />
+            <button class="ui-btn ui-btn--icon ui-btn--sm wbtn" id="watchbtn" data-act="watches" data-tooltip="Agent 订阅" hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><b></b>
+            </button>
+            <button class="ui-btn ui-btn--icon ui-btn--sm" id="logout" data-tooltip="退出登录">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            </button>
+          </div>
+          <div id="banner" class="banner" hidden></div>
+          <div id="folders" class="ftabs" hidden></div>
+          <div id="dialogs"></div>
+        </aside>
+        <section id="chat">
+          <div class="empty-chat" id="nochat">选择一个聊天开始对话</div>
+        </section>
+      </section>
+    </div>
+    <div id="lightbox" hidden></div>
+    <input type="file" id="file" multiple hidden />
+    <script src="enso-ui.js"></script>
+    <script src="vendor/mp4box.js"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const ICON = {
+        back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>',
+        send: '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>',
+        clip: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.4 11.1 12.2 20.3a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>',
+        reply: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v5"/></svg>',
+        trash: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+        down: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>',
+        play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+        pin: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>',
+        tick1: '<svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 5.5 5 9l7-7.5"/></svg>',
+        tick2: '<svg width="16" height="10" viewBox="0 0 18 11" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 5.5 4.5 9 11.5 1.5M7.5 8.5l.5.5 7-7.5"/></svg>',
+        x: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+        smile: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9.5h.01M15 9.5h.01"/></svg>',
+        edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+        kbd: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/></svg>',
+        tg: '<svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M9.8 15.2 9.4 20c.6 0 .9-.3 1.2-.6l2.9-2.7 6 4.3c1.1.6 1.9.3 2.2-1L24 3.4c.4-1.6-.6-2.3-1.6-1.9L.9 9.9c-1.5.6-1.5 1.5-.3 1.8l5.6 1.7L19.3 5.3c.6-.4 1.2-.2.7.2z"/></svg>',
+      };
+      const COLORS = ['#e17076', '#faa774', '#a695e7', '#7bc862', '#6ec9cb', '#65aadd', '#ee7aae'];
+      const color = (id) => { try { return COLORS[Number((BigInt(id) < 0n ? -BigInt(id) : BigInt(id)) % 7n)]; } catch { return COLORS[0]; } };
+      const initials = (t) => Array.from(String(t || '?').trim().split(/\s+/).slice(0, 2).map((w) => Array.from(w)[0] ?? '').join('')).slice(0, 2).join('').toUpperCase() || '?';
+
+      const S = {
+        watches: [],
+        topic: null,
+        topicInfo: null,
+        topics: [],
+        tmore: false,
+        tnext: null,
+        st: null, cursor: 0, dialogs: [], q: '', chat: null, msgs: [], more: false, older: false,
+        reply: null, files: [], avatars: new Map(), media: new Map(), busy: false, confirm: null,
+        edit: null, panel: null, stk: null, sthumb: new Map(), rx: new Map(), rkClosed: new Set(),
+        folders: [], folder: (() => { try { const v = localStorage.getItem('tg:folder'); return v === 'archive' ? v : Number(v) || 0; } catch { return 0; } })(),
+        fcache: new Map(),
+        dlgMore: false, sendAs: null,
+      };
+      const freshStickers = () => ({ sets: null, cur: 'recent', items: new Map(), loading: new Set() });
+      S.stk = freshStickers();
+      // 沙箱 iframe 没有 sessionStorage，草稿只留在内存里
+      const drafts = new Map();
+      // 本地缓存：会话列表（最近 4 个分组各 50 条）和最近 6 个聊天的最后 30 条消息，打开侧栏先画缓存再刷新
+      const store = {
+        get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+        set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+        del(k) { try { localStorage.removeItem(k); } catch {} },
+      };
+      const DLG_KEY = 'tg:cache:dlg', HIDX = 'tg:cache:hidx';
+      let dlgSave;
+      function saveDialogs() {
+        clearTimeout(dlgSave);
+        dlgSave = setTimeout(() => {
+          if (!S.dialogs.length || !S.st?.me) return;
+          const c = store.get(DLG_KEY) ?? {};
+          const by = { [S.folder]: { items: S.dialogs.slice(0, 50), folders: S.folders } };
+          for (const k of c.order ?? []) if (String(k) !== String(S.folder) && Object.keys(by).length < 4 && c.by?.[k]) by[k] = c.by[k];
+          store.set(DLG_KEY, { me: S.st.me, by, order: Object.keys(by) });
+        }, 1500);
+      }
+      const cachedDialogs = (folder) => store.get(DLG_KEY)?.by?.[folder] ?? null;
+      let histSave;
+      function saveHistory() {
+        clearTimeout(histSave);
+        const key = ckey(), msgs = S.msgs;
+        if (!key || !msgs.length) return;
+        histSave = setTimeout(() => {
+          let items = msgs.slice(-30);
+          while (items.length > 5 && JSON.stringify(items).length > 40000) items = items.slice(5);
+          store.set(`tg:cache:h:${key}`, items);
+          const idx = [key, ...(store.get(HIDX) ?? []).filter((k) => k !== key)];
+          for (const k of idx.splice(6)) store.del(`tg:cache:h:${k}`);
+          store.set(HIDX, idx);
+        }, 1000);
+      }
+      function clearCache() {
+        for (const k of store.get(HIDX) ?? []) store.del(`tg:cache:h:${k}`);
+        store.del(HIDX);
+        store.del(DLG_KEY);
+      }
+      // 论坛群里每个话题各自一份草稿；tp() 是带给接口的当前话题参数
+      const ckey = () => (S.topic ? `${S.chat?.id}#${S.topic}` : S.chat?.id);
+      const tp = () => (S.topic ? { topic: S.topic } : {});
+
+      // 宿主对侧栏调用限速 10 次/秒（按到达宿主的时间算，传递有抖动），这里只用 6 次留足余量
+      const stamps = [], RATE = 6;
+      // 宿主拒绝的调用根本没执行，可以放心重试：限速就退避重排队，熔断就整体冷却到解除再继续
+      let coolUntil = 0, coolTold = 0;
+      // 没连上时不去碰数据接口：失败会累计到宿主的熔断里，连坏 5 次整个插件停 30 秒
+      const ANY_STATE = new Set(['state', 'poll', 'login', 'code', 'password', 'cancel', 'logout', 'reconnect', 'open', 'watches', 'unwatch']);
+      async function call(method, args) {
+        if (!ANY_STATE.has(method) && S.st && S.st.status !== 'ready') throw new Error(S.st.status === 'offline' ? '正在重连 Telegram…' : '还没连上 Telegram');
+        for (let tries = 0; ; tries++) {
+          for (;;) {
+            const now = Date.now();
+            if (now < coolUntil) { await sleep(coolUntil - now); continue; }
+            while (stamps.length && now - stamps[0] > 1000) stamps.shift();
+            if (stamps.length < RATE) { stamps.push(now); break; }
+            await sleep(1005 - (now - stamps[0]));
+          }
+          try {
+            return await window.enso.call(method, args ?? {});
+          } catch (e) {
+            const msg = String(e?.message ?? e);
+            if (/调用过于频繁/.test(msg) && tries < 10) {
+              // 占满本秒的名额，让排队中的调用一起往后让
+              const now = Date.now();
+              stamps.length = 0;
+              for (let i = 0; i < RATE; i++) stamps.push(now + Math.min(tries, 4) * 250);
+              continue;
+            }
+            if (/插件连续失败/.test(msg) && tries < 3) {
+              coolUntil = Math.max(coolUntil, Date.now() + 30_500);
+              if (Date.now() - coolTold > 30_000) { coolTold = Date.now(); toast('请求失败太多，宿主让插件冷却 30 秒，之后自动继续', 30_000); }
+              continue;
+            }
+            throw e;
+          }
+        }
+      }
+      // Telegram 限流（FLOOD_WAIT）的报错里带了秒数，取出来定时重试
+      const floodWait = (e) => { const m = /请 (\d+) 秒后再试/.exec(String(e?.message ?? '')); return m ? Number(m[1]) * 1000 + 500 : 0; };
+      let toastTimer;
+      function toast(text, ms = 3200) {
+        document.querySelector('.toast')?.remove();
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = text;
+        document.body.append(el);
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.remove(), ms);
+      }
+      const fail = (e) => toast(e?.message ?? String(e));
+
+      // ---------- 时间 ----------
+      const pad = (n) => String(n).padStart(2, '0');
+      const hm = (t) => { const d = new Date(t * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+      const dayKey = (t) => new Date(t * 1000).toDateString();
+      function shortDate(t) {
+        if (!t) return '';
+        const d = new Date(t * 1000), now = new Date();
+        if (d.toDateString() === now.toDateString()) return hm(t);
+        if (now - d < 6 * 864e5) return '周' + '日一二三四五六'[d.getDay()];
+        return d.getFullYear() === now.getFullYear() ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+      }
+      function dayLabel(t) {
+        const d = new Date(t * 1000), now = new Date();
+        const diff = Math.round((new Date(now.toDateString()) - new Date(d.toDateString())) / 864e5);
+        if (diff === 0) return '今天';
+        if (diff === 1) return '昨天';
+        return d.getFullYear() === now.getFullYear() ? `${d.getMonth() + 1}月${d.getDate()}日` : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+      }
+      const dur = (s) => `${Math.floor((s || 0) / 60)}:${pad(Math.floor((s || 0) % 60))}`;
+      const bytes = (n) => (n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`);
+
+      // ---------- 头像 ----------
+      const wantAv = new Set();
+      let avTimer;
+      function avatar(id, title, size = '', photo = true, dot = false) {
+        const url = S.avatars.get(id);
+        if (url === undefined && photo && id) { wantAv.add(id); clearTimeout(avTimer); avTimer = setTimeout(flushAv, 120); }
+        const inner = url ? `<img src="${url}" alt="">` : esc(initials(title));
+        return `<div class="av ${size}" data-av="${esc(id)}" data-title="${esc(title)}" style="background:${url ? 'none' : color(id)}">${inner}${dot ? '<i class="dot"></i>' : ''}</div>`;
+      }
+      async function flushAv() {
+        if (S.st?.status !== 'ready') return;
+        const ids = [...wantAv].filter((id) => !S.avatars.has(id)).slice(0, 30);
+        wantAv.clear();
+        if (!ids.length) return;
+        for (const id of ids) S.avatars.set(id, null);
+        try {
+          const r = await call('avatars', { ids });
+          for (const id of ids) {
+            if (!(id in r)) { S.avatars.delete(id); wantAv.add(id); continue; }
+            S.avatars.set(id, r[id]);
+            if (!r[id]) continue;
+            document.querySelectorAll(`[data-av="${CSS.escape(id)}"]`).forEach((el) => {
+              el.style.background = 'none';
+              const dot = el.querySelector('.dot');
+              el.innerHTML = `<img src="${r[id]}" alt="">`;
+              if (dot) el.append(dot);
+            });
+          }
+          if (wantAv.size) avTimer = setTimeout(flushAv, 150);
+        } catch {
+          for (const id of ids) S.avatars.delete(id);
+        }
+      }
+
+      // ---------- 富文本 ----------
+      const href = (u) => (/^[a-z]+:\/\//i.test(u) ? u : `https://${u}`);
+      function linkify(html) {
+        return html.replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?'")\]]/g, (u) => `<a data-href="${u}">${u}</a>`);
+      }
+      function rich(text, ents) {
+        if (!text) return '';
+        if (!ents?.length) return linkify(esc(text));
+        const pts = new Set([0, text.length]);
+        for (const e of ents) { pts.add(e.o); pts.add(Math.min(text.length, e.o + e.l)); }
+        const arr = [...pts].sort((a, b) => a - b);
+        let out = '';
+        for (let i = 0; i < arr.length - 1; i++) {
+          const a = arr[i], b = arr[i + 1];
+          if (a >= b) continue;
+          let seg = esc(text.slice(a, b));
+          for (const e of ents) {
+            if (e.o > a || e.o + e.l < b) continue;
+            const whole = text.slice(e.o, e.o + e.l);
+            seg = ({
+              bold: `<b>${seg}</b>`, italic: `<i>${seg}</i>`, underline: `<u>${seg}</u>`, strike: `<s>${seg}</s>`,
+              code: `<code>${seg}</code>`, pre: `<pre><code>${seg}</code></pre>`, spoiler: `<span class="spoiler">${seg}</span>`,
+              blockquote: `<span class="bq">${seg}</span>`,
+              url: `<a data-href="${esc(href(whole))}">${seg}</a>`,
+              texturl: `<a data-href="${esc(e.u ?? '')}">${seg}</a>`,
+              mention: `<a data-href="https://t.me/${esc(whole.replace(/^@/, ''))}">${seg}</a>`,
+              email: `<span class="link">${seg}</span>`, hashtag: `<span class="link">${seg}</span>`, botcommand: `<span class="link">${seg}</span>`,
+            })[e.k] ?? seg;
+          }
+          out += seg;
+        }
+        return out;
+      }
+
+      // ---------- 登录 ----------
+      function renderAuth() {
+        const st = S.st;
+        $('main').hidden = true;
+        $('auth').hidden = false;
+        const err = st.error ? `<div class="err">${esc(st.error)}</div>` : '';
+        if (st.status === 'connecting' || st.status === 'idle' || (st.status === 'offline' && !st.me)) {
+          $('auth').innerHTML = `<div class="center"><div class="ui-spin"></div><div class="m">正在连接 Telegram…</div>${err}
+            ${st.status === 'offline' ? '<button class="ui-btn ui-btn--sm ui-btn--outline" data-act="reconnect">立即重试</button><div class="m">国内网络需要在 设置 → 插件 → Telegram 客户端 里填写代理</div>' : ''}</div>`;
+          return;
+        }
+        const head = `<div class="logo">${ICON.tg}</div>`;
+        if (st.status === 'code') {
+          $('auth').innerHTML = `<form class="auth" data-form="code">${head}<h1>${esc(st.phone)}</h1>
+            <p class="m">验证码已发送到你${st.codeVia === 'app' ? '其他设备上的 Telegram App' : '的手机短信'}</p>
+            <div class="field"><input class="ui-input" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="验证码" autofocus /></div>
+            ${err}<button class="ui-btn ui-btn--primary ui-btn--block" ${S.busy ? 'disabled' : ''}>${S.busy ? '登录中…' : '下一步'}</button>
+            <button type="button" class="ui-btn ui-btn--sm" data-act="cancel">换个手机号</button></form>`;
+        } else if (st.status === 'password') {
+          $('auth').innerHTML = `<form class="auth" data-form="password">${head}<h1>两步验证</h1>
+            <p class="m">账号开启了两步验证，请输入云密码${st.hint ? `（提示：${esc(st.hint)}）` : ''}</p>
+            <div class="field"><input class="ui-input" name="password" type="password" placeholder="密码" autofocus /></div>
+            ${err}<button class="ui-btn ui-btn--primary ui-btn--block" ${S.busy ? 'disabled' : ''}>${S.busy ? '验证中…' : '登录'}</button>
+            <button type="button" class="ui-btn ui-btn--sm" data-act="cancel">取消</button></form>`;
+        } else {
+          $('auth').innerHTML = `<form class="auth" data-form="login">${head}<h1>登录 Telegram</h1>
+            <p class="m">用你自己的 Telegram 账号登录，像官方客户端一样收发消息</p>
+            <div class="field"><label class="ui-label">手机号</label><input class="ui-input" name="phone" type="tel" value="${esc(st.phone)}" placeholder="+86 138 0000 0000" autofocus /></div>
+            ${err}<button class="ui-btn ui-btn--primary ui-btn--block" ${S.busy ? 'disabled' : ''}>${S.busy ? '发送中…' : '获取验证码'}</button>
+            <div class="m" style="text-align:center">连不上？在 设置 → 插件 → Telegram 客户端 填写 socks5 或 MTProxy 代理</div></form>`;
+        }
+        $('auth').querySelector('[autofocus]')?.focus();
+      }
+      async function submit(form) {
+        if (S.busy) return;
+        const data = Object.fromEntries(new FormData(form));
+        S.busy = true;
+        renderAuth();
+        try {
+          applyState(await call(form.dataset.form, data), true);
+        } catch (e) {
+          S.st.error = e?.message ?? String(e);
+        } finally {
+          S.busy = false;
+          if (S.st.status !== 'ready') renderAuth();
+        }
+      }
+
+      // ---------- 状态 ----------
+      function applyState(r, force) {
+        const prev = S.st;
+        S.st = r;
+        const was = prev?.status, now = r.status;
+        const warm = !S.busy && (now === 'connecting' || now === 'idle' || now === 'offline') && !r.me && store.get(DLG_KEY)?.me;
+        if (warm) r.me = store.get(DLG_KEY).me;
+        if (now === 'ready' || (now === 'offline' && r.me) || warm) {
+          if ($('main').hidden) { $('auth').hidden = true; $('main').hidden = false; renderMe(); showCached(); }
+          renderBanner();
+          if (now === 'ready' && was !== 'ready') { loadDialogs(); if (S.chat && was) openChat(S.chat.id, true); }
+        } else if (force || was !== now || prev?.error !== r.error) {
+          if (now === 'setup') clearCache();
+          if (!$('main').hidden) resetMain();
+          if (!S.busy) renderAuth();
+        }
+      }
+      function resetMain() {
+        Object.assign(S, { dialogs: [], chat: null, msgs: [], reply: null, files: [], edit: null, panel: null, stk: freshStickers(), folders: [] });
+        S.fcache.clear();
+        renderFolders();
+        S.avatars.clear();
+        S.sthumb.clear();
+        S.rx.clear();
+        closePicker();
+        document.body.classList.remove('open');
+        $('chat').innerHTML = '<div class="empty-chat">选择一个聊天开始对话</div>';
+        $('dialogs').innerHTML = '';
+      }
+      function renderMe() {
+        const me = S.st.me;
+        $('me').innerHTML = me ? avatar(me.id, me.name, 'xs', me.photo) : '';
+        $('me').title = me ? `${me.name}${me.username ? ` @${me.username}` : ''}` : '';
+      }
+      function showCached() {
+        if (S.dialogs.length) return;
+        const c = cachedDialogs(S.folder);
+        if (!c) return;
+        S.dialogs = c.items;
+        S.folders = c.folders ?? [];
+        renderFolders();
+        renderDialogs();
+      }
+      function renderBanner() {
+        const off = S.st.status === 'offline';
+        $('list').classList.toggle('syncing', S.st.status !== 'ready' && !off || dlgLoading);
+        $('banner').hidden = !off;
+        if (off) $('banner').innerHTML = `<span class="grow">连接已断开，正在重连…${S.st.error ? ` ${esc(S.st.error)}` : ''}</span><button class="ui-btn ui-btn--sm" data-act="reconnect">重试</button>`;
+      }
+
+      async function loop() {
+        for (;;) {
+          try {
+            const r = await call('poll', { cursor: S.cursor, active: S.chat?.id ?? null, visible: document.visibilityState === 'visible' });
+            if (r.reset) {
+              S.cursor = r.cursor;
+              applyState(r);
+              if (r.status === 'ready') { loadDialogs(); if (S.chat) openChat(S.chat.id, true); }
+              continue;
+            }
+            S.cursor = r.cursor;
+            for (const ev of r.events) onEvent(ev);
+            applyState(r);
+          } catch {
+            await sleep(3000);
+          }
+        }
+      }
+
+      // ---------- 会话列表 ----------
+      let dlgTimer, slowTimer, dlgSeq = 0;
+      const scheduleDialogs = () => { clearTimeout(dlgTimer); dlgTimer = setTimeout(loadDialogs, 1200); };
+      // 分组标签的未读数和非「全部」分组的列表变化不急，合并成慢刷新，避免频繁拉列表
+      const scheduleSlow = () => { if (!slowTimer) slowTimer = setTimeout(() => { slowTimer = null; loadDialogs(); }, 8000); };
+      // ---------- Agent 订阅（tg_watch） ----------
+      const watchBtn = () => `<button class="ui-btn ui-btn--icon ui-btn--sm wbtn inchat" data-act="watches" hidden>${$('watchbtn').innerHTML}</button>`;
+      function syncWatchBtns() {
+        const n = S.watches.length, warn = S.watches.some((w) => w.error);
+        document.querySelectorAll('.wbtn').forEach((b) => {
+          b.hidden = !n;
+          b.classList.toggle('warn', warn);
+          b.querySelector('b').dataset.n = n;
+          b.dataset.tooltip = `Agent 订阅 ${n} 个`;
+        });
+      }
+      async function loadWatches() {
+        try { S.watches = (await call('watches')).items; } catch { return; }
+        syncWatchBtns();
+        if (document.getElementById('ctx')?.dataset.kind === 'watches') renderWatches(document.getElementById('ctx'));
+      }
+      const ago = (ms) => { const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? '刚刚' : s < 3600 ? `${Math.floor(s / 60)} 分钟前` : s < 86400 ? `${Math.floor(s / 3600)} 小时前` : `${Math.floor(s / 86400)} 天前`; };
+      function renderWatches(box) {
+        if (!S.watches.length) return closeCtx();
+        box.innerHTML = '<div class="rd">Agent 订阅的新消息</div>' + S.watches.map((w) => {
+          const scope = [w.directOnly && '只看私聊、@我和回复我', w.includeMuted && !w.chat && '含静音聊天'].filter(Boolean).join('，');
+          const stat = [w.project && `项目 ${w.project}`, w.since && `${ago(w.since)}开始`, `已投递 ${w.delivered ?? 0} 条`, w.lastAt && `最近 ${ago(w.lastAt)}`, w.pending && `待投递 ${w.pending} 条`].filter(Boolean).join(' · ');
+          return `<div class="wt"><div class="h"><span class="ellipsis">${esc(w.chat ? w.title || w.chat : '所有未静音的聊天')}</span>
+              <button class="ui-btn ui-btn--sm" data-act="unwatch" data-sid="${esc(w.sid)}">取消</button></div>
+            ${scope ? `<div class="m">${esc(scope)}</div>` : ''}<div class="m">${esc(stat)}</div>
+            ${w.note ? `<div class="note">${esc(w.note)}</div>` : ''}${w.error ? `<div class="err">${esc(w.error)}</div>` : ''}</div>`;
+        }).join('');
+      }
+      function openWatches(btn) {
+        closePicker(); closeCtx();
+        const box = document.createElement('div');
+        box.id = 'ctx';
+        box.className = 'pop wide';
+        box.dataset.kind = 'watches';
+        renderWatches(box);
+        const r = btn.getBoundingClientRect();
+        popAt(box, r.right - 300, r.bottom + 6);
+      }
+
+      let dlgLoading = false;
+      async function loadDialogs() {
+        void loadWatches();
+        const folder = S.folder, my = ++dlgSeq;
+        clearTimeout(slowTimer); slowTimer = null;
+        if (!S.dialogs.length && !S.fcache.has(folder)) {
+          const c = cachedDialogs(folder);
+          if (c) { S.dialogs = c.items; S.folders = c.folders ?? S.folders; renderFolders(); }
+          renderDialogs();
+        }
+        dlgLoading = true;
+        renderBanner();
+        try {
+          const r = await call('dialogs', { folder });
+          if (my !== dlgSeq) return;
+          S.folders = r.folders ?? [];
+          if (S.folder !== 0 && !S.folders.some((f) => f.id === S.folder)) return switchFolder(0);
+          // 已经往下翻过的会话保留下来，只用第一页覆盖顶部
+          const prev = S.fcache.get(folder) ?? [];
+          const ids = new Set(r.items.map((d) => d.id));
+          S.dialogs = prev.length > r.items.length ? [...r.items, ...prev.filter((d) => !ids.has(d.id))] : r.items;
+          if (S.dialogs.length > r.items.length) sortDialogs();
+          S.dlgMore = !!r.more;
+          S.fcache.set(folder, S.dialogs);
+          if (S.chat) S.chat = S.dialogs.find((d) => d.id === S.chat.id) ?? S.chat;
+          renderFolders();
+          renderDialogs();
+        } catch (e) {
+          const wait = floodWait(e);
+          if (wait && my === dlgSeq) { clearTimeout(dlgTimer); dlgTimer = setTimeout(loadDialogs, wait); }
+          if (my === dlgSeq && !S.dialogs.length) $('dialogs').innerHTML = `<div class="ui-empty"><div class="err">${esc(e.message)}${wait ? '，到时自动重试' : ''}</div><button class="ui-btn ui-btn--sm" data-act="dialogs">重试</button></div>`;
+        } finally {
+          if (my === dlgSeq) { dlgLoading = false; renderBanner(); }
+        }
+      }
+      function switchFolder(id) {
+        S.folder = id;
+        try { localStorage.setItem('tg:folder', String(id)); } catch {}
+        S.dialogs = S.fcache.get(id) ?? cachedDialogs(id)?.items ?? [];
+        S.dlgMore = false;
+        $('dialogs').scrollTop = 0;
+        renderFolders();
+        renderDialogs();
+        loadDialogs();
+      }
+      let dlgPaging = false;
+      async function moreDialogs() {
+        if (dlgPaging || !S.dlgMore || S.q.trim() || !S.fcache.has(S.folder)) return;
+        dlgPaging = true;
+        const folder = S.folder, my = dlgSeq;
+        try {
+          const r = await call('dialogs', { folder, offset: S.dialogs.length });
+          if (my !== dlgSeq || folder !== S.folder) return;
+          const known = new Set(S.dialogs.map((d) => d.id));
+          const add = r.items.filter((d) => !known.has(d.id));
+          S.dialogs.push(...add);
+          S.dlgMore = !!r.more;
+          S.fcache.set(folder, S.dialogs);
+          renderDialogs();
+        } catch (e) {
+          const wait = floodWait(e);
+          if (wait) { setTimeout(() => { if (folder === S.folder) nearDlgEnd(); }, wait); return; }
+          S.dlgMore = false;
+          renderDialogs();
+        } finally { dlgPaging = false; }
+      }
+      function nearDlgEnd() {
+        const el = $('dialogs');
+        if (el.scrollHeight - el.scrollTop - el.clientHeight < 320) moreDialogs();
+      }
+      $('dialogs').addEventListener('scroll', nearDlgEnd, { passive: true });
+      function renderFolders() {
+        const box = $('folders');
+        box.hidden = S.folders.length < 2;
+        if (box.hidden) return;
+        box.innerHTML = S.folders.map((f) => `<button class="ftab ${f.id === S.folder ? 'on' : ''}" data-folder="${esc(f.id)}">${esc(f.title)}${f.unread ? `<span class="fbadge">${f.unread > 99 ? '99+' : f.unread}</span>` : ''}</button>`).join('');
+        box.querySelector('.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+      function sortDialogs() {
+        const pinned = S.dialogs.filter((d) => d.pinned);
+        const rest = S.dialogs.filter((d) => !d.pinned).sort((a, b) => b.date - a.date);
+        S.dialogs = [...pinned, ...rest];
+      }
+      let dlgRaf;
+      function renderDialogs() {
+        cancelAnimationFrame(dlgRaf);
+        dlgRaf = requestAnimationFrame(() => {
+          const q = S.q.trim().toLowerCase();
+          const list = q ? S.dialogs.filter((d) => d.title.toLowerCase().includes(q)) : S.dialogs;
+          if (!S.dialogs.length) {
+            if (S.dlgMore && S.fcache.has(S.folder)) { $('dialogs').innerHTML = '<div class="ui-empty" style="padding:24px"><div class="ui-spin"></div><div>正在查找这个分组的聊天…</div></div>'; moreDialogs(); return; }
+            $('dialogs').innerHTML = S.fcache.has(S.folder) ? '<div class="ui-empty m" style="padding:24px">这个分组里还没有聊天</div>' : '<div class="ui-empty" style="padding:24px"><div class="ui-spin"></div></div>';
+            return;
+          }
+          if (!list.length) { $('dialogs').innerHTML = '<div class="ui-empty m" style="padding:24px">没有匹配的聊天</div>'; return; }
+          $('dialogs').innerHTML = list.map((d) => {
+            const tick = d.lastOut ? `<span class="tick">${d.readOut && d.lastOut ? ICON.tick2 : ICON.tick1}</span>` : '';
+            const badge = d.unread ? `<span class="badge ${d.muted ? 'muted' : ''}">${d.unread > 999 ? '999+' : d.unread}</span>` : d.mentions ? '<span class="badge at">@</span>' : d.pinned ? `<span class="pin">${ICON.pin}</span>` : '';
+            const av = d.self
+              ? `<div class="av" style="background:#65aadd"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M6 3h12v18l-6-4-6 4z"/></svg></div>`
+              : avatar(d.id, d.title, '', d.photo, d.online);
+            return `<button class="dlg ${S.chat?.id === d.id ? 'active' : ''}" data-dlg="${esc(d.id)}">${av}
+              <div class="dlg-body"><div class="dlg-row"><span class="dlg-title ellipsis">${esc(d.title)}</span><span class="dlg-time">${tick}${shortDate(d.date)}</span></div>
+              <div class="dlg-row"><span class="dlg-last ellipsis">${d.lastFrom ? `<b>${esc(d.lastFrom)}: </b>` : d.lastOut && d.kind !== 'user' && !d.self ? '<b>你: </b>' : ''}${esc(d.last)}</span>${badge}</div></div></button>`;
+          }).join('') + (S.dlgMore && !q ? '<div class="dlg-more"><div class="ui-spin"></div></div>' : '');
+          if (!q) nearDlgEnd();
+          if (S.st?.status === 'ready' && S.fcache.has(S.folder)) saveDialogs();
+        });
+      }
+
+      // ---------- 聊天 ----------
+      const nearBottom = () => { const el = $('msgs'); return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 120; };
+      const toBottom = () => { const el = $('msgs'); if (el) el.scrollTop = el.scrollHeight; };
+      function chatShell(d) {
+        const t = S.topic ? S.topicInfo : null, all = S.topic === 0;
+        const sub = t ? esc(d.title) : all ? '全部话题' : d.self ? '' : d.kind === 'user' ? (d.online ? '在线' : '') : d.kind === 'bot' ? '机器人' : d.kind === 'channel' ? '频道' : '群组';
+        const av = t ? topicIcon(t, 'sm') : d.self ? '' : avatar(d.id, d.title, 'sm', d.photo);
+        const back = t
+          ? `<button class="ui-btn ui-btn--icon ui-btn--sm tback" data-act="topics" data-tooltip="话题列表">${ICON.back}</button>`
+          : `<button class="ui-btn ui-btn--icon ui-btn--sm back" data-act="back">${ICON.back}</button>`;
+        const canSend = d.canSend && !(t?.closed);
+        $('chat').innerHTML = `<div class="bar">${back}${av}
+          <div class="grow"><div class="chat-title ellipsis">${esc(t ? t.title : d.title)}</div>${sub ? `<div class="m">${sub}</div>` : ''}</div>${watchBtn()}</div>
+          ${d.forum ? '<div id="ttabs" class="ftabs ttabs"></div>' : ''}
+          <div id="msgs"><div class="ui-empty" style="margin:auto"><div class="ui-spin"></div></div></div>
+          <div id="tray" class="tray" hidden></div>
+          ${canSend ? `<form id="composer"><button type="button" class="ui-btn ui-btn--icon" id="sendas" data-act="sendas" hidden></button>
+            <button type="button" class="ui-btn ui-btn--icon" data-act="attach" data-tooltip="发送文件">${ICON.clip}</button>
+            <textarea id="input" class="ui-input" rows="1" placeholder="发消息…"></textarea>
+            <button type="button" class="ui-btn ui-btn--icon" id="kbdbtn" data-act="kbd" data-tooltip="机器人键盘" hidden>${ICON.kbd}</button>
+            <button type="button" class="ui-btn ui-btn--icon" id="emojibtn" data-act="panel" data-tooltip="表情与贴纸">${ICON.smile}</button>
+            <button class="ui-btn ui-btn--primary ui-btn--icon" id="send">${ICON.send}</button></form>
+            <div id="rkbd" hidden></div><div id="panel" hidden></div>`
+            : `<div class="readonly">${t?.closed ? '话题已关闭' : d.kind === 'channel' ? '这是频道，只有管理员能发言' : '无法在此发言'}</div>`}`;
+        $('msgs').addEventListener('scroll', onScroll);
+        syncWatchBtns();
+        if (d.forum) {
+          $('ttabs').addEventListener('scroll', (e) => { const el = e.currentTarget; if (el.scrollWidth - el.scrollLeft - el.clientWidth < 200) loadTopics(false); }, { passive: true });
+          renderTtabs(true);
+        }
+        const input = $('input');
+        if (input) {
+          input.value = drafts.get(ckey()) ?? '';
+          grow(input);
+          if (matchMedia('(min-width: 640px)').matches) input.focus();
+        }
+        renderPanel();
+      }
+      async function openChat(id, keep) {
+        const d = S.dialogs.find((x) => x.id === id) ?? S.chat;
+        if (!d) return;
+        const switching = S.chat?.id !== id;
+        if (switching) Object.assign(S, { topic: null, topicInfo: null });
+        if (d.forum && S.topic == null) return openTopics(d, keep && !switching);
+        S.chat = d;
+        const topic = S.topic;
+        if (switching || !keep) { S.reply = null; S.files = []; S.msgs = []; S.edit = null; closePicker(); chatShell(d); }
+        if (switching || !keep) { closeCtx(); loadSendAs(d); }
+        document.body.classList.add('open');
+        renderDialogs();
+        if (!S.msgs.length) {
+          const c = store.get(`tg:cache:h:${ckey()}`);
+          if (c?.length) { S.msgs = c; S.more = false; renderMsgs(); toBottom(); }
+        }
+        try {
+          const r = await call('history', { chat: id, limit: 40, ...tp() });
+          if (!at(id, topic)) return;
+          S.msgs = r.items;
+          S.more = r.more;
+          renderMsgs();
+          toBottom();
+          markRead();
+        } catch (e) {
+          if (at(id, topic) && !S.msgs.length) $('msgs').innerHTML = `<div class="ui-empty" style="margin:auto"><div class="err">${esc(e.message)}</div></div>`;
+        }
+      }
+
+      // ---------- 论坛话题 ----------
+      const topicIcon = (t, size = '') => `<div class="av tp ${size}" style="background:${esc(t.color ?? '#6fb9f0')}">${t.id === 1 ? '#' : esc([...(t.title || '#')][0])}</div>`;
+      function openTopics(d, keep) {
+        S.chat = d;
+        Object.assign(S, { topic: null, topicInfo: null, reply: null, files: [], msgs: [], edit: null, panel: null });
+        if (!keep) Object.assign(S, { topics: [], tmore: false, tnext: null });
+        closePicker(); closeCtx();
+        $('chat').innerHTML = `<div class="bar"><button class="ui-btn ui-btn--icon ui-btn--sm back" data-act="back">${ICON.back}</button>${avatar(d.id, d.title, 'sm', d.photo)}
+          <div class="grow"><div class="chat-title ellipsis">${esc(d.title)}</div><div class="m">话题</div></div>${watchBtn()}</div><div id="topics"></div>`;
+        $('topics').addEventListener('scroll', nearTopicEnd, { passive: true });
+        syncWatchBtns();
+        document.body.classList.add('open');
+        renderDialogs();
+        renderTopics();
+        return loadTopics(true);
+      }
+      let topicSeq = 0, topicPaging = false, topicTimer;
+      async function loadTopics(reset) {
+        const d = S.chat, my = reset ? ++topicSeq : topicSeq;
+        if (!d?.forum || (!reset && (topicPaging || !S.tmore))) return;
+        topicPaging = true;
+        try {
+          const r = await call('topics', { chat: d.id, ...(reset ? {} : S.tnext) });
+          if (my !== topicSeq || S.chat?.id !== d.id) return;
+          const seen = new Set(r.items.map((t) => t.id));
+          S.topics = reset ? [...r.items, ...S.topics.slice(r.items.length).filter((t) => !seen.has(t.id))] : [...S.topics, ...r.items.filter((t) => !S.topics.some((x) => x.id === t.id))];
+          if (reset && S.topics.length > r.items.length) sortTopics();
+          if (reset ? !S.tnext || S.topics.length <= r.items.length : true) Object.assign(S, { tmore: r.more, tnext: r.next });
+          renderTopics();
+          renderTtabs();
+          if (S.topic && S.topicInfo && !S.topicInfo.color) { const t = S.topics.find((x) => x.id === S.topic); if (t) S.topicInfo = t; }
+        } catch (e) {
+          if (my === topicSeq && S.chat?.id === d.id && S.topic == null && !S.topics.length) $('topics').innerHTML = `<div class="ui-empty"><div class="err">${esc(e.message)}</div><button class="ui-btn ui-btn--sm" data-act="topicsReload">重试</button></div>`;
+        } finally { topicPaging = false; }
+      }
+      const scheduleTopics = () => { clearTimeout(topicTimer); topicTimer = setTimeout(() => loadTopics(true), 1500); };
+      function nearTopicEnd() {
+        const el = $('topics');
+        if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 240) loadTopics(false);
+      }
+      function sortTopics() {
+        S.topics = [...S.topics.filter((t) => t.pinned), ...S.topics.filter((t) => !t.pinned).sort((a, b) => b.date - a.date)];
+      }
+      function renderTopics() {
+        const box = $('topics');
+        if (!box) return;
+        if (!S.topics.length) { box.innerHTML = '<div class="ui-empty" style="padding:24px"><div class="ui-spin"></div></div>'; return; }
+        box.innerHTML = `<button class="dlg" data-topic="0"><div class="av tp" style="background:var(--muted-foreground)">≡</div>
+            <div class="dlg-body"><div class="dlg-row"><span class="dlg-title">全部消息</span></div><div class="dlg-row"><span class="dlg-last">所有话题的消息按时间排在一起</span></div></div></button>` + S.topics.map((t) => {
+          const badge = t.unread ? `<span class="badge ${t.muted || S.chat?.muted ? 'muted' : ''}">${t.unread > 999 ? '999+' : t.unread}</span>` : t.mentions ? '<span class="badge at">@</span>' : t.pinned ? `<span class="pin">${ICON.pin}</span>` : '';
+          return `<button class="dlg" data-topic="${t.id}">${topicIcon(t)}
+            <div class="dlg-body"><div class="dlg-row"><span class="dlg-title ellipsis">${t.closed ? '🔒 ' : ''}${esc(t.title)}</span><span class="dlg-time">${shortDate(t.date)}</span></div>
+            <div class="dlg-row"><span class="dlg-last ellipsis">${t.lastFrom ? `<b>${esc(t.lastFrom)}: </b>` : t.lastOut ? '<b>你: </b>' : ''}${esc(t.last)}</span>${badge}</div></div></button>`;
+        }).join('') + (S.tmore ? '<div class="dlg-more"><div class="ui-spin"></div></div>' : '');
+        nearTopicEnd();
+      }
+      function openTopic(id) {
+        const d = S.chat;
+        if (!d) return;
+        S.topic = id;
+        S.topicInfo = id === 0 ? null : S.topics.find((t) => t.id === id) ?? { id, title: id === 1 ? 'General' : '话题' };
+        return openChat(d.id);
+      }
+      // 聊天顶部的话题标签栏，和手机端一样随时切换
+      function renderTtabs(focus) {
+        const box = $('ttabs');
+        if (!box) return;
+        const x = box.scrollLeft;
+        const badge = (n) => (n ? `<span class="fbadge">${n > 99 ? '99+' : n}</span>` : '');
+        box.innerHTML = `<button class="ftab tlist" data-act="topics" data-tooltip="话题列表"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+          <button class="ftab ${S.topic === 0 ? 'on' : ''}" data-topic="0">全部</button>` +
+          S.topics.map((t) => `<button class="ftab ${t.id === S.topic ? 'on' : ''}" data-topic="${t.id}"><span class="ti" style="color:${esc(t.color ?? '#6fb9f0')}">#</span>${t.closed ? '🔒' : ''}${esc(t.title)}${badge(t.unread)}</button>`).join('') +
+          (S.tmore ? '<span class="ftab"><span class="ui-spin" style="width:12px;height:12px"></span></span>' : '');
+        if (focus) box.querySelector('.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+        else box.scrollLeft = x;
+      }
+      const topicTitle = (id) => (id === 1 ? 'General' : S.topics.find((t) => t.id === id)?.title ?? '话题');
+      // 话题列表开着时，新消息直接更新对应话题；不认识的话题重新拉列表
+      function topicMessage(m, seen) {
+        const t = S.topics.find((x) => x.id === m.topic);
+        if (!t) return scheduleTopics();
+        Object.assign(t, { date: m.date, last: m.service || [mediaLabel(m.media) && m.media.type !== 'webpage' ? `[${mediaLabel(m.media)}]` : '', m.text].filter(Boolean).join(' '), lastOut: m.out, lastFrom: m.out ? '' : m.name });
+        if (!m.out && !seen) t.unread = (t.unread || 0) + 1;
+        if (S.topic == null) { sortTopics(); renderTopics(); } else renderTtabs();
+      }
+      let readTimer;
+      function markRead() {
+        const d = S.chat;
+        if (!d || document.visibilityState !== 'visible') return;
+        clearTimeout(readTimer);
+        const topic = S.topic;
+        readTimer = setTimeout(() => {
+          if (topic) {
+            const t = S.topics.find((x) => x.id === topic);
+            const n = t?.unread ?? 0;
+            if (t) Object.assign(t, { unread: 0, mentions: 0 });
+            if (n) renderTtabs();
+            if (n && d.unread) { d.unread = Math.max(0, d.unread - n); renderDialogs(); }
+            return call('read', { chat: d.id, topic, max: S.msgs.at(-1)?.id ?? 0 }).catch(() => {});
+          }
+          if (d.forum && S.topics.some((t) => t.unread)) { S.topics.forEach((t) => { t.unread = 0; t.mentions = 0; }); renderTtabs(); }
+          if (d.unread || d.mentions) { d.unread = 0; d.mentions = 0; renderDialogs(); }
+          call('read', { chat: d.id }).catch(() => {});
+        }, 300);
+      }
+      async function onScroll() {
+        closePicker();
+        closeCtx();
+        const el = $('msgs');
+        if (el.scrollTop > 200 || !S.more || S.older || !S.msgs.length) return;
+        S.older = true;
+        const id = S.chat.id, topic = S.topic;
+        try {
+          const r = await call('history', { chat: id, before: S.msgs[0].id, limit: 40, ...tp() });
+          if (!at(id, topic)) return;
+          const h = el.scrollHeight;
+          const known = new Set(S.msgs.map((m) => m.id));
+          S.msgs = [...r.items.filter((m) => !known.has(m.id)), ...S.msgs];
+          S.more = r.more;
+          renderMsgs();
+          el.scrollTop += el.scrollHeight - h;
+        } catch (e) { fail(e); }
+        finally { S.older = false; }
+      }
+
+      function replyPreview(id) {
+        const m = S.msgs.find((x) => x.id === id);
+        if (!m) return { name: '', text: '回复的消息' };
+        return { name: m.out ? '你' : m.name, text: m.text || mediaLabel(m.media) || m.service || '' };
+      }
+      const mediaLabel = (md) => md && ({ photo: '图片', image: '图片', sticker: `贴纸 ${md.emoji ?? ''}`, gif: '动图', video: '视频', round: '视频消息', voice: '语音', audio: md.title || '音频', file: md.name || '文件', other: md.label })[md.type];
+
+      function mediaHtml(m) {
+        const md = m.media;
+        if (!md || md.type === 'webpage' || md.type === 'other') return '';
+        const key = `${S.chat.id}:${m.id}`;
+        const visual = ['photo', 'image', 'sticker', 'gif', 'video', 'round'].includes(md.type);
+        if (visual) {
+          const w = md.w || 320, h = md.h || 240;
+          const max = md.type === 'sticker' ? 150 : md.type === 'round' ? 200 : 300;
+          const width = Math.min(max, w, Math.round((max * 1.1 * w) / h));
+          const url = S.media.get(key);
+          const isVid = !!url?.video;
+          const inner = url ? (isVid ? `<video src="${url.src}" autoplay loop muted playsinline></video>` : `<img src="${url.src}" alt="">`) : '';
+          const play = (md.type === 'video' || md.type === 'round') ? `<div class="play">${ICON.play}</div>` : '';
+          const d = md.duration ? `<span class="dur">${dur(md.duration)}</span>` : md.type === 'gif' ? '<span class="dur">GIF</span>' : '';
+          return `<div class="media ${md.type}" data-media="${m.id}" ${url ? '' : 'data-lazy'} style="width:${width}px;aspect-ratio:${w}/${h}">${inner}${play}${d}</div>`;
+        }
+        if (md.type === 'voice' || md.type === 'audio') {
+          const url = S.media.get(`${key}:full`);
+          if (url) return `<audio controls src="${url.src}"></audio>`;
+          return `<div class="file"><button class="ficon" data-act="audio" data-id="${m.id}">${ICON.play}</button>
+            <div class="grow"><div class="ellipsis">${esc(md.type === 'voice' ? '语音消息' : [md.performer, md.title].filter(Boolean).join(' - ') || md.name || '音频')}</div><div class="m">${dur(md.duration)} · ${bytes(md.size)}</div></div></div>`;
+        }
+        return `<div class="file"><button class="ficon" data-act="download" data-id="${m.id}" data-tooltip="下载到「下载」文件夹">${ICON.down}</button>
+          <div class="grow"><div class="ellipsis" style="font-weight:500">${esc(md.name || '文件')}</div><div class="m">${bytes(md.size)}</div></div></div>`;
+      }
+      // 相册：同一 album 的连续消息合成一条，文字、回应、操作都挂在带文字的那条（没有就第一条）上
+      function groupAlbums(ms) {
+        const out = [];
+        for (const m of ms) {
+          const p = out.at(-1);
+          if (m.album && p?.parts && p.album === m.album) p.parts.push(m);
+          else out.push(m.album && !m.service ? { album: m.album, parts: [m] } : m);
+        }
+        return out.map((a) => {
+          if (!a.parts) return a;
+          if (a.parts.length === 1) return a.parts[0];
+          const cap = a.parts.find((x) => x.text) ?? a.parts[0];
+          return { ...cap, parts: a.parts, date: Math.max(...a.parts.map((x) => x.date)), edited: a.parts.some((x) => x.edited), media: cap.media };
+        });
+      }
+      const ALBUM_ROWS = { 2: [2], 3: [1, 2], 4: [2, 2], 5: [2, 3], 6: [3, 3], 7: [2, 2, 3], 8: [2, 3, 3], 9: [3, 3, 3], 10: [2, 2, 3, 3] };
+      const VISUAL = ['photo', 'image', 'gif', 'video'];
+      function albumHtml(m) {
+        const ps = m.parts.filter((x) => x.media && x.media.type !== 'webpage');
+        if (!ps.every((x) => VISUAL.includes(x.media.type))) return `<div class="album-files">${ps.map(mediaHtml).join('')}</div>`;
+        const rows = [];
+        let i = 0;
+        for (const n of ALBUM_ROWS[ps.length] ?? ALBUM_ROWS[10]) rows.push(ps.slice(i, (i += n)));
+        while (i < ps.length) rows.push(ps.slice(i, (i += 3)));
+        const ratio = (x) => Math.min(2.5, Math.max(0.5, (x.media.w || 320) / (x.media.h || 240)));
+        return `<div class="album" style="width:300px">${rows.map((row) => {
+          const sum = row.reduce((t, x) => t + ratio(x), 0);
+          return `<div class="arow" style="aspect-ratio:${Math.max(sum, 0.8).toFixed(3)}">${row.map((x) => {
+            const md = x.media, url = S.media.get(`${S.chat.id}:${x.id}`);
+            const inner = url ? (url.video ? `<video src="${url.src}" autoplay loop muted playsinline></video>` : `<img src="${url.src}" alt="">`) : '';
+            const play = md.type === 'video' ? `<div class="play">${ICON.play}</div>` : '';
+            const d = md.duration ? `<span class="dur">${dur(md.duration)}</span>` : md.type === 'gif' ? '<span class="dur">GIF</span>' : '';
+            return `<div class="media ${md.type}" data-media="${x.id}" ${url ? '' : 'data-lazy'} style="flex:${ratio(x).toFixed(3)} 1 0">${inner}${play}${d}</div>`;
+          }).join('')}</div>`;
+        }).join('')}</div>`;
+      }
+      function msgHtml(m, prev, next, group) {
+        let html = '';
+        if (!prev || dayKey(prev.date) !== dayKey(m.date)) html += `<div class="sep">${dayLabel(m.date)}</div>`;
+        if (m.service) return html + `<div class="svc">${esc(m.service)}</div>`;
+        const all = S.topic === 0 && S.chat.forum;
+        const same = (a, b) => a && b && !a.service && !b.service && a.out === b.out && a.from === b.from && Math.abs(a.date - b.date) < 300 && dayKey(a.date) === dayKey(b.date) && (!all || a.topic === b.topic);
+        const first = !same(prev, m), last = !same(m, next);
+        const md = m.media;
+        const bare = !m.parts && (md && md.type === 'sticker' || (md?.type === 'round' && !m.text));
+        const mediaOnly = (m.parts ? m.parts.every((x) => VISUAL.includes(x.media?.type)) : md && VISUAL.includes(md.type)) && !m.text && !m.reply && !m.fwd;
+        const showName = group && !m.out && first && !bare;
+        const tick = m.out ? `<span class="tick">${m.id <= (S.chat.readOut || 0) ? ICON.tick2 : ICON.tick1}</span>` : '';
+        const rp = m.reply ? replyPreview(m.reply) : null;
+        const wp = md?.type === 'webpage' ? `<div class="wp" data-href="${esc(md.url)}">${md.site ? `<span class="site">${esc(md.site)}</span>` : ''}${md.title ? `<b>${esc(md.title)}</b>` : ''}${md.desc ? `<span>${esc(md.desc)}</span>` : ''}<div data-media="${m.id}" data-lazy data-wp></div></div>` : '';
+        const other = md?.type === 'other' ? `<div class="m">${esc(md.label)}</div>` : '';
+        const acts = `<div class="acts">${S.chat.canSend ? `<button data-act="reply" data-id="${m.id}" data-tooltip="回复">${ICON.reply}</button>` : ''}
+          <button data-act="reactpick" data-id="${m.id}" data-tooltip="表情回应">${ICON.smile}</button>
+          ${canEdit(m) ? `<button data-act="edit" data-id="${m.id}" data-tooltip="编辑">${ICON.edit}</button>` : ''}
+          ${m.out ? `<button data-act="delete" data-id="${m.id}" class="${S.confirm === m.id ? 'danger' : ''}" data-tooltip="${S.confirm === m.id ? '再点一次删除' : '删除'}">${ICON.trash}</button>` : ''}</div>`;
+        const reacts = m.reacts?.length ? `<div class="reacts">${m.reacts.map((r) => r.paid
+          ? `<span class="rx"><span>⭐</span>${r.n}</span>`
+          : `<button class="rx ${r.me ? 'me' : ''}" data-act="react" data-id="${m.id}" ${r.c ? `data-c="${r.c}"` : `data-e="${esc(r.e)}"`}><span>${esc(r.e)}</span>${r.n}</button>`).join('')}</div>` : '';
+        const kb = m.kb ? `<div class="kb">${m.kb.map((row, r) => `<div class="kb-row">${row.map((b, c) =>
+          `<button class="kbb" data-act="press" data-id="${m.id}" data-r="${r}" data-c="${c}" title="${esc(b.t)}">${esc(b.t)}${b.k === 'url' ? '<i>↗</i>' : b.k === 'inline' ? '<i>↪</i>' : ''}</button>`).join('')}</div>`).join('')}</div>` : '';
+        return html + `<div class="msg ${m.out ? 'out' : 'in'} ${first ? 'gap' : ''} ${last ? 'tail' : ''}" data-mid="${m.id}" ${m.parts ? `data-ids="${m.parts.map((x) => x.id).join(' ')}"` : ''}>
+          ${group && !m.out ? `<div class="avslot">${last ? avatar(m.from, m.name, 'sm') : ''}</div>` : ''}
+          <div class="col"><div class="bubble ${bare ? 'bare' : ''} ${mediaOnly && !reacts ? 'media-only' : ''}">
+            ${all && first && !bare && m.topic ? `<div class="ttag" data-topic="${m.topic}" style="color:${esc(S.topics.find((t) => t.id === m.topic)?.color ?? '#6fb9f0')}"># ${esc(topicTitle(m.topic))}</div>` : ''}
+            ${showName ? `<div class="who" style="color:${color(m.from)}">${esc(m.name)}</div>` : ''}
+            ${m.fwd ? `<div class="fwd">转发自 ${esc(m.fwd)}</div>` : ''}
+            ${rp ? `<div class="rq" data-jump="${m.reply}"><b class="ellipsis">${esc(rp.name)}</b><span class="ellipsis">${esc(rp.text)}</span></div>` : ''}
+            ${m.parts ? albumHtml(m) : mediaHtml(m)}${other}
+            ${m.text ? `<span class="text">${rich(m.text, m.ents)}</span>` : ''}${wp}${reacts}
+            <span class="meta">${m.edited ? '已编辑 ' : ''}${hm(m.date)}${tick}</span>
+          </div>${kb}</div>${acts}</div>`;
+      }
+      async function removeMsg(id) {
+        const al = S.msgs.find((x) => x.id === id)?.album;
+        const ids = al ? S.msgs.filter((x) => x.album === al).map((x) => x.id) : [id];
+        try {
+          await call('remove', { chat: S.chat.id, ids });
+          S.msgs = S.msgs.filter((m) => !ids.includes(m.id));
+          renderMsgs();
+        } catch (err) { fail(err); }
+      }
+      function canEdit(m) {
+        if (!m.out || m.service || m.fwd || ['sticker', 'round', 'voice', 'other'].includes(m.media?.type)) return false;
+        return S.chat.self || Date.now() / 1000 - m.date < 48 * 3600;
+      }
+      function rerender() {
+        const stick = nearBottom();
+        renderMsgs();
+        if (stick) toBottom();
+      }
+      let io;
+      function renderMsgs() {
+        const el = $('msgs');
+        if (!el) return;
+        if (S.st?.status === 'ready') saveHistory();
+        const group = S.chat.kind === 'group';
+        const ms = groupAlbums(S.msgs);
+        const empty = S.chat.kind === 'bot' && S.chat.canSend
+          ? '<div class="empty-chat"><p>还没有消息</p><button class="ui-btn ui-btn--primary ui-btn--sm" data-act="start">开始</button></div>'
+          : '<div class="empty-chat">还没有消息</div>';
+        el.innerHTML = (S.more ? '<div class="older m">上滑加载更多</div>' : '') +
+          (ms.length ? ms.map((m, i) => msgHtml(m, ms[i - 1], ms[i + 1], group)).join('') : empty);
+        io?.disconnect();
+        io = new IntersectionObserver((entries) => {
+          for (const e of entries) if (e.isIntersecting) { io.unobserve(e.target); loadMedia(e.target); }
+        }, { root: el, rootMargin: '300px' });
+        el.querySelectorAll('[data-lazy]').forEach((n) => io.observe(n));
+        renderKbd();
+      }
+      function upsertMsg(m) {
+        const i = S.msgs.findIndex((x) => x.id === m.id);
+        if (i >= 0) S.msgs[i] = m;
+        else { S.msgs.push(m); S.msgs.sort((a, b) => a.id - b.id); }
+      }
+
+      // ---------- 媒体 ----------
+      const fetching = new Map();
+      const b64 = (s) => { const bin = atob(s); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+      function blob(chat, id, full, onProgress, onChunk) {
+        const key = `${chat}:${id}${full ? ':full' : ''}`;
+        if (S.media.has(key)) return Promise.resolve(S.media.get(key));
+        const cur = fetching.get(key);
+        if (cur && !cur.aborted) return cur.p;
+        const job = { aborted: false };
+        job.p = (async () => {
+          const r = await call('media', { chat, id, full });
+          if (r.none) return null;
+          const parts = [b64(r.data)];
+          let off = 0;
+          onChunk?.(parts[0], off, r.parts === 1);
+          for (let i = 1; i < r.parts; i++) {
+            if (onProgress?.(i / r.parts, r.size) === false) { job.aborted = true; throw new Error('closed'); }
+            off += parts[i - 1].length;
+            parts.push(b64((await call('media', { token: r.token, part: i })).data));
+            onChunk?.(parts[i], off, i === r.parts - 1);
+          }
+          const v = { src: URL.createObjectURL(new Blob(parts, { type: r.mime })), video: /^video\//.test(r.mime), mime: r.mime };
+          S.media.set(key, v);
+          return v;
+        })().finally(() => fetching.get(key) === job && fetching.delete(key));
+        fetching.set(key, job);
+        return job.p;
+      }
+      let active = 0;
+      const queue = [];
+      function loadMedia(node) {
+        queue.push(node);
+        pump();
+      }
+      async function pump() {
+        while (active < 2 && queue.length) {
+          const node = queue.pop();
+          if (!node.isConnected) continue;
+          active++;
+          const chat = S.chat.id, id = Number(node.dataset.media);
+          blob(chat, id, false).then((v) => {
+            if (!v || !node.isConnected) return;
+            node.removeAttribute('data-lazy');
+            const stick = nearBottom();
+            const media = document.createElement(v.video ? 'video' : 'img');
+            media.src = v.src;
+            if (v.video) Object.assign(media, { autoplay: true, loop: true, muted: true, playsInline: true });
+            if (stick) media.addEventListener(v.video ? 'loadeddata' : 'load', toBottom, { once: true });
+            node.prepend(media);
+          }).catch(() => {}).finally(() => { active--; pump(); });
+        }
+      }
+      // 边下边播：mp4box 把普通 MP4（索引在文件开头）边收边转成分段喂给 MediaSource；
+      // 索引在末尾、已分段或编码不支持时 failed，调用方退回下完再播
+      function videoStream() {
+        if (!window.MediaSource || !window.MP4Box) return null;
+        const mp4 = MP4Box.createFile(), ms = new MediaSource();
+        const st = { url: null, live: false, failed: false, onLive: null };
+        const queues = new Map(), sbs = new Map();
+        let ended = false;
+        const fail = () => { st.failed = true; };
+        const pump = (sb) => {
+          if (sb.updating || !sb.q.length || ms.readyState !== 'open') return;
+          try { sb.appendBuffer(sb.q.shift()); } catch { fail(); }
+        };
+        const tryEnd = () => {
+          if (!ended || sbs.size !== queues.size || ms.readyState !== 'open') return;
+          if ([...sbs.values()].every((sb) => !sb.updating && !sb.q.length)) try { ms.endOfStream(); } catch {}
+        };
+        const push = (id, buf) => { queues.get(id).push(buf); const sb = sbs.get(id); if (sb) pump(sb); };
+        const ok = (t) => MediaSource.isTypeSupported(`video/mp4; codecs="${t.codec}"`);
+        mp4.onError = fail;
+        // 分段必须在 onReady 里马上开始，否则之前收到的数据会被 mp4box 丢掉；SourceBuffer 建好前先排队
+        mp4.onReady = (info) => {
+          const vt = info.videoTracks.filter(ok);
+          if (info.isFragmented || !vt.length) return fail();
+          const use = [vt[0], ...info.audioTracks.filter(ok).slice(0, 1)];
+          try {
+            mp4.onSegment = (id, _u, buf, next) => { push(id, buf); mp4.releaseUsedSamples(id, next); };
+            for (const t of use) { queues.set(t.id, []); mp4.setSegmentOptions(t.id, null, { nbSamples: 24 }); }
+            for (const seg of mp4.initializeSegmentation('per-track')) push(seg.id, seg.buffer);
+            mp4.start();
+          } catch { return fail(); }
+          st.url = URL.createObjectURL(ms);
+          ms.addEventListener('sourceopen', () => {
+            URL.revokeObjectURL(st.url);
+            try {
+              if (info.duration && info.timescale) ms.duration = info.duration / info.timescale;
+              for (const t of use) {
+                const sb = ms.addSourceBuffer(`video/mp4; codecs="${t.codec}"`);
+                sb.q = queues.get(t.id);
+                sb.addEventListener('updateend', () => { pump(sb); tryEnd(); });
+                sb.addEventListener('error', fail);
+                sbs.set(t.id, sb);
+                pump(sb);
+              }
+              st.live = true;
+              tryEnd();
+            } catch { fail(); }
+          }, { once: true });
+          st.onLive?.();
+        };
+        st.feed = (u8, off, last) => {
+          if (st.failed) return;
+          try {
+            const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.length);
+            ab.fileStart = off;
+            mp4.appendBuffer(ab);
+            if (last) { ended = true; mp4.flush(); tryEnd(); }
+          } catch { fail(); }
+        };
+        return st;
+      }
+
+      // 大图里能左右切换的同一相册里的图片和视频
+      function albumIds(id) {
+        const al = S.msgs.find((x) => x.id === id)?.album;
+        return al ? S.msgs.filter((x) => x.album === al && VISUAL.includes(x.media?.type)).map((x) => x.id) : [id];
+      }
+      function lbNav(id) {
+        const ids = albumIds(id), i = ids.indexOf(id);
+        if (ids.length < 2) return '';
+        return `${i > 0 ? '<button class="lb-nav prev" data-lb="-1" aria-label="上一张">‹</button>' : ''}${i < ids.length - 1 ? '<button class="lb-nav next" data-lb="1" aria-label="下一张">›</button>' : ''}<div class="lb-count">${i + 1} / ${ids.length}</div>`;
+      }
+      function lbStep(d) {
+        const box = $('lightbox');
+        if (box.hidden) return;
+        const cur = Number(box.dataset.mid), ids = albumIds(cur), next = ids[ids.indexOf(cur) + d];
+        if (next) openMedia(next);
+      }
+      async function openMedia(id) {
+        const m = S.msgs.find((x) => x.id === id);
+        const md = m?.media;
+        if (!md) return;
+        if ((md.type === 'video' || md.type === 'round') && md.size > 50 * 1048576) { toast('视频超过 50MB，保存到下载文件夹后再看'); return download(id); }
+        const box = $('lightbox');
+        box.hidden = false;
+        box.dataset.mid = id;
+        const nav = lbNav(id);
+        const here = () => !box.hidden && box.dataset.mid === String(id);
+        box.innerHTML = '<div class="lb-load"><div class="ui-spin"></div><span>正在加载…</span></div>' + nav;
+        const vs = (md.type === 'video' || md.type === 'round') && !S.media.has(`${S.chat.id}:${id}:full`) && /mp4|quicktime/.test(md.mime ?? 'video/mp4') ? videoStream() : null;
+        if (vs) vs.onLive = () => {
+          if (!here()) return;
+          box.innerHTML = `<video controls autoplay playsinline></video><div class="lb-bar"><i></i></div>${nav}`;
+          box.querySelector('video').src = vs.url;
+        };
+        try {
+          // 关掉大图就停止传输；进度按 DOM 找，重新打开时复用同一次传输也能更新
+          const v = await blob(S.chat.id, id, true, (f, size) => {
+            if (!here()) return false;
+            const label = box.querySelector('.lb-load span'), bar = box.querySelector('.lb-bar i');
+            if (label) label.textContent = `${Math.round(f * 100)}%${size ? ` · ${bytes(Math.round(f * size))} / ${bytes(size)}` : ''}`;
+            if (bar) bar.style.width = `${f * 100}%`;
+          }, vs?.feed);
+          if (!here()) return;
+          if (!v) { box.hidden = true; return; }
+          if (vs?.live && !vs.failed) { box.querySelector('.lb-bar')?.remove(); return; }
+          // 流式播放中途出错时，换成完整文件并接着刚才的位置播
+          const at = box.querySelector('video')?.currentTime || 0;
+          box.innerHTML = (v.video ? `<video src="${v.src}" controls autoplay ${md.type === 'gif' ? 'loop muted' : ''} playsinline></video>` : `<img src="${v.src}" alt="">`) + nav;
+          if (at) box.querySelector('video')?.addEventListener('loadedmetadata', (e) => { e.target.currentTime = at; }, { once: true });
+        } catch (e) {
+          if (e?.message === 'closed' || box.dataset.mid !== String(id)) return;
+          box.hidden = true; fail(e);
+        }
+      }
+      async function playAudio(btn, id) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="ui-spin"></div>';
+        try {
+          const v = await blob(S.chat.id, id, true);
+          const wrap = btn.closest('.file');
+          const a = document.createElement('audio');
+          Object.assign(a, { controls: true, autoplay: true, src: v.src });
+          wrap.replaceWith(a);
+        } catch (e) { fail(e); btn.disabled = false; btn.innerHTML = ICON.play; }
+      }
+      async function download(id) {
+        toast('正在下载…');
+        try {
+          const r = await call('download', { chat: S.chat.id, id });
+          toast(`已保存到 ${r.path}`);
+        } catch (e) { fail(e); }
+      }
+
+      // ---------- 发送 ----------
+      function grow(t) { t.style.height = 'auto'; t.style.height = `${Math.min(160, t.scrollHeight + 2)}px`; }
+      function renderTray() {
+        const tray = $('tray');
+        if (!tray) return;
+        if (S.files.length) {
+          tray.hidden = false;
+          tray.innerHTML = `<div class="chips">${S.files.map((f, i) => `<span class="chip"><span>${esc(f.name)}</span><span class="m">${bytes(f.size)}</span><a class="link" data-act="unfile" data-i="${i}">${ICON.x}</a></span>`).join('')}</div>
+            <span class="m" id="upinfo">输入框的文字会作为说明</span>`;
+        } else if (S.edit) {
+          const m = S.msgs.find((x) => x.id === S.edit);
+          tray.hidden = false;
+          tray.innerHTML = `<div class="grow"><b>编辑消息</b><span class="ellipsis m">${esc(m?.text || mediaLabel(m?.media) || '')}</span></div><button class="ui-btn ui-btn--icon ui-btn--sm" data-act="unedit">${ICON.x}</button>`;
+        } else if (S.reply) {
+          const rp = replyPreview(S.reply);
+          tray.hidden = false;
+          tray.innerHTML = `<div class="grow"><b>回复 ${esc(rp.name)}</b><span class="ellipsis m">${esc(rp.text)}</span></div><button class="ui-btn ui-btn--icon ui-btn--sm" data-act="unreply">${ICON.x}</button>`;
+        } else tray.hidden = true;
+      }
+      function addMessage(m) {
+        if (!S.chat) return;
+        const stick = nearBottom();
+        upsertMsg(m);
+        renderMsgs();
+        if (stick || m.out) toBottom();
+      }
+      function readFile(file) {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+          r.onerror = () => reject(r.error);
+          r.readAsDataURL(file);
+        });
+      }
+      // 视频在侧栏里量出宽高和时长，后台据此按可播放的视频发送
+      function probeVideo(f) {
+        return new Promise((resolve) => {
+          const v = document.createElement('video'), url = URL.createObjectURL(f);
+          let t;
+          const done = (x) => { clearTimeout(t); URL.revokeObjectURL(url); v.removeAttribute('src'); resolve(x); };
+          v.preload = 'metadata';
+          v.onloadedmetadata = () => done(v.videoWidth ? { w: v.videoWidth, h: v.videoHeight, duration: Math.round(v.duration) || 0 } : null);
+          v.onerror = () => done(null);
+          t = setTimeout(() => done(null), 5000);
+          v.src = url;
+        });
+      }
+      async function uploadOne(f) {
+        const data = await readFile(f);
+        const PART = 60000, total = Math.ceil(data.length / PART);
+        let token = null;
+        for (let i = 0; i < total; i++) {
+          const r = await call('upload', { token, part: i, data: data.slice(i * PART, (i + 1) * PART), ...(token ? {} : { size: f.size, name: f.name }) });
+          token = r.token;
+          if (total > 3) toast(`正在上传 ${f.name} ${Math.round(((i + 1) / total) * 100)}%`, 120000);
+        }
+        toast(`正在上传 ${f.name} 到 Telegram…`, 120000);
+        await call('stage', { token });
+        return token;
+      }
+      // 图片和视频每 10 个合成一个相册，其余文件另成一组；说明文字和回复挂在第一组
+      async function sendFiles(chat, caption, reply, topic = null) {
+        const files = S.files;
+        S.files = [];
+        renderTray();
+        const ok = files.filter((f) => (f.size > 20 * 1048576 ? (toast(`${f.name} 超过 20MB，暂不支持`), false) : true));
+        const metas = await Promise.all(ok.map((f) => (/\.(mp4|m4v|mov)$/i.test(f.name) ? probeVideo(f) : null)));
+        const items = ok.map((f, i) => ({ f, video: metas[i] ?? undefined }));
+        const visual = items.filter((x) => /\.(jpe?g|png)$/i.test(x.f.name) || x.video);
+        const rest = items.filter((x) => !visual.includes(x));
+        const groups = [];
+        for (const list of [visual, rest]) for (let i = 0; i < list.length; i += 10) groups.push(list.slice(i, i + 10));
+        let first = true;
+        try {
+          for (const g of groups) {
+            const tokens = [];
+            for (const it of g) tokens.push({ token: await uploadOne(it.f), video: it.video });
+            const extra = { ...(first ? { caption, reply } : { caption: '' }), ...(topic ? { topic } : {}) };
+            first = false;
+            toast(g.length > 1 ? `正在发送 ${g.length} 个文件…` : `正在发送 ${g[0].f.name}…`, 120000);
+            const r = g.length > 1
+              ? await call('sendAlbum', { chat, items: tokens, ...extra })
+              : await call('sendFile', { chat, token: tokens[0].token, video: tokens[0].video, ...extra });
+            if (at(chat, topic)) for (const m of r.messages ?? [r.message]) addMessage(m);
+          }
+        } finally { document.querySelector('.toast')?.remove(); }
+      }
+      function bumpDialog(chat, last) {
+        const d = S.dialogs.find((x) => x.id === chat);
+        if (!d) return;
+        Object.assign(d, { date: Math.floor(Date.now() / 1000), last, lastOut: true, lastFrom: '', unread: 0 });
+        sortDialogs();
+        renderDialogs();
+      }
+      const at = (chat, topic) => S.chat?.id === chat && (S.topic ?? null) === (topic ?? null);
+      async function sendText(chat, text, reply, topic = S.chat?.id === chat ? S.topic : null) {
+        const r = await call('send', { chat, text, reply, ...(topic ? { topic } : {}) });
+        if (at(chat, topic)) addMessage(r.message);
+        bumpDialog(chat, text);
+      }
+      function fillInput(text) {
+        const input = $('input');
+        if (!input) return;
+        input.value = text;
+        grow(input);
+        input.focus();
+        if (S.chat && !S.edit) drafts.set(ckey(), text);
+      }
+      async function send() {
+        const input = $('input');
+        if (!input || !S.chat) return;
+        if (S.edit) return saveEdit();
+        const text = input.value.trim();
+        if (!text && !S.files.length) return;
+        const chat = S.chat.id, topic = S.topic, reply = S.reply ?? undefined, hadFiles = S.files.length > 0;
+        input.value = '';
+        grow(input);
+        drafts.delete(ckey());
+        S.reply = null;
+        try {
+          if (hadFiles) await sendFiles(chat, text, reply, topic);
+          else { renderTray(); await sendText(chat, text, reply, topic); }
+          if (hadFiles) bumpDialog(chat, text || '[文件]');
+        } catch (e) {
+          if (!hadFiles && !input.value) input.value = text;
+          grow(input);
+          fail(e);
+        }
+        renderTray();
+      }
+
+      // ---------- 编辑 ----------
+      // GramJS 默认按 markdown 解析发出的文本，编辑时把原有格式还原成 markdown
+      function toMd(text, ents) {
+        const MK = { bold: '**', italic: '__', strike: '~~', code: '`', pre: '```' };
+        const ins = [];
+        for (const e of ents ?? []) {
+          const mk = MK[e.k];
+          if (mk) ins.push({ p: e.o + e.l, s: mk, open: 0, l: e.l }, { p: e.o, s: mk, open: 1, l: e.l });
+        }
+        ins.sort((a, b) => b.p - a.p || b.open - a.open || (a.open ? a.l - b.l : b.l - a.l));
+        let out = text || '';
+        for (const x of ins) out = out.slice(0, x.p) + x.s + out.slice(x.p);
+        return out;
+      }
+      function startEdit(id) {
+        const m = S.msgs.find((x) => x.id === id);
+        if (!m || !$('input')) return;
+        Object.assign(S, { edit: id, reply: null, files: [] });
+        fillInput(toMd(m.text, m.ents));
+        renderTray();
+      }
+      function stopEdit() {
+        S.edit = null;
+        const input = $('input');
+        if (input) { input.value = (S.chat && drafts.get(ckey())) ?? ''; grow(input); }
+        renderTray();
+      }
+      async function saveEdit() {
+        const id = S.edit, chat = S.chat.id;
+        const text = $('input').value.trim();
+        const m = S.msgs.find((x) => x.id === id);
+        if (!text && !(m?.media && m.media.type !== 'webpage')) return toast('消息不能为空');
+        stopEdit();
+        try {
+          const r = await call('edit', { chat, id, text });
+          if (S.chat?.id === chat) { upsertMsg(r.message); rerender(); }
+        } catch (e) { fail(e); }
+      }
+
+      // ---------- 表情回应 ----------
+      const closePicker = () => document.getElementById('picker')?.remove();
+      function place(box, btn) {
+        const r = btn.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+        box.style.left = `${Math.max(6, Math.min(innerWidth - w - 6, r.right - w))}px`;
+        box.style.top = `${r.top - h - 6 > 6 ? r.top - h - 6 : Math.min(innerHeight - h - 6, r.bottom + 6)}px`;
+      }
+      async function openPicker(btn, id) {
+        closePicker();
+        const chat = S.chat.id;
+        const box = document.createElement('div');
+        box.id = 'picker';
+        box.innerHTML = '<div class="ui-spin" style="grid-column:1/-1;margin:8px auto"></div>';
+        document.body.append(box);
+        place(box, btn);
+        try {
+          let items = S.rx.get(chat);
+          if (!items) { items = (await call('reactionList', { chat })).items; S.rx.set(chat, items); }
+          if (!box.isConnected) return;
+          box.innerHTML = items.length
+            ? items.map((e) => `<button data-act="react" data-id="${id}" data-e="${esc(e)}">${esc(e)}</button>`).join('')
+            : '<div class="m" style="grid-column:1/-1;padding:8px">这里不允许表情回应</div>';
+          place(box, btn);
+        } catch (e) { closePicker(); fail(e); }
+      }
+      async function react(id, emoji, custom) {
+        closePicker();
+        const chat = S.chat.id;
+        try {
+          const r = await call('react', { chat, id, emoji, custom });
+          const m = S.chat?.id === chat && S.msgs.find((x) => x.id === id);
+          if (m) { m.reacts = r.reactions; rerender(); }
+        } catch (e) { fail(e); }
+      }
+
+      // ---------- 机器人按钮 ----------
+      async function press(t) {
+        const id = Number(t.dataset.id), row = Number(t.dataset.r), col = Number(t.dataset.c);
+        const b = S.msgs.find((x) => x.id === id)?.kb?.[row]?.[col];
+        if (!b) return;
+        if (b.k === 'url') return call('open', { url: b.u }).catch(fail);
+        if (b.k === 'inline') return fillInput(b.u);
+        if (b.k === 'copy') return copyText(b.u);
+        if (b.k !== 'cb') return toast('暂不支持这种按钮，请在官方客户端操作');
+        t.classList.add('busy');
+        try {
+          const r = await call('press', { chat: S.chat.id, id, row, col });
+          if (r.text) toast(r.text, r.alert ? 8000 : 3200);
+        } catch (e) { fail(e); }
+        finally { t.classList.remove('busy'); }
+      }
+      function currentKbd() {
+        for (let i = S.msgs.length - 1; i >= 0; i--) {
+          const m = S.msgs[i];
+          if (m.out || m.service) continue;
+          if (m.rkHide) return null;
+          if (m.rk) return { id: m.id, ...m.rk };
+        }
+        return null;
+      }
+      function renderKbd() {
+        const box = $('rkbd'), btn = $('kbdbtn'), input = $('input');
+        if (!box || !btn) return;
+        const k = currentKbd();
+        const show = !!k && !S.rkClosed.has(`${S.chat.id}:${k.id}`) && !S.panel;
+        btn.hidden = !k;
+        btn.classList.toggle('on', show);
+        box.hidden = !show;
+        if (input) input.placeholder = k?.ph || '发消息…';
+        if (show) box.innerHTML = k.rows.map((row, r) => `<div class="kb-row">${row.map((t, c) => `<button type="button" class="kbb" data-act="rk" data-r="${r}" data-c="${c}">${esc(t)}</button>`).join('')}</div>`).join('');
+      }
+
+      // ---------- 表情与贴纸面板 ----------
+      const EMOJI = [
+        ['表情', '😀 😃 😄 😁 😆 😅 🤣 😂 🙂 🙃 🫠 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😙 🥲 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🫢 🫣 🤫 🤔 🫡 🤐 🤨 😐 😑 😶 🫥 😏 😒 🙄 😬 🤥 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 🥸 😎 🤓 🧐 😕 🫤 😟 🙁 😮 😯 😲 😳 🥺 🥹 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👹 👺 👻 👽 👾 🤖 😺 😸 😹 😻 😼 😽 🙀 😿 😾 🙈 🙉 🙊'],
+        ['手势与人物', '👋 🤚 🖐️ ✋ 🖖 🫱 🫲 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 🫵 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🧠 👀 👁️ 👅 👄 💋 👶 🧒 👦 👧 🧑 👱 👨 🧔 👩 🧓 👴 👵 🙍 🙎 🙅 🙆 💁 🙋 🧏 🙇 🤦 🤷 👮 🕵️ 💂 🥷 👷 🤴 👸 👳 🧕 🤵 👰 🤰 👼 🎅 🤶 🦸 🦹 🧙 🧚 🧛 🧜 🧝 🧞 🧟 💆 💇 🚶 🧍 🧎 🏃 💃 🕺 👯 🧖 🧗'],
+        ['爱心与符号', '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❤️‍🔥 ❤️‍🩹 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 💯 💢 💥 💫 💦 💨 💬 💭 💤 ✨ 🔥 ⭐ 🌟 ⚡ ☀️ 🌈 ❄️ ☃️ 💧 🌊 ✅ ❌ ❓ ❗ ‼️ ⁉️ ⭕ 🚫 🆗 🆒 🆕 🆓 🔞 ♻️ ⚠️ 🔔 🎵 🎶 ➕ ➖ ✖️ ➗ ♾️ 💲 ©️ ®️ ™️'],
+        ['动物与自然', '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🐢 🐍 🦎 🦖 🐙 🦑 🦐 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🐘 🦛 🦏 🐪 🦒 🦘 🐄 🐎 🐖 🐑 🐐 🦌 🐕 🐈 🐓 🦃 🦚 🦜 🦢 🕊️ 🐇 🦝 🦦 🦥 🐁 🐿️ 🦔 🌵 🎄 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🍁 🍂 🍃 🍄 🌾 💐 🌷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌚 🌙 🌍 🪐'],
+        ['食物', '🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶️ 🌽 🥕 🧄 🧅 🥔 🍠 🥐 🍞 🥖 🥨 🧀 🥚 🍳 🥞 🧇 🥓 🍗 🍖 🌭 🍔 🍟 🍕 🥪 🌮 🌯 🥗 🍝 🍜 🍲 🍛 🍣 🍱 🥟 🍤 🍙 🍚 🍘 🍥 🥮 🍢 🍡 🍧 🍨 🍦 🥧 🧁 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🥜 🍯 🥛 🍼 ☕ 🍵 🧃 🥤 🧋 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🍾 🧊 🥢'],
+        ['活动与物品', '⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🎱 🏓 🏸 🥊 🎯 ⛳ 🎣 🎿 🏂 🚴 🏆 🥇 🥈 🥉 🏅 🎫 🎪 🎭 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🎷 🎺 🎸 🎻 🎲 ♟️ 🎮 🎰 🧩 🚗 🚕 🚙 🚌 🏎️ 🚓 🚑 🚒 🚚 🚲 🛵 🏍️ 🚨 🚄 🚇 ✈️ 🚀 🛸 🚁 ⛵ 🚢 ⚓ 🗺️ 🗽 🗼 🏰 🎡 🎢 🏖️ 🏝️ 🏔️ 🗻 🏠 🏢 🏥 🏦 🏫 🌃 🌉 🎆 🎇 ⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 💾 💿 📷 📹 🎥 📞 ☎️ 📺 📻 ⏰ ⌛ 🔋 🔌 💡 🔦 🕯️ 💸 💵 💰 💳 💎 🔧 🔨 🛠️ ⚙️ 💣 🔪 🛡️ 🔮 💊 💉 🩹 🧬 🔬 🔭 🧹 🧻 🔑 🗝️ 🚪 🛋️ 🛏️ 🧸 🎁 🎈 🎉 🎊 🎀 ✉️ 📦 📝 📌 📎 ✂️ 🔒 🔓 📚 📖 🔗'],
+        ['旗帜', '🏳️ 🏴 🏁 🚩 🏳️‍🌈 🇨🇳 🇭🇰 🇲🇴 🇹🇼 🇯🇵 🇰🇷 🇸🇬 🇺🇸 🇬🇧 🇫🇷 🇩🇪 🇮🇹 🇪🇸 🇷🇺 🇺🇦 🇮🇳 🇨🇦 🇦🇺 🇧🇷'],
+      ];
+      const recentEmoji = () => { try { return JSON.parse(localStorage.getItem('tg:emoji') || '[]'); } catch { return []; } };
+      function useEmoji(e) {
+        const input = $('input');
+        if (!input) return;
+        const a = input.selectionStart ?? input.value.length, b = input.selectionEnd ?? a;
+        input.value = input.value.slice(0, a) + e + input.value.slice(b);
+        input.selectionStart = input.selectionEnd = a + e.length;
+        grow(input);
+        if (!S.edit) drafts.set(ckey(), input.value);
+        try { localStorage.setItem('tg:emoji', JSON.stringify([e, ...recentEmoji().filter((x) => x !== e)].slice(0, 24))); } catch {}
+      }
+      let sio;
+      const wantSt = new Set();
+      let stTimer;
+      async function flushSt() {
+        const ids = [...wantSt].filter((id) => !S.sthumb.has(id)).slice(0, 40);
+        wantSt.clear();
+        if (!ids.length) return;
+        for (const id of ids) S.sthumb.set(id, null);
+        try {
+          const r = await call('stickerThumbs', { ids });
+          for (const id of ids) {
+            if (!(id in r)) { S.sthumb.delete(id); wantSt.add(id); continue; }
+            S.sthumb.set(id, r[id]);
+            if (r[id]) document.querySelectorAll(`[data-sid="${id}"]`).forEach((el) => { el.innerHTML = `<img src="${r[id]}" alt="">`; });
+          }
+        } catch { for (const id of ids) S.sthumb.delete(id); wantSt.clear(); }
+        if (wantSt.size) stTimer = setTimeout(flushSt, 100);
+      }
+      async function loadStickers(set) {
+        const st = S.stk;
+        if (st.loading.has(set)) return;
+        st.loading.add(set);
+        try {
+          if (set === 'sets') st.sets = (await call('stickers', {})).sets;
+          else st.items.set(set, (await call('stickers', { set })).items);
+        } catch (e) {
+          if (set === 'sets') st.sets = []; else st.items.set(set, []);
+          fail(e);
+        } finally { st.loading.delete(set); }
+        if (S.stk === st && S.panel === 'sticker') renderPanel();
+      }
+      function renderPanel() {
+        const p = $('panel');
+        if (!p) return;
+        p.hidden = !S.panel;
+        $('emojibtn')?.classList.toggle('on', !!S.panel);
+        renderKbd();
+        if (!S.panel) { p.innerHTML = ''; return; }
+        const tabs = `<div class="ptabs"><button class="ptab ${S.panel === 'emoji' ? 'on' : ''}" data-act="ptab" data-p="emoji">表情</button><button class="ptab ${S.panel === 'sticker' ? 'on' : ''}" data-act="ptab" data-p="sticker">贴纸</button></div>`;
+        if (S.panel === 'emoji') {
+          const recent = recentEmoji();
+          const sections = [...(recent.length ? [['常用', recent]] : []), ...EMOJI.map(([n, s]) => [n, s.split(' ')])];
+          p.innerHTML = tabs + `<div class="pbody">${sections.map(([n, list]) => `<div class="ehead">${n}</div><div class="egrid">${list.map((e) => `<button type="button" data-act="emoji" data-e="${esc(e)}">${esc(e)}</button>`).join('')}</div>`).join('')}</div>`;
+          return;
+        }
+        const st = S.stk;
+        if (!st.sets) loadStickers('sets');
+        const items = st.items.get(st.cur);
+        if (!items) loadStickers(st.cur);
+        const sets = [{ id: 'recent', title: '最近' }, { id: 'faved', title: '收藏' }, ...(st.sets ?? [])];
+        const body = !items ? '<div class="ui-empty" style="padding:24px"><div class="ui-spin"></div></div>'
+          : !items.length ? `<div class="ui-empty m" style="padding:24px">${st.cur === 'faved' ? '还没有收藏的贴纸' : st.cur === 'recent' ? '还没有最近使用的贴纸' : '这个贴纸包是空的'}</div>`
+          : `<div class="sgrid">${items.map((s) => { const u = S.sthumb.get(s.id); return `<button type="button" data-act="sticker" data-sid="${s.id}" title="${esc(s.e)}">${u ? `<img src="${u}" alt="">` : esc(s.e || '·')}</button>`; }).join('')}</div>`;
+        p.innerHTML = tabs + `<div class="ptabs">${sets.map((s) => `<button class="ptab ${st.cur === s.id ? 'on' : ''}" data-act="pset" data-set="${esc(s.id)}" title="${esc(s.title)}">${esc(s.title)}</button>`).join('')}</div><div class="pbody">${body}</div>`;
+        sio?.disconnect();
+        sio = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            sio.unobserve(e.target);
+            const id = e.target.dataset.sid;
+            if (!S.sthumb.has(id)) { wantSt.add(id); clearTimeout(stTimer); stTimer = setTimeout(flushSt, 60); }
+          }
+        }, { root: p.querySelector('.pbody'), rootMargin: '200px' });
+        p.querySelectorAll('[data-sid]').forEach((n) => { if (!S.sthumb.get(n.dataset.sid)) sio.observe(n); });
+      }
+      async function sendSticker(sid) {
+        const chat = S.chat.id, topic = S.topic, reply = S.reply ?? undefined;
+        S.reply = null;
+        renderTray();
+        try {
+          const r = await call('sendSticker', { chat, id: sid, reply, ...(topic ? { topic } : {}) });
+          if (at(chat, topic)) addMessage(r.message);
+          bumpDialog(chat, '[贴纸]');
+          if (S.stk.cur !== 'recent') S.stk.items.delete('recent');
+        } catch (e) { fail(e); }
+      }
+
+      // ---------- 实时事件 ----------
+      // ---------- 右键菜单与已读 ----------
+      const closeCtx = () => document.getElementById('ctx')?.remove();
+      function popAt(box, x, y) {
+        document.body.append(box);
+        const w = box.offsetWidth, h = box.offsetHeight;
+        box.style.left = `${Math.max(6, Math.min(innerWidth - w - 6, x))}px`;
+        box.style.top = `${Math.max(6, Math.min(innerHeight - h - 6, y))}px`;
+      }
+      function copyText(s) {
+        const legacy = () => {
+          const ta = Object.assign(document.createElement('textarea'), { value: s });
+          ta.style.cssText = 'position:fixed;opacity:0';
+          document.body.append(ta);
+          ta.select();
+          let ok = false;
+          try { ok = document.execCommand('copy'); } catch {}
+          ta.remove();
+          toast(ok ? '已复制' : '复制失败，请手动选择文字复制');
+        };
+        if (!navigator.clipboard?.writeText) return legacy();
+        navigator.clipboard.writeText(s).then(() => toast('已复制'), legacy);
+      }
+      const readAt = (t) => `${dayLabel(t)} ${hm(t)}`;
+      function readersHtml(r) {
+        if (r.hidden) return `<div class="rd">${esc(r.hidden)}</div>`;
+        if ('date' in r) return r.date ? `<div class="rd">${ICON.tick2}已读于 ${readAt(r.date)}</div>` : `<div class="rd">${ICON.tick1}对方还没读</div>`;
+        if (!r.users.length) return `<div class="rd">${ICON.tick1}还没有人读</div>`;
+        return `<div class="rd">${ICON.tick2}${r.users.length} 人已读</div><div class="rlist">${r.users.map((u) =>
+          `<div class="ru">${avatar(u.id, u.name, 'xs', u.photo)}<span class="ellipsis">${esc(u.name)}</span><span class="t">${readAt(u.date)}</span></div>`).join('')}</div>`;
+      }
+      async function openCtx(id, x, y) {
+        closeCtx(); closePicker();
+        const m = S.msgs.find((v) => v.id === id), chat = S.chat;
+        if (!m || m.service || !chat) return;
+        const box = document.createElement('div');
+        box.id = 'ctx';
+        box.className = 'pop';
+        const showRead = m.out && !chat.self && (chat.kind === 'user' || chat.kind === 'group');
+        const quick = (S.rx.get(chat.id) ?? []).slice(0, 7);
+        box.innerHTML = `<div class="qr" ${quick.length ? '' : 'hidden'}>${quick.map((e) => `<button data-act="react" data-id="${id}" data-e="${esc(e)}">${esc(e)}</button>`).join('')}</div>
+          ${chat.canSend ? `<button class="mi" data-act="reply" data-id="${id}">${ICON.reply}回复</button>` : ''}
+          ${m.text ? `<button class="mi" data-act="copy" data-id="${id}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>复制文字</button>` : ''}
+          ${canEdit(m) ? `<button class="mi" data-act="edit" data-id="${id}">${ICON.edit}编辑</button>` : ''}
+          ${m.out ? `<button class="mi danger" data-act="ctxdel" data-id="${id}">${ICON.trash}<span>删除</span></button>` : ''}
+          ${showRead ? `<div class="line"></div><div id="ctxread"><div class="rd"><span class="ui-spin"></span>正在获取已读情况…</div></div>` : ''}`;
+        popAt(box, x, y);
+        if (!quick.length) {
+          (S.rx.has(chat.id) ? Promise.resolve(S.rx.get(chat.id)) : call('reactionList', { chat: chat.id }).then((r) => (S.rx.set(chat.id, r.items), r.items)))
+            .then((items) => {
+              const qr = box.querySelector('.qr');
+              if (!box.isConnected || !qr || !qr.hidden || !items.length) return;
+              qr.innerHTML = items.slice(0, 7).map((e) => `<button data-act="react" data-id="${id}" data-e="${esc(e)}">${esc(e)}</button>`).join('');
+              qr.hidden = false;
+              popAt(box, x, y);
+            }).catch(() => {});
+        }
+        if (!showRead) return;
+        const slot = box.querySelector('#ctxread');
+        try {
+          const r = chat.kind === 'user' && m.id > (chat.readOut || 0) ? { date: 0 } : await call('readers', { chat: chat.id, id });
+          if (!box.isConnected) return;
+          slot.innerHTML = readersHtml(r);
+        } catch (e) {
+          if (box.isConnected) slot.innerHTML = `<div class="rd">${esc(e.message)}</div>`;
+        }
+        if (box.isConnected) popAt(box, x, y);
+      }
+      document.addEventListener('contextmenu', (e) => {
+        const msg = e.target.closest('#msgs .msg[data-mid]');
+        if (!msg || String(getSelection() ?? '').trim()) return;
+        e.preventDefault();
+        openCtx(Number(msg.dataset.mid), e.clientX, e.clientY);
+      });
+
+      // ---------- 发言身份 ----------
+      async function loadSendAs(d) {
+        S.sendAs = null;
+        renderSendAs();
+        if (d.kind !== 'group' || !d.canSend) return;
+        try {
+          const r = await call('sendAs', { chat: d.id });
+          if (S.chat?.id !== d.id || !r.items.length) return;
+          S.sendAs = { chat: d.id, ...r };
+          renderSendAs();
+        } catch {}
+      }
+      function renderSendAs() {
+        const b = $('sendas');
+        if (!b) return;
+        const sa = S.sendAs?.chat === S.chat?.id ? S.sendAs : null;
+        b.hidden = !sa;
+        if (!sa) return;
+        const cur = sa.items.find((x) => x.id === sa.current) ?? sa.items[0];
+        b.innerHTML = avatar(cur.id, cur.name, 'xs', cur.photo);
+        b.dataset.tooltip = `发言身份：${cur.name}`;
+      }
+      function openSendAs(btn) {
+        closePicker(); closeCtx();
+        const sa = S.sendAs;
+        if (!sa) return;
+        const box = document.createElement('div');
+        box.id = 'ctx';
+        box.className = 'pop';
+        box.innerHTML = '<div class="rd">选择发言身份</div>' + sa.items.map((x) => `<button class="mi" data-act="pickas" data-as="${esc(x.id)}" ${x.locked ? 'data-locked' : ''}>${avatar(x.id, x.name, 'xs', x.photo)}
+          <span style="min-width:0"><div class="ellipsis">${esc(x.name)}</div>${x.sub ? `<div class="m" style="font-size:11.5px">${esc(x.sub)}</div>` : ''}</span>
+          ${x.id === sa.current ? '<span class="chk">✓</span>' : x.locked ? '<span class="chk m" style="font-weight:400">Premium</span>' : ''}</button>`).join('');
+        const r = btn.getBoundingClientRect();
+        popAt(box, r.left, 0);
+        box.style.top = `${Math.max(6, r.top - box.offsetHeight - 6)}px`;
+      }
+
+      function onEvent(ev) {
+        if (ev.type === 'message') {
+          const d = S.dialogs.find((x) => x.id === ev.chat);
+          const m = ev.message;
+          const same = S.chat?.id === ev.chat;
+          const here = same && (!S.chat.forum || S.topic === 0 || (S.topic != null && m.topic === S.topic));
+          if (same && S.chat.forum) topicMessage(m, here && document.visibilityState === 'visible');
+          if (d) {
+            d.date = m.date;
+            d.last = m.service || [mediaLabel(m.media) && m.media.type !== 'webpage' ? `[${mediaLabel(m.media)}]` : '', m.text].filter(Boolean).join(' ');
+            d.lastOut = m.out;
+            d.lastFrom = d.kind === 'group' && !m.out ? m.name : '';
+            if (!m.out && !(here && document.visibilityState === 'visible')) d.unread = (d.unread || 0) + 1;
+            if (m.out) d.unread = 0;
+            sortDialogs();
+            renderDialogs();
+            if (S.folders.length && !m.out) scheduleSlow();
+          } else if (S.folder === 0) scheduleDialogs();
+          else scheduleSlow();
+          if (here) { addMessage(m); if (!m.out) markRead(); }
+        } else if (ev.type === 'edit') {
+          if (S.chat?.id === ev.chat && S.msgs.some((x) => x.id === ev.message.id)) { upsertMsg(ev.message); renderMsgs(); }
+        } else if (ev.type === 'delete') {
+          if (S.chat && (!ev.chat || ev.chat === S.chat.id)) {
+            const ids = new Set(ev.ids);
+            const before = S.msgs.length;
+            S.msgs = S.msgs.filter((m) => !ids.has(m.id));
+            if (S.msgs.length !== before) renderMsgs();
+          }
+          scheduleDialogs();
+        } else if (ev.type === 'readOut') {
+          const d = S.dialogs.find((x) => x.id === ev.chat);
+          if (d) { d.readOut = Math.max(d.readOut || 0, ev.max); renderDialogs(); }
+          if (S.chat?.id === ev.chat) { S.chat.readOut = Math.max(S.chat.readOut || 0, ev.max); renderMsgs(); }
+        } else if (ev.type === 'readIn') {
+          const d = S.dialogs.find((x) => x.id === ev.chat);
+          if (d) { d.unread = ev.unread; if (!ev.unread) d.mentions = 0; renderDialogs(); }
+          if (S.folders.length) scheduleSlow();
+        } else if (ev.type === 'reactions') {
+          const m = S.chat?.id === ev.chat && S.msgs.find((x) => x.id === ev.id);
+          if (m) { m.reacts = ev.reactions; rerender(); }
+        } else if (ev.type === 'refresh') scheduleDialogs();
+        else if (ev.type === 'watches') void loadWatches();
+      }
+
+      // ---------- 交互 ----------
+      // 侧栏 iframe 沙箱没有 allow-forms，表单提交被拦截且不会触发 submit 事件，只能自己接管
+      const doSubmit = (form) => (form.id === 'composer' ? send() : form.dataset.form && submit(form));
+      document.addEventListener('click', (e) => {
+        const b = e.target.closest('form button:not([type="button"])');
+        if (b?.form) { e.preventDefault(); doSubmit(b.form); }
+      }, true);
+      document.addEventListener('keydown', (e) => {
+        const f = e.target.closest?.('form[data-form]');
+        if (f && e.key === 'Enter' && !e.isComposing && e.target.tagName === 'INPUT') { e.preventDefault(); doSubmit(f); }
+      });
+      document.addEventListener('submit', (e) => { e.preventDefault(); doSubmit(e.target); });
+      document.addEventListener('keydown', (e) => {
+        if (e.target.id === 'input' && e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+        if (e.target.id === 'input' && e.key === 'ArrowUp' && !e.target.value && !S.edit) {
+          const m = [...S.msgs].reverse().find(canEdit);
+          if (m) { e.preventDefault(); startEdit(m.id); }
+        }
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !$('lightbox').hidden) {
+          e.preventDefault();
+          return lbStep(e.key === 'ArrowLeft' ? -1 : 1);
+        }
+        if (e.key === 'Escape') {
+          if (document.getElementById('ctx')) closeCtx();
+          else if (document.getElementById('picker')) closePicker();
+          else if (!$('lightbox').hidden) { $('lightbox').hidden = true; $('lightbox').innerHTML = ''; }
+          else if (S.edit) stopEdit();
+          else if (S.panel) { S.panel = null; renderPanel(); }
+          else if (S.reply || S.files.length) { S.reply = null; S.files = []; renderTray(); }
+          else if (document.body.classList.contains('open')) document.body.classList.remove('open');
+        }
+      });
+      document.addEventListener('input', (e) => {
+        if (e.target.id === 'search') { S.q = e.target.value; renderDialogs(); }
+        if (e.target.id === 'input') { grow(e.target); if (S.chat && !S.edit) drafts.set(ckey(), e.target.value); }
+      });
+      // 点面板里的表情不让输入框失焦，光标位置保持不变
+      document.addEventListener('mousedown', (e) => {
+        if (e.target.closest('#panel button, #rkbd button')) e.preventDefault();
+      });
+      document.addEventListener('paste', (e) => {
+        if (e.target.id !== 'input') return;
+        const files = [...(e.clipboardData?.files ?? [])];
+        if (!files.length) return;
+        e.preventDefault();
+        S.files.push(...files.map((f) => (f.name && f.name !== 'image.png' ? f : new File([f], `paste_${Date.now()}.${(f.type.split('/')[1] || 'png')}`, { type: f.type }))));
+        renderTray();
+      });
+      $('file').addEventListener('change', (e) => {
+        S.files.push(...e.target.files);
+        e.target.value = '';
+        renderTray();
+        $('input')?.focus();
+      });
+      let swipeX = null;
+      $('lightbox').addEventListener('touchstart', (e) => { swipeX = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+      $('lightbox').addEventListener('touchend', (e) => {
+        const dx = swipeX == null ? 0 : e.changedTouches[0].clientX - swipeX;
+        swipeX = null;
+        if (Math.abs(dx) > 50) lbStep(dx < 0 ? 1 : -1);
+      });
+      $('lightbox').addEventListener('click', (e) => {
+        if (e.target.tagName === 'VIDEO') return;
+        const nav = e.target.closest('[data-lb]');
+        if (nav) return lbStep(Number(nav.dataset.lb));
+        $('lightbox').hidden = true;
+        $('lightbox').innerHTML = '';
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && S.chat?.unread) markRead();
+      });
+      let logoutArmed = false;
+      document.addEventListener('click', async (e) => {
+        if (!e.target.closest('#picker, [data-act="reactpick"]')) closePicker();
+        if (!e.target.closest('#ctx, [data-act="sendas"], [data-act="watches"]')) closeCtx();
+        // 点表情面板和输入栏以外的地方收起面板；输入栏里保留，方便表情和文字混着输入
+        if (S.panel && e.target.isConnected && !e.target.closest('#panel, #composer')) { S.panel = null; renderPanel(); }
+        const t = e.target.closest('[data-href],[data-act],[data-topic],[data-dlg],[data-folder],[data-jump],[data-media],.spoiler,#logout');
+        if (!t) { if (S.confirm) { S.confirm = null; renderMsgs(); } return; }
+        if (t.closest('#ctx') && t.dataset.act !== 'ctxdel' && t.dataset.act !== 'unwatch') closeCtx();
+        if (t.classList.contains('spoiler')) return t.classList.add('show');
+        if (t.dataset.href) return call('open', { url: t.dataset.href }).catch(fail);
+        if (t.dataset.topic) return openTopic(Number(t.dataset.topic));
+        if (t.dataset.dlg) { if (S.chat?.id === t.dataset.dlg && S.topic != null) S.topic = null; return openChat(t.dataset.dlg); }
+        if ('folder' in t.dataset) { const v = t.dataset.folder; const id = v === 'archive' ? v : Number(v); return id === S.folder ? ($('dialogs').scrollTop = 0) : switchFolder(id); }
+        if (t.dataset.jump) {
+          const el = document.querySelector(`[data-mid="${t.dataset.jump}"] .bubble, [data-ids~="${t.dataset.jump}"] .bubble`);
+          if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+          return;
+        }
+        if ('wp' in t.dataset) {
+          const url = t.closest('[data-href]')?.dataset.href;
+          return url && call('open', { url }).catch(fail);
+        }
+        if (t.dataset.media) {
+          const md = S.msgs.find((x) => x.id === Number(t.dataset.media))?.media;
+          if (md?.type !== 'sticker') openMedia(Number(t.dataset.media));
+          return;
+        }
+        if (t.id === 'logout') {
+          if (!logoutArmed) { logoutArmed = true; toast('再点一次退出登录'); setTimeout(() => (logoutArmed = false), 3000); return; }
+          logoutArmed = false;
+          try { applyState(await call('logout'), true); } catch (err) { fail(err); }
+          return;
+        }
+        const id = Number(t.dataset.id);
+        switch (t.dataset.act) {
+          case 'reconnect': return call('reconnect').then((r) => applyState(r, true)).catch(fail);
+          case 'cancel': return call('cancel').then((r) => applyState(r, true)).catch(fail);
+          case 'dialogs': return loadDialogs();
+          case 'back': document.body.classList.remove('open'); return;
+          case 'attach': return $('file').click();
+          case 'reply': S.reply = id; S.files = []; renderTray(); $('input')?.focus(); return;
+          case 'copy': return copyText(S.msgs.find((x) => x.id === id)?.text ?? '');
+          case 'ctxdel':
+            if (!t.classList.contains('armed')) { t.classList.add('armed'); t.querySelector('span').textContent = '再点一次确认删除'; return; }
+            closeCtx();
+            return removeMsg(id);
+          case 'sendas': return document.getElementById('ctx') ? closeCtx() : openSendAs(t);
+          case 'topics': return S.chat && openTopics(S.chat, true);
+          case 'topicsReload': return loadTopics(true);
+          case 'watches': return document.getElementById('ctx')?.dataset.kind === 'watches' ? closeCtx() : openWatches(t);
+          case 'unwatch':
+            t.disabled = true;
+            return call('unwatch', { sid: t.dataset.sid }).then(() => { toast('已取消订阅'); return loadWatches(); }).catch(fail);
+          case 'pickas': {
+            const sa = S.sendAs, v = t.dataset.as;
+            if (!sa || v === sa.current) return;
+            if ('locked' in t.dataset) return toast('以这个身份发言需要 Telegram Premium');
+            try {
+              await call('setSendAs', { chat: sa.chat, id: v });
+              sa.current = v;
+              renderSendAs();
+              toast(`已切换为以「${sa.items.find((x) => x.id === v)?.name ?? ''}」身份发言`);
+            } catch (err) { fail(err); }
+            return;
+          }
+          case 'edit': return startEdit(id);
+          case 'unedit': return stopEdit();
+          case 'reactpick': return document.getElementById('picker') ? closePicker() : openPicker(t, id);
+          case 'react': return react(id, t.dataset.e, t.dataset.c);
+          case 'press': return press(t);
+          case 'start': return sendText(S.chat.id, '/start').catch(fail);
+          case 'kbd': {
+            const k = currentKbd();
+            if (!k) return;
+            const key = `${S.chat.id}:${k.id}`;
+            if (S.rkClosed.has(key) || S.panel) { S.rkClosed.delete(key); S.panel = null; renderPanel(); }
+            else { S.rkClosed.add(key); renderKbd(); }
+            return;
+          }
+          case 'rk': {
+            const k = currentKbd();
+            const text = k?.rows[Number(t.dataset.r)]?.[Number(t.dataset.c)];
+            if (!text) return;
+            if (k.once) S.rkClosed.add(`${S.chat.id}:${k.id}`);
+            return sendText(S.chat.id, text).catch(fail);
+          }
+          case 'panel': S.panel = S.panel ? null : 'emoji'; renderPanel(); if (!S.panel) $('input')?.focus(); return;
+          case 'ptab': S.panel = t.dataset.p; renderPanel(); return;
+          case 'pset': S.stk.cur = t.dataset.set; renderPanel(); return;
+          case 'emoji': return useEmoji(t.dataset.e);
+          case 'sticker': return sendSticker(t.dataset.sid);
+          case 'unreply': S.reply = null; renderTray(); return;
+          case 'unfile': S.files.splice(Number(t.dataset.i), 1); renderTray(); return;
+          case 'download': return download(id);
+          case 'audio': return playAudio(t, id);
+          case 'delete':
+            if (S.confirm !== id) { S.confirm = id; renderMsgs(); return; }
+            S.confirm = null;
+            return removeMsg(id);
+        }
+      });
+
+      ensoUI.tooltip();
+      (async () => {
+        for (;;) {
+          try {
+            const r = await call('state');
+            S.cursor = r.cursor;
+            applyState(r, true);
+            break;
+          } catch (e) {
+            $('auth').innerHTML = `<div class="center"><div class="err">${esc(e?.message ?? e)}</div></div>`;
+            await sleep(3000);
+          }
+        }
+        loop();
+      })();
+    </script>
+  </body>
+</html>

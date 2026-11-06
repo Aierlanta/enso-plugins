@@ -1,0 +1,5 @@
+{
+  "name": "enso-plugin-tgclient",
+  "private": true,
+  "type": "module"
+}
