@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T16:29:00.476Z",
-  "sequence": 47,
+  "generatedAt": "2026-11-06T04:22:11.082Z",
+  "sequence": 48,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -546,7 +546,7 @@
       ],
       "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
-      "latest": "0.3.2",
+      "latest": "0.3.3",
       "versions": [
         {
           "version": "0.1.0",
@@ -619,6 +619,20 @@
           "sha256": "73d1820df33e495ffc43fe51f5e31a04cc729077d955d0598ee140330f0eaef6",
           "size": 817865,
           "publishedAt": "2026-11-05T04:19:54.787Z"
+        },
+        {
+          "version": "0.3.3",
+          "engines": {
+            "enso": ">=0.2.15"
+          },
+          "permissions": [
+            "agent.intercept",
+            "ui.slot"
+          ],
+          "path": "packages/enso.pstack/0.3.3.zip",
+          "sha256": "90800a7a2b99952e2eb956dae26454bec58f505d52a4f412ceee8bbbdb23e1fe",
+          "size": 817984,
+          "publishedAt": "2026-11-06T04:22:11.082Z"
         }
       ]
     },
