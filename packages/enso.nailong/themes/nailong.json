@@ -20,5 +20,18 @@
     "textMuted": "#E9CF9F",
     "textSubtle": "#B8996A",
     "accent": "#FFC42E"
+  },
+  "assets": {
+    "sidebar-footer": { "src": "assets/lying.webp", "still": "assets/lying-still.webp" },
+    "empty-main": { "src": "assets/wave.webp" },
+    "welcome": { "src": "assets/welcome.webp", "still": "assets/welcome-still.webp" },
+    "composer-peek": { "src": "assets/peek.webp" },
+    "thinking": { "src": "assets/busy.webp", "still": "assets/busy-still.webp" },
+    "code-corner": { "src": "assets/peek-face.webp" },
+    "status-icon": { "src": "assets/peek-face.webp" },
+    "panel-corner": {
+      "src": "assets/bombloong-typing.webp",
+      "still": "assets/bombloong-typing-still.webp"
+    }
   }
 }

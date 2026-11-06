@@ -2,7 +2,7 @@
 
 奶龙主题。浅色是奶油底配巧克力棕字，深色是巧克力夜配奶龙黄。主题键是 `enso.nailong/nailong`。
 
-需要 EnsoCode 0.2.16 以上：图片和字体放在插件目录里，主题 CSS 用相对 `url()` 引用，旧版本不会改写这些地址。带 `themes/nailong.css`，安装或更新时要同意「修改界面样式」。`permissions` 是空数组。
+需要 EnsoCode 0.3.3 以上：大部分奶龙图写在 `themes/nailong.json` 的 `assets` 素材槽位里，旧版本不认这个字段。白云、字标、好耶、奶酪斑点和气泡仍在 `themes/nailong.css`，安装或更新时要同意「修改界面样式」。`permissions` 是空数组。
 
 ## 界面上的奶龙
 
