@@ -196,7 +196,7 @@ html.enso-chat-wide [data-enso="timeline"]:has([data-enso="message-user"])::afte
   border-color: var(--wm-edge);
 }
 
-/* 思考块：认真的小脸。思考中靠图标的 animate-pulse 判断，类名变了只是不再晃 */
+/* 思考块：认真的小脸。思考中由宿主标 data-live，旧版宿主没有这个属性时不晃 */
 [data-enso="thinking"] {
   position: relative;
   padding-left: 30px;
@@ -213,7 +213,7 @@ html.enso-chat-wide [data-enso="timeline"]:has([data-enso="message-user"])::afte
   pointer-events: none;
 }
 
-[data-enso="thinking"]:has(.animate-pulse)::before {
+[data-enso="thinking"][data-live]::before {
   animation: wm-nod 1.4s ease-in-out infinite;
 }
 
@@ -325,7 +325,7 @@ html.enso-chat-wide [data-enso="timeline"]:has([data-enso="message-user"])::afte
     translate: -50% 0;
   }
 
-  [data-enso="thinking"]:has(.animate-pulse)::before {
+  [data-enso="thinking"][data-live]::before {
     animation: none;
   }
 }

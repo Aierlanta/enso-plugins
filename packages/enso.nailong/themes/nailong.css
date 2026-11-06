@@ -113,7 +113,7 @@
   border-color: var(--nl-edge);
 }
 
-/* 「在忙」：思考中才动，历史里的思考块停在第一帧。思考中靠图标的 animate-pulse 判断，类名变了只会退回静态 */
+/* 「在忙」：思考中才动，历史里的思考块停在第一帧。思考中由宿主标 data-live，旧版宿主没有这个属性时停在第一帧 */
 [data-enso="thinking"] {
   position: relative;
   padding-left: 36px;
@@ -130,7 +130,7 @@
   pointer-events: none;
 }
 
-[data-enso="thinking"]:has(.animate-pulse)::before {
+[data-enso="thinking"][data-live]::before {
   background-image: var(--nl-busy);
 }
 
