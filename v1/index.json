@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T09:46:46.887Z",
-  "sequence": 51,
+  "generatedAt": "2026-11-06T10:59:12.902Z",
+  "sequence": 52,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -442,6 +442,30 @@
       ]
     },
     {
+      "id": "enso.lulu",
+      "name": "噜噜和噜妹",
+      "description": "噜噜和噜妹主题：奶油橘底配焦糖棕，两人在侧栏并排，噜噜在输入框后探头，思考时托腮。",
+      "tier": "official",
+      "tags": [
+        "theme"
+      ],
+      "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.lulu.svg",
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.3.3"
+          },
+          "permissions": [],
+          "path": "packages/enso.lulu/0.1.0.zip",
+          "sha256": "ca373756bbdd5e2e95a104f85a0bb5e50409422465f151602fea5fe74cb160d9",
+          "size": 776744,
+          "publishedAt": "2026-11-06T10:59:12.902Z"
+        }
+      ]
+    },
+    {
       "id": "enso.monokaipro",
       "name": "Monokai Pro",
       "description": "Monokai Pro 风格深浅双色主题：炭黑/暖白画布，粉强调色，偏精致专业。",
@@ -540,7 +564,7 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.naiwa.svg",
-      "latest": "0.1.1",
+      "latest": "0.1.2",
       "versions": [
         {
           "version": "0.1.0",
@@ -563,6 +587,17 @@
           "sha256": "ad58586a8ff3f2bcea20fa7287b0c2d4e967b254f0c8f567584ecb61be2064de",
           "size": 712306,
           "publishedAt": "2026-11-06T08:50:16.583Z"
+        },
+        {
+          "version": "0.1.2",
+          "engines": {
+            "enso": ">=0.2.16"
+          },
+          "permissions": [],
+          "path": "packages/enso.naiwa/0.1.2.zip",
+          "sha256": "b9eafd2a11f85415fbbfc51344638ed0c999d95960245b935953994b391eb9ba",
+          "size": 712484,
+          "publishedAt": "2026-11-06T10:59:12.902Z"
         }
       ]
     },
