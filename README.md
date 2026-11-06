@@ -40,7 +40,7 @@ EnsoCode 官方插件市场的源仓库 · [浏览插件](https://enso-plugins.j
 | 红果短剧 | `enso.hongguo` | 0.2.9 | 社区 | 在侧栏里浏览、搜索并播放红果短剧（基于 openhongguo 匿名 SDK）。仅供学习研究。 |
 | Kanban | `enso.kanban` | 1.0.2 | 官方 | 项目看板：同一项目的所有会话共享，人和会话都能创建、编辑、拖动卡片。 |
 | Monokai Pro | `enso.monokaipro` | 1.0.0 | 社区 | Monokai Pro 风格深浅双色主题：炭黑/暖白画布，粉强调色，偏精致专业。 |
-| 奶龙 | `enso.nailong` | 0.1.4 | 官方 | 奶龙主题：奶油黄配巧克力棕，奶龙在输入框后面探头、在侧栏躺平、思考时「在忙」。 |
+| 奶龙 | `enso.nailong` | 0.1.5 | 官方 | 奶龙主题：奶油黄配巧克力棕，奶龙在输入框后面探头、在侧栏躺平、思考时「在忙」。 |
 | 奶蛙 | `enso.naiwa` | 0.1.1 | 官方 | 奶蛙主题：荷叶绿配奶黄，奶蛙在输入框后面探头、在侧栏爬行、思考时托腮，干完活就捧腹大笑。 |
 | [pstack](https://github.com/cursor/plugins/tree/main/pstack) | `enso.pstack` | 0.3.3 | 官方 | Lauren Tan 的 pstack 0.15.36（MIT）：poteto-mode 按任务挑选 playbook，配套 arena、interrogate、architect 等 58 个 skill 和工程原则，先深挖再并行。只在输入框选了「pstack」预设的会话里加载。在输入框按钮里为某个会话打开后，该会话的每条消息自动展开 poteto-mode。 |
 | Scheduler | `enso.scheduler` | 1.0.2 | 官方 | 定时任务：按 cron 到点向会话发送提示词或弹出系统通知，侧栏显示下次运行时间与倒计时。 |
