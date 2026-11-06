@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/themeFile.ts@3916fe5ae7f317c33855be043e4a725f36b14479 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/themeFile.ts@54172294569824c8423d95ccc4913897639dbe96 同步，勿手改
 import { parseThemeAssets, parseThemeBackground } from './assets';
 import { isSafeTokenValue, sanitizeTokens } from './tokensCss';
 import {

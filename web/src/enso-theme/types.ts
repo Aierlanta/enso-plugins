@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/types.ts@3916fe5ae7f317c33855be043e4a725f36b14479 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/types.ts@54172294569824c8423d95ccc4913897639dbe96 同步，勿手改
 export type ThemeMode = 'light' | 'dark';
 
 export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark'];
