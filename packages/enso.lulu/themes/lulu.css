@@ -68,6 +68,15 @@
   border-radius: 12px;
 }
 
+/* 噜噜只陪着想，想完就走 */
+[data-enso="thinking"]:not([data-live]) {
+  padding-left: 0;
+}
+
+[data-enso="thinking"]:not([data-live])::before {
+  content: none;
+}
+
 [data-enso="todo"] {
   border-color: var(--lu-edge);
 }
