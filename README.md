@@ -141,6 +141,19 @@ npm run dev     # http://localhost:5173，/v1 代理到线上 Worker
 npm run build   # 输出 web/dist
 ```
 
+### 主题工坊
+
+`/studio/` 是浏览器里的主题生成器（`web/studio/index.html` → `web/src/studio/`）。调色板、九个素材槽位和可选 CSS 组成一份草稿，存在浏览器的 IndexedDB 里；预览和导出都从草稿派生。导出的 zip 结构与 `packages/enso.nailong` 相同，在 EnsoCode 里解压后按目录安装。
+
+它依赖宿主的主题纯模块，副本在 `web/src/enso-theme/`，**不要手改**。EnsoCode 改了 `src/shared/theme/` 或 `src/shared/accentColor.ts` 后，在本仓库同步并检查：
+
+```bash
+ENSO_CODE_DIR=../enso-code node scripts/sync-theme.mjs          # 拷贝并写入来源 commit
+ENSO_CODE_DIR=../enso-code node scripts/sync-theme.mjs --check  # 只比对，有漂移时失败
+```
+
+CI 里没有 enso-code 仓库，所以这一步只在本地运行。
+
 ## 发布
 
 PR 合并到 `main` 后，`.github/workflows/publish.yml` 依次执行：

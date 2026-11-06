@@ -1,4 +1,4 @@
-import { Github, RotateCw, Search, SearchX, ShieldCheck, X } from 'lucide-react';
+import { Github, Palette, RotateCw, Search, SearchX, ShieldCheck, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import * as React from 'react';
 import { Toaster } from 'sonner';
@@ -178,12 +178,20 @@ export default function App() {
                 在 <code className="font-mono text-xs">packages/&lt;id&gt;/</code> 放入带 <code className="font-mono text-xs">enso-plugin.json</code> 的目录并提交 Pull Request。合并后由 CI 打包、签名并发布。
               </p>
             </div>
-            <Button asChild variant="default">
-              <a href={REPO} target="_blank" rel="noopener noreferrer">
-                <Github />
-                提交 Pull Request
-              </a>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <a href="/studio/">
+                  <Palette />
+                  主题工坊
+                </a>
+              </Button>
+              <Button asChild variant="default">
+                <a href={REPO} target="_blank" rel="noopener noreferrer">
+                  <Github />
+                  提交 Pull Request
+                </a>
+              </Button>
+            </div>
           </section>
 
           {state.status === 'ready' && (
