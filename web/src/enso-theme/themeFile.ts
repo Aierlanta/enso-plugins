@@ -1,9 +1,10 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/themeFile.ts@b47bf7799526d09851b24772836d05446cf3d5a7 同步，勿手改
-import { parseThemeAssets } from './assets';
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/themeFile.ts@8c94ada55385d33a5c50187fcd0775ebff26db80 同步，勿手改
+import { parseThemeAssets, parseThemeBackground } from './assets';
 import { isSafeTokenValue, sanitizeTokens } from './tokensCss';
 import {
   THEME_MODES,
   type ThemeAssets,
+  type ThemeBackground,
   type ThemeMode,
   type ThemePalette,
   type ThemeTokens,
@@ -28,6 +29,7 @@ export type ThemeFileResult =
       dark: ThemePalette;
       tokens?: Partial<Record<ThemeMode, ThemeTokens>>;
       assets?: ThemeAssets;
+      background?: ThemeBackground;
     }
   | { ok: false; error: string };
 
@@ -46,7 +48,7 @@ function parsePalette(raw: unknown, mode: ThemeMode): ThemePalette | string {
   return palette;
 }
 
-/** 插件主题 JSON 的边界解析；tokens 里不合法的键值、assets 里不合法的槽位直接丢掉，不算错误 */
+/** 插件主题 JSON 的边界解析；tokens 里不合法的键值、assets 里不合法的槽位、不合法的 background 直接丢掉，不算错误 */
 export function parseThemeFile(raw: unknown): ThemeFileResult {
   if (!isRecord(raw)) return { ok: false, error: '主题文件必须是 JSON 对象' };
   const light = parsePalette(raw.light, 'light');
@@ -54,7 +56,14 @@ export function parseThemeFile(raw: unknown): ThemeFileResult {
   const dark = parsePalette(raw.dark, 'dark');
   if (typeof dark === 'string') return { ok: false, error: dark };
   const assets = parseThemeAssets(raw.assets);
-  const base = { ok: true as const, light, dark, ...(assets ? { assets } : {}) };
+  const background = parseThemeBackground(raw.background);
+  const base = {
+    ok: true as const,
+    light,
+    dark,
+    ...(assets ? { assets } : {}),
+    ...(background ? { background } : {}),
+  };
   if (raw.tokens === undefined) return base;
   if (!isRecord(raw.tokens)) return { ok: false, error: 'tokens 必须是对象' };
   const tokens: Partial<Record<ThemeMode, ThemeTokens>> = {};

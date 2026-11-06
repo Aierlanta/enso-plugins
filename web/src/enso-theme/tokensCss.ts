@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/tokensCss.ts@b47bf7799526d09851b24772836d05446cf3d5a7 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/tokensCss.ts@8c94ada55385d33a5c50187fcd0775ebff26db80 同步，勿手改
 import { type AccentColor, accentOverride } from './accentColor';
 import { resolveThemeTokens } from './derive';
 import { THEME_MODES, type ThemeDefinition, type ThemeMode, type ThemeTokens } from './types';

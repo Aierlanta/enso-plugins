@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { easeOut } from '@/lib/motion';
 import type { ThemeMode } from '../enso-theme/types';
-import { emptyDraft, suggestPalette, type Draft } from './draft';
-import { AssetsEditor, CssEditor, Field, PaletteEditor, Section } from './editor';
+import { BACKGROUND_DEFAULTS, emptyDraft, suggestPalette, type Draft } from './draft';
+import { AssetsEditor, BackgroundEditor, CssEditor, Field, PaletteEditor, Section } from './editor';
 import { draftFromPlugin, readZip, type ImportResult } from './importTheme';
 import { checkDraft, draftAssets, packDraft, zipStore } from './pack';
 import { Preview, type MainView, type PreviewState, type SessionState } from './Preview';
@@ -91,9 +91,11 @@ export default function Studio() {
 
   React.useEffect(() => setErrors([]), [draft]);
 
-  const { assets, files } = React.useMemo(() => draftAssets(draft.assets), [draft.assets]);
+  // 只按图片取文件，拖滑块不重建 blob URL；背景参数由 previewCss 直接读草稿
+  const bgImage = draft.background?.image;
+  const { assets, background, files } = React.useMemo(() => draftAssets(draft.assets, bgImage && { ...BACKGROUND_DEFAULTS, image: bgImage }), [draft.assets, bgImage]);
   const urls = useBlobUrls(files);
-  const css = React.useMemo(() => previewCss(draft, assets, urls, preview.reducedMotion), [draft, assets, urls, preview.reducedMotion]);
+  const css = React.useMemo(() => previewCss(draft, assets, background, urls, preview.reducedMotion), [draft, assets, background, urls, preview.reducedMotion]);
   const set = <K extends keyof PreviewState>(key: K) => (value: PreviewState[K]) => setPreview((p) => ({ ...p, [key]: value }));
   const update = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -200,6 +202,7 @@ export default function Studio() {
                 }}
               />
               <AssetsEditor assets={draft.assets} onChange={(assets) => update({ assets })} />
+              <BackgroundEditor background={draft.background} onChange={(background) => update({ background })} />
               <CssEditor key={loaded ? 'ready' : 'loading'} css={draft.css ?? ''} onChange={(value) => update({ css: value })} />
               <div className="flex flex-col gap-2 rounded-xl border bg-card p-4 shadow-xs">
                 <Button onClick={exportZip}>

@@ -1,8 +1,8 @@
-import { parseThemeAssets, THEME_ASSET_EXTENSIONS } from '../enso-theme/assets';
+import { parseThemeAssets, parseThemeBackground, THEME_ASSET_EXTENSIONS } from '../enso-theme/assets';
 import { parseThemeFile } from '../enso-theme/themeFile';
 import { isSafeTokenValue } from '../enso-theme/tokensCss';
-import type { ThemeAsset, ThemeAssets, ThemeAssetSlot, ThemePalette } from '../enso-theme/types';
-import { PALETTE_FIELDS, type AssetFile, type AssetVariant, type Draft, type DraftAssets } from './draft';
+import type { ThemeAsset, ThemeAssets, ThemeAssetSlot, ThemeBackground, ThemePalette } from '../enso-theme/types';
+import { PALETTE_FIELDS, type AssetFile, type AssetVariant, type Draft, type DraftAsset, type DraftAssets, type DraftBackground } from './draft';
 
 /** 与 enso-code manifest.ts / scripts/lib.mjs 相同的规则 */
 const PLUGIN_ID = /^[a-z][a-z0-9]*(\.[a-z0-9]+)+$/;
@@ -15,30 +15,41 @@ export const themeIdOf = (pluginId: string) => pluginId.split('.').pop() ?? '';
 
 const extOf = (name: string) => name.slice(name.lastIndexOf('.') + 1).toLowerCase();
 
-/** 主题 JSON 的 assets（相对 themes/）与对应文件（相对插件根目录）；预览与导出共用 */
-export function draftAssets(draftAssets: DraftAssets): { assets: ThemeAssets; files: Map<string, Blob> } {
+/** 主题 JSON 的 assets、background（图片相对 themes/）与对应文件（相对插件根目录）；预览与导出共用 */
+export function draftAssets(
+  draftAssets: DraftAssets,
+  draftBackground?: DraftBackground,
+): { assets: ThemeAssets; background?: ThemeBackground; files: Map<string, Blob> } {
   const files = new Map<string, Blob>();
-  const path = (slot: ThemeAssetSlot, variant: AssetVariant, file: AssetFile) => {
-    const rel = `assets/${variant === 'src' ? slot : `${slot}-${variant}`}.${extOf(file.name)}`;
-    files.set(`themes/${rel}`, file.blob);
-    return rel;
+  const toAsset = (name: string, asset: DraftAsset): ThemeAsset => {
+    const path = (variant: AssetVariant, file: AssetFile) => {
+      const rel = `assets/${variant === 'src' ? name : `${name}-${variant}`}.${extOf(file.name)}`;
+      files.set(`themes/${rel}`, file.blob);
+      return rel;
+    };
+    const out: ThemeAsset = { src: path('src', asset.src) };
+    if (asset.still) out.still = path('still', asset.still);
+    if (asset.dark) out.dark = path('dark', asset.dark);
+    const states = Object.entries(asset.states ?? {}).filter((entry): entry is [keyof NonNullable<ThemeAsset['states']>, AssetFile] => !!entry[1]);
+    if (states.length > 0) out.states = Object.fromEntries(states.map(([state, file]) => [state, path(state, file)]));
+    return out;
   };
   const assets: ThemeAssets = {};
   for (const [slot, asset] of Object.entries(draftAssets) as [ThemeAssetSlot, DraftAssets[ThemeAssetSlot]][]) {
-    if (!asset) continue;
-    const out: ThemeAsset = { src: path(slot, 'src', asset.src) };
-    if (asset.still) out.still = path(slot, 'still', asset.still);
-    if (asset.dark) out.dark = path(slot, 'dark', asset.dark);
-    const states = Object.entries(asset.states ?? {}).filter((entry): entry is [keyof NonNullable<ThemeAsset['states']>, AssetFile] => !!entry[1]);
-    if (states.length > 0) out.states = Object.fromEntries(states.map(([state, file]) => [state, path(slot, state, file)]));
-    assets[slot] = out;
+    if (asset) assets[slot] = toAsset(slot, asset);
   }
-  return { assets, files };
+  const background = draftBackground && { ...draftBackground, image: toAsset('background', draftBackground.image) };
+  return { assets, ...(background ? { background } : {}), files };
 }
 
-export function themeJson(draft: Draft, assets: ThemeAssets) {
+export function themeJson(draft: Draft, assets: ThemeAssets, background?: ThemeBackground) {
   const palette = (p: ThemePalette) => Object.fromEntries(PALETTE_FIELDS.map(({ key }) => [key, p[key].trim()]));
-  return { light: palette(draft.light), dark: palette(draft.dark), ...(Object.keys(assets).length > 0 ? { assets } : {}) };
+  return {
+    light: palette(draft.light),
+    dark: palette(draft.dark),
+    ...(Object.keys(assets).length > 0 ? { assets } : {}),
+    ...(background ? { background } : {}),
+  };
 }
 
 export function manifestJson(draft: Draft) {
@@ -73,19 +84,21 @@ export function checkDraft(draft: Draft): string[] {
       if (!value.trim() || !isSafeTokenValue(value)) errors.push(`${mode === 'light' ? '浅色' : '深色'}「${label}」不是合法的颜色`);
     }
   }
-  for (const [slot, asset] of Object.entries(draft.assets)) {
+  const named: [string, DraftAsset | undefined][] = [...Object.entries(draft.assets), ['背景图', draft.background?.image]];
+  for (const [slot, asset] of named) {
     if (!asset) continue;
     const names = [asset.src, asset.still, asset.dark, ...Object.values(asset.states ?? {})].filter((f): f is AssetFile => !!f);
     for (const file of names)
       if (!THEME_ASSET_EXTENSIONS.includes(extOf(file.name))) errors.push(`「${slot}」的 ${file.name} 格式不支持，只能用 ${THEME_ASSET_EXTENSIONS.join('、')}`);
   }
   if (errors.length > 0) return errors;
-  const { assets } = draftAssets(draft.assets);
-  const parsed = parseThemeFile(themeJson(draft, assets));
+  const { assets, background } = draftAssets(draft.assets, draft.background);
+  const parsed = parseThemeFile(themeJson(draft, assets, background));
   if (!parsed.ok) return [parsed.error];
   const kept = Object.keys(parseThemeAssets(assets) ?? {});
   const lost = Object.keys(assets).filter((slot) => !kept.includes(slot));
   if (lost.length > 0) errors.push(`素材槽位没有通过校验：${lost.join('、')}`);
+  if (background && !parseThemeBackground(background)) errors.push('背景图没有通过校验');
   return errors;
 }
 
@@ -97,10 +110,10 @@ export async function packDraft(draft: Draft): Promise<PackResult> {
   if (errors.length > 0) return { ok: false, errors };
   const text = (value: unknown) => new TextEncoder().encode(`${JSON.stringify(value, null, 2)}\n`);
   const themeId = themeIdOf(draft.id);
-  const { assets, files: blobs } = draftAssets(draft.assets);
+  const { assets, background, files: blobs } = draftAssets(draft.assets, draft.background);
   const files = new Map<string, Uint8Array>([
     ['enso-plugin.json', text(manifestJson(draft))],
-    [`themes/${themeId}.json`, text(themeJson(draft, assets))],
+    [`themes/${themeId}.json`, text(themeJson(draft, assets, background))],
   ]);
   const css = draft.css?.trim();
   if (css) files.set(`themes/${themeId}.css`, new TextEncoder().encode(`${css}\n`));

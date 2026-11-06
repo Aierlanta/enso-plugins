@@ -86,6 +86,40 @@ test('导出的 zip 解压后通过市场校验，主题 JSON 的素材完整', 
   assert.equal(await readFile(join(dir, 'themes/assets/thinking-running.webp'), 'utf8'), 'run.webp');
 });
 
+test('带背景图的草稿导出后主题 JSON 有完整 background，并能导入回草稿', async (t) => {
+  const background = {
+    image: { src: file('wall.JPG'), dark: file('wall-dark.webp'), states: { running: file('busy.webp') } },
+    size: 'contain',
+    opacity: 0.7,
+    blur: 6,
+    brightness: 0.9,
+    saturation: 1.2,
+    mask: 0.3,
+    composerOpacity: 0.5,
+    codeOpacity: 0.8,
+  };
+  const packed = await packDraft({ ...draft(), background });
+  assert.ok(packed.ok, packed.ok ? '' : packed.errors.join('\n'));
+  const { root, dir } = await unzipPackage(zipStore(packed.files), 'demo.studio');
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  const theme = parseThemeFile(JSON.parse(await readFile(join(dir, 'themes/studio.json'), 'utf8')));
+  assert.ok(theme.ok);
+  const { image: _, ...params } = background;
+  assert.deepEqual(theme.background, {
+    ...params,
+    image: { src: 'assets/background.jpg', dark: 'assets/background-dark.webp', states: { running: 'assets/background-running.webp' } },
+  });
+  assert.equal(await readFile(join(dir, 'themes/assets/background-dark.webp'), 'utf8'), 'wall-dark.webp');
+
+  const entries = await readZip(zipStore(packed.files));
+  const back = await draftFromPlugin([...entries.keys()], async (path) => entries.get(path));
+  assert.ok(back.ok);
+  const { image, ...backParams } = back.draft.background;
+  assert.deepEqual(backParams, params);
+  assert.equal(await image.states.running.blob.text(), 'busy.webp');
+});
+
 test('没有 CSS 时清单不声明 css，也不需要样式同意', async () => {
   const packed = await packDraft({ ...draft(), css: '  ' });
   assert.ok(packed.ok);

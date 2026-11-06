@@ -1,14 +1,48 @@
-import { resolveThemeAssets, themeAssetsCss } from '../enso-theme/assets';
+import { resolveThemeAssets, resolveThemeBackground, themeAssetsCss } from '../enso-theme/assets';
 import { themeTokensCss } from '../enso-theme/tokensCss';
-import type { ThemeAssets } from '../enso-theme/types';
+import type { ThemeAssets, ThemeBackground, ThemeBackgroundSize } from '../enso-theme/types';
 import type { Draft } from './draft';
 import { themeIdOf } from './pack';
 
+const SIZE: Record<ThemeBackgroundSize, string> = {
+  cover: 'background-size:cover;background-repeat:no-repeat;background-position:center',
+  contain: 'background-size:contain;background-repeat:no-repeat;background-position:center',
+  repeat: 'background-size:auto;background-repeat:repeat;background-position:top left',
+  center: 'background-size:auto;background-repeat:no-repeat;background-position:center',
+};
+
 /**
- * 注入顺序与宿主相同：tokens → 素材 → 主题 CSS。
+ * 近似宿主的背景图模式：BackgroundLayer 的图层、滤镜与遮罩，useBackgroundImage 的 alpha，
+ * globals.css 里 html.bg-image-enabled 对面板令牌的重映射。宿主改的是 Tailwind 的 --color-*，
+ * 模拟界面直接用原始令牌，所以这里按选择器逐个改写
+ */
+export function backgroundCss(background: Required<Omit<ThemeBackground, 'image'>>): string {
+  const { size, blur, brightness, saturation, mask, opacity, composerOpacity, codeOpacity } = background;
+  const panel = Math.min(1, Math.max(0, 1 - opacity));
+  const border = Math.min(1, panel + 0.25);
+  const alpha = (token: string, a: number) => `oklch(from var(--${token}) l c h / ${a})`;
+  return `
+.m-bg{display:block}
+.m-bg-image{inset:${blur > 0 ? `-${blur * 2}px` : '0'};background-image:var(--enso-asset-background);${SIZE[size]};filter:blur(${blur}px) brightness(${brightness}) saturate(${saturation})}
+.m-bg-mask{background:color-mix(in oklab,var(--canvas,var(--background)) ${Math.round(mask * 100)}%,transparent)}
+.m-canvas{position:relative;background:transparent}
+[data-enso=main],[data-enso=side-panel]{background:${alpha('background', panel)}}
+[data-enso=todo]{background:${alpha('card', panel)}}
+[data-enso=message-user]>div:not(:last-child),.m-chip{background:${alpha('secondary', panel)}}
+[data-enso=message-assistant] code{background:${alpha('muted', panel)};border-color:${alpha('border', border)}}
+.m-item.on,.m-file.on{background:${alpha('accent', panel)}}
+[data-enso=title-bar]{border-color:${alpha('border', border)}}
+[data-enso=code-block]{background:${alpha('background', codeOpacity)};border-color:${alpha('border', border)}}
+[data-enso=todo]{border-color:${alpha('border', border)}}
+[data-enso=composer]{background:${alpha('background', composerOpacity)};border-color:${alpha('input', border)}}
+`;
+}
+
+/**
+ * 注入顺序与宿主相同：tokens → 素材 → 背景图模式 → 主题 CSS。
  * 模拟「减少动态效果」：把 reduce 媒体查询改成恒真，宿主的 still 规则就会生效
  */
-export function previewCss(draft: Draft, assets: ThemeAssets, urls: Map<string, string>, reducedMotion: boolean): string {
+export function previewCss(draft: Draft, assets: ThemeAssets, background: ThemeBackground | undefined, urls: Map<string, string>, reducedMotion: boolean): string {
   const themeId = themeIdOf(draft.id) || 'theme';
   const theme = {
     id: `${draft.id}/${themeId}` as const,
@@ -17,8 +51,16 @@ export function previewCss(draft: Draft, assets: ThemeAssets, urls: Map<string, 
     light: draft.light,
     dark: draft.dark,
   };
-  const resolved = resolveThemeAssets(assets, `themes/${themeId}.json`, (rel) => urls.get(rel) ?? '');
-  const css = [themeTokensCss(theme, 'theme'), themeAssetsCss(resolved), draft.css ?? ''].join('\n');
+  const themePath = `themes/${themeId}.json`;
+  const toUrl = (rel: string) => urls.get(rel) ?? '';
+  const resolved = resolveThemeAssets(assets, themePath, toUrl);
+  const resolvedBackground = background && resolveThemeBackground(background, themePath, toUrl);
+  const css = [
+    themeTokensCss(theme, 'theme'),
+    themeAssetsCss(resolved, resolvedBackground),
+    draft.background ? backgroundCss(draft.background) : '',
+    draft.css ?? '',
+  ].join('\n');
   return reducedMotion
     ? css.replace(/\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/g, 'all').replace(/\(\s*prefers-reduced-motion\s*:\s*no-preference\s*\)/g, 'not all')
     : css;
@@ -30,6 +72,8 @@ export const MOCK_CSS = `
 html,body{margin:0;height:100%}
 body{font:13px/1.55 var(--font-family-sans,-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif);color:var(--foreground);background:var(--canvas);-webkit-font-smoothing:antialiased}
 .m-canvas{display:flex;height:100vh;background:var(--canvas);overflow:hidden}
+.m-bg{display:none;position:fixed;inset:0;overflow:hidden;background:var(--canvas)}
+.m-bg-image,.m-bg-mask{position:absolute;inset:0}
 .m-sidebar{width:208px;flex:none;display:flex;flex-direction:column;gap:2px;padding:44px 8px 12px}
 .m-group{padding:10px 10px 4px;font-size:11px;color:var(--subtle-foreground)}
 .m-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden}

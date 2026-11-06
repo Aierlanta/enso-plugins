@@ -1,5 +1,6 @@
+import { THEME_BACKGROUND_PARAMS } from '../enso-theme/assets';
 import { BUILTIN_THEMES } from '../enso-theme/builtinThemes';
-import type { ThemeAssetSlot, ThemeAssetState, ThemeMode, ThemePalette } from '../enso-theme/types';
+import type { ThemeAssetSlot, ThemeAssetState, ThemeBackgroundParam, ThemeBackgroundSize, ThemeMode, ThemePalette } from '../enso-theme/types';
 
 /** 上传的原始文件；name 只用来取扩展名 */
 export interface AssetFile {
@@ -17,6 +18,9 @@ export interface DraftAsset {
 
 export type DraftAssets = Partial<Record<ThemeAssetSlot, DraftAsset>>;
 
+/** 与宿主 ThemeBackground 同形，图片换成文件；参数在草稿里总是写全 */
+export type DraftBackground = { image: DraftAsset; size: ThemeBackgroundSize } & Record<ThemeBackgroundParam, number>;
+
 /** 生成器唯一的状态：预览与导出都从它派生 */
 export interface Draft {
   id: string;
@@ -26,6 +30,8 @@ export interface Draft {
   light: ThemePalette;
   dark: ThemePalette;
   assets: DraftAssets;
+  /** 老草稿没有这个字段 */
+  background?: DraftBackground;
   css?: string;
 }
 
@@ -90,17 +96,34 @@ export function getVariant(asset: DraftAsset | undefined, key: AssetVariant): As
   return key === 'src' || key === 'still' || key === 'dark' ? asset[key] : asset.states?.[key];
 }
 
-/** 清掉默认图等于清掉整个槽位 */
-export function setVariant(assets: DraftAssets, slot: ThemeAssetSlot, key: AssetVariant, file: AssetFile | undefined): DraftAssets {
-  const { [slot]: current, ...rest } = assets;
-  if (key === 'src') return file ? { ...rest, [slot]: { ...current, src: file } } : rest;
-  if (!current) return assets;
+/** 清掉默认图等于清掉整张素材 */
+export function withVariant(current: DraftAsset | undefined, key: AssetVariant, file: AssetFile | undefined): DraftAsset | undefined {
+  if (key === 'src') return file ? { ...current, src: file } : undefined;
+  if (!current) return undefined;
   if (key === 'still' || key === 'dark') {
     const { [key]: _, ...asset } = current;
-    return { ...rest, [slot]: file ? { ...asset, [key]: file } : asset };
+    return file ? { ...asset, [key]: file } : asset;
   }
   const { [key]: _, ...states } = current.states ?? {};
   const nextStates = file ? { ...states, [key]: file } : states;
   const { states: __, ...asset } = current;
-  return { ...rest, [slot]: Object.keys(nextStates).length > 0 ? { ...asset, states: nextStates } : asset };
+  return Object.keys(nextStates).length > 0 ? { ...asset, states: nextStates } : asset;
+}
+
+export function setVariant(assets: DraftAssets, slot: ThemeAssetSlot, key: AssetVariant, file: AssetFile | undefined): DraftAssets {
+  const { [slot]: current, ...rest } = assets;
+  const next = withVariant(current, key, file);
+  return next ? { ...rest, [slot]: next } : rest;
+}
+
+export const BACKGROUND_DEFAULTS: Omit<DraftBackground, 'image'> = {
+  size: 'cover',
+  ...(Object.fromEntries(Object.entries(THEME_BACKGROUND_PARAMS).map(([key, range]) => [key, range.default])) as Record<ThemeBackgroundParam, number>),
+};
+
+/** 换图保留参数；第一次放图取设置页默认值；清掉默认图等于去掉背景 */
+export function setBackgroundVariant(background: DraftBackground | undefined, key: AssetVariant, file: AssetFile | undefined): DraftBackground | undefined {
+  const image = withVariant(background?.image, key, file);
+  if (!image) return undefined;
+  return { ...BACKGROUND_DEFAULTS, ...background, image };
 }

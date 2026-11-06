@@ -1,6 +1,6 @@
 import { parseThemeFile } from '../enso-theme/themeFile';
-import type { ThemeAssetSlot } from '../enso-theme/types';
-import type { AssetFile, Draft, DraftAsset, DraftAssets } from './draft';
+import type { ThemeAsset, ThemeAssetSlot } from '../enso-theme/types';
+import { BACKGROUND_DEFAULTS, type AssetFile, type Draft, type DraftAsset, type DraftAssets } from './draft';
 
 type Read = (path: string) => Promise<Blob | undefined>;
 
@@ -40,10 +40,9 @@ export async function draftFromPlugin(paths: string[], read: Read): Promise<Impo
     if (!blob) warnings.push(`缺少素材 ${rel}`);
     return blob && { name: rel.split('/').pop() ?? rel, blob };
   };
-  const assets: DraftAssets = {};
-  for (const [slot, asset] of Object.entries(parsed.assets ?? {}) as [ThemeAssetSlot, NonNullable<typeof parsed.assets>[ThemeAssetSlot]][]) {
+  const draftAsset = async (asset: ThemeAsset | undefined): Promise<DraftAsset | undefined> => {
     const src = asset && (await file(asset.src));
-    if (!asset || !src) continue;
+    if (!asset || !src) return undefined;
     const out: DraftAsset = { src };
     for (const key of ['still', 'dark'] as const) {
       const got = asset[key] && (await file(asset[key]));
@@ -53,7 +52,18 @@ export async function draftFromPlugin(paths: string[], read: Read): Promise<Impo
       const got = await file(path);
       if (got) out.states = { ...out.states, [state]: got };
     }
-    assets[slot] = out;
+    return out;
+  };
+  const assets: DraftAssets = {};
+  for (const [slot, asset] of Object.entries(parsed.assets ?? {}) as [ThemeAssetSlot, ThemeAsset | undefined][]) {
+    const out = await draftAsset(asset);
+    if (out) assets[slot] = out;
+  }
+  let background: Draft['background'];
+  if (parsed.background) {
+    const { image: raw, ...params } = parsed.background;
+    const image = await draftAsset(raw);
+    if (image) background = { ...BACKGROUND_DEFAULTS, ...params, image };
   }
 
   let css: string | undefined;
@@ -75,6 +85,7 @@ export async function draftFromPlugin(paths: string[], read: Read): Promise<Impo
       light: parsed.light,
       dark: parsed.dark,
       assets,
+      ...(background ? { background } : {}),
       ...(css?.trim() ? { css } : {}),
     },
   };

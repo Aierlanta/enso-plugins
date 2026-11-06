@@ -7,9 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { easeOut } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { THEME_ASSET_EXTENSIONS } from '../enso-theme/assets';
-import type { ThemeAssetSlot, ThemeMode, ThemePalette } from '../enso-theme/types';
-import { getVariant, PALETTE_FIELDS, setVariant, SLOTS, VARIANTS, type AssetFile, type AssetVariant, type DraftAsset, type DraftAssets } from './draft';
+import { THEME_ASSET_EXTENSIONS, THEME_BACKGROUND_PARAMS } from '../enso-theme/assets';
+import type { ThemeAssetSlot, ThemeBackgroundParam, ThemeBackgroundSize, ThemeMode, ThemePalette } from '../enso-theme/types';
+import {
+  getVariant,
+  PALETTE_FIELDS,
+  setBackgroundVariant,
+  setVariant,
+  SLOTS,
+  VARIANTS,
+  type AssetFile,
+  type AssetVariant,
+  type DraftAsset,
+  type DraftAssets,
+  type DraftBackground,
+} from './draft';
 import { Segmented } from './segmented';
 
 export function Section({ title, hint, action, children }: { title: string; hint?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
@@ -161,6 +173,16 @@ function AssetCell({ label, file, disabled, onFile }: { label: string; file?: As
   );
 }
 
+function VariantGrid({ asset, onChange }: { asset?: DraftAsset; onChange: (key: AssetVariant, file: AssetFile | undefined) => void }) {
+  return (
+    <div className="grid grid-cols-6 gap-1.5">
+      {VARIANTS.map(({ key, label }) => (
+        <AssetCell key={key} label={label} file={getVariant(asset, key)} disabled={key !== 'src' && !asset} onFile={(file) => onChange(key, file)} />
+      ))}
+    </div>
+  );
+}
+
 function SlotCard({ slot, label, hint, asset, onChange }: { slot: ThemeAssetSlot; label: string; hint: string; asset?: DraftAsset; onChange: (key: AssetVariant, file: AssetFile | undefined) => void }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border p-3">
@@ -169,11 +191,7 @@ function SlotCard({ slot, label, hint, asset, onChange }: { slot: ThemeAssetSlot
         <code className="font-mono text-[11px] text-muted-foreground">{slot}</code>
       </div>
       <p className="-mt-1 text-xs text-muted-foreground">{hint}</p>
-      <div className="grid grid-cols-6 gap-1.5">
-        {VARIANTS.map(({ key, label: variant }) => (
-          <AssetCell key={key} label={variant} file={getVariant(asset, key)} disabled={key !== 'src' && !asset} onFile={(file) => onChange(key, file)} />
-        ))}
-      </div>
+      <VariantGrid asset={asset} onChange={onChange} />
     </div>
   );
 }
@@ -189,6 +207,61 @@ export function AssetsEditor({ assets, onChange }: { assets: DraftAssets; onChan
           <SlotCard key={slot} slot={slot} label={label} hint={hint} asset={assets[slot]} onChange={(key, file) => onChange(setVariant(assets, slot, key, file))} />
         ))}
       </div>
+    </Section>
+  );
+}
+
+/** 文案与 EnsoCode 外观设置「背景图」一致；百分比显示与设置页同为 ×100，模糊是 px */
+const SIZES: readonly { value: ThemeBackgroundSize; label: string }[] = [
+  { value: 'cover', label: '覆盖' },
+  { value: 'contain', label: '完整显示' },
+  { value: 'repeat', label: '平铺' },
+  { value: 'center', label: '居中原图' },
+];
+
+const SLIDERS: readonly { key: ThemeBackgroundParam; label: string; px?: boolean }[] = [
+  { key: 'opacity', label: '背景可见度' },
+  { key: 'blur', label: '模糊', px: true },
+  { key: 'brightness', label: '亮度' },
+  { key: 'saturation', label: '饱和度' },
+  { key: 'mask', label: '遮罩' },
+  { key: 'composerOpacity', label: '输入框不透明度' },
+  { key: 'codeOpacity', label: '代码块不透明度' },
+];
+
+function SliderRow({ label, value, px, max, onChange }: { label: string; value: number; px?: boolean; max: number; onChange: (value: number) => void }) {
+  const scale = px ? 1 : 100;
+  const shown = Math.round(value * scale);
+  return (
+    <label className="flex items-center gap-3 text-xs text-muted-foreground">
+      <span className="w-24 shrink-0">{label}</span>
+      <input type="range" min={0} max={max * scale} step={1} value={shown} onChange={(e) => onChange(Number(e.target.value) / scale)} className="h-1.5 flex-1 cursor-pointer accent-primary" />
+      <span className="w-12 shrink-0 text-right font-mono tabular-nums">
+        {shown}
+        {px ? 'px' : '%'}
+      </span>
+    </label>
+  );
+}
+
+export function BackgroundEditor({ background, onChange }: { background?: DraftBackground; onChange: (background: DraftBackground | undefined) => void }) {
+  return (
+    <Section
+      title="背景图"
+      hint="铺满整个窗口的壁纸，面板会变成半透明。变体用法同角色素材，三种状态图跟随全局状态切换。用户在 EnsoCode 外观里自己开了背景图时，以用户的为准。"
+    >
+      <VariantGrid asset={background?.image} onChange={(key, file) => onChange(setBackgroundVariant(background, key, file))} />
+      {background && (
+        <div className="flex flex-col gap-2.5 pt-1">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="w-24 shrink-0">填充方式</span>
+            <Segmented label="填充方式" value={background.size} onChange={(size) => onChange({ ...background, size })} options={SIZES} />
+          </div>
+          {SLIDERS.map(({ key, label, px }) => (
+            <SliderRow key={key} label={label} px={px} max={THEME_BACKGROUND_PARAMS[key].max} value={background[key]} onChange={(value) => onChange({ ...background, [key]: value })} />
+          ))}
+        </div>
+      )}
     </Section>
   );
 }
