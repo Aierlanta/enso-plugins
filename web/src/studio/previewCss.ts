@@ -12,29 +12,22 @@ const SIZE: Record<ThemeBackgroundSize, string> = {
 };
 
 /**
- * 近似宿主的背景图模式：BackgroundLayer 的图层、滤镜与遮罩，useBackgroundImage 的 alpha，
- * globals.css 里 html.bg-image-enabled 对面板令牌的重映射。宿主改的是 Tailwind 的 --color-*，
- * 模拟界面直接用原始令牌，所以这里按选择器逐个改写
+ * 近似宿主的背景图模式：BackgroundLayer 把可见度合成在整张壁纸（图+遮罩）上，普通面板全透；
+ * 代码块、输入框按各自不透明度铺底，见 useBackgroundImage 与 globals.css 的 html.bg-image-enabled。
+ * 宿主改的是 Tailwind 的 --color-*，模拟界面直接用原始令牌，所以这里按选择器逐个改写
  */
 export function backgroundCss(background: Required<Omit<ThemeBackground, 'image'>>): string {
   const { size, blur, brightness, saturation, mask, opacity, composerOpacity, codeOpacity } = background;
-  const panel = Math.min(1, Math.max(0, 1 - opacity));
-  const border = Math.min(1, panel + 0.25);
   const alpha = (token: string, a: number) => `oklch(from var(--${token}) l c h / ${a})`;
   return `
 .m-bg{display:block}
+.m-bg-media{opacity:${Math.min(1, Math.max(0, opacity))}}
 .m-bg-image{inset:${blur > 0 ? `-${blur * 2}px` : '0'};background-image:var(--enso-asset-background);${SIZE[size]};filter:blur(${blur}px) brightness(${brightness}) saturate(${saturation})}
 .m-bg-mask{background:color-mix(in oklab,var(--canvas,var(--background)) ${Math.round(mask * 100)}%,transparent)}
 .m-canvas{position:relative;background:transparent}
-[data-enso=main],[data-enso=side-panel]{background:${alpha('background', panel)}}
-[data-enso=todo]{background:${alpha('card', panel)}}
-[data-enso=message-user]>div:not(:last-child),.m-chip{background:${alpha('secondary', panel)}}
-[data-enso=message-assistant] code{background:${alpha('muted', panel)};border-color:${alpha('border', border)}}
-.m-item.on,.m-file.on{background:${alpha('accent', panel)}}
-[data-enso=title-bar]{border-color:${alpha('border', border)}}
-[data-enso=code-block]{background:${alpha('background', codeOpacity)};border-color:${alpha('border', border)}}
-[data-enso=todo]{border-color:${alpha('border', border)}}
-[data-enso=composer]{background:${alpha('background', composerOpacity)};border-color:${alpha('input', border)}}
+[data-enso=main],[data-enso=side-panel],[data-enso=todo]{background:transparent}
+[data-enso=code-block]{background:${alpha('background', codeOpacity)}}
+[data-enso=composer]{background:${alpha('background', composerOpacity)}}
 `;
 }
 
@@ -73,7 +66,7 @@ html,body{margin:0;height:100%}
 body{font:13px/1.55 var(--font-family-sans,-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif);color:var(--foreground);background:var(--canvas);-webkit-font-smoothing:antialiased}
 .m-canvas{display:flex;height:100vh;background:var(--canvas);overflow:hidden}
 .m-bg{display:none;position:fixed;inset:0;overflow:hidden;background:var(--canvas)}
-.m-bg-image,.m-bg-mask{position:absolute;inset:0}
+.m-bg-media,.m-bg-image,.m-bg-mask{position:absolute;inset:0}
 .m-sidebar{width:208px;flex:none;display:flex;flex-direction:column;gap:2px;padding:44px 8px 12px}
 .m-group{padding:10px 10px 4px;font-size:11px;color:var(--subtle-foreground)}
 .m-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden}

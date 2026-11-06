@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/anchors.ts@8c94ada55385d33a5c50187fcd0775ebff26db80 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/anchors.ts@e4cf8ca311de4e8f75874b018aec0ff2899027ee 同步，勿手改
 /** 用户 CSS / 插件主题可依赖的稳定选择器：组件上的 `data-enso="…"` */
 export const THEME_ANCHORS = [
   'canvas',

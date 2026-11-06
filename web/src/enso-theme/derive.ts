@@ -1,4 +1,4 @@
-// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/derive.ts@8c94ada55385d33a5c50187fcd0775ebff26db80 同步，勿手改
+// 由 scripts/sync-theme.mjs 从 enso-code/src/shared/theme/derive.ts@e4cf8ca311de4e8f75874b018aec0ff2899027ee 同步，勿手改
 import type { ThemeDefinition, ThemeMode, ThemePalette, ThemeTokens } from './types';
 
 const mix = (color: string, percent: number, base: string) =>
@@ -63,8 +63,8 @@ export function deriveThemeTokens(
     '--brand': brand,
     '--brand-foreground': dark ? canvas : 'oklch(0.985 0 0)',
     '--elevation-surface': dark
-      ? `0 0 0 1px ${mix(text, 6, 'transparent')}, 0 2px 8px rgb(0 0 0 / 0.3)`
-      : `0 0 0 1px ${mix(text, 7, 'transparent')}, 0 1px 3px rgb(0 0 0 / 0.04)`,
+      ? `0 0 0 1px color-mix(in oklch, ${text} calc(6% * var(--ui-border-opacity, 1)), transparent), 0 2px 8px rgb(0 0 0 / 0.3)`
+      : `0 0 0 1px color-mix(in oklch, ${text} calc(7% * var(--ui-border-opacity, 1)), transparent), 0 1px 3px rgb(0 0 0 / 0.04)`,
     ...FIXED_TOKENS[mode],
   };
 }

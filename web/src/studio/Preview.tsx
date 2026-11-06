@@ -22,8 +22,10 @@ function Mock({ state }: { state: PreviewState }) {
   return (
     <>
       <div aria-hidden className="m-bg">
-        <div className="m-bg-image" />
-        <div className="m-bg-mask" />
+        <div className="m-bg-media">
+          <div className="m-bg-image" />
+          <div className="m-bg-mask" />
+        </div>
       </div>
       <div data-enso="canvas" className="m-canvas">
         <aside data-enso="sidebar" className="m-sidebar">
