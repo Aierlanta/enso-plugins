@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T11:09:41.797Z",
-  "sequence": 56,
+  "generatedAt": "2026-11-07T12:01:21.782Z",
+  "sequence": 57,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -76,7 +76,12 @@
         "observability"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.context.svg",
-      "latest": "0.1.2",
+      "readme": {
+        "path": "packages/enso.context/0.1.3.readme.md",
+        "sha256": "64f409490ab94987741a85a481d21897a4f4f6bab078d3ae84b9f027bec19ccd",
+        "size": 1269
+      },
+      "latest": "0.1.3",
       "versions": [
         {
           "version": "0.1.0",
@@ -119,6 +124,20 @@
           "sha256": "019b9814b49bfa7737552e060cc6a7152be3a50f34cecaa1506df0a77439c591",
           "size": 53021,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "0.1.3",
+          "engines": {
+            "enso": ">=0.2.0"
+          },
+          "permissions": [
+            "ui.view",
+            "agent.observe"
+          ],
+          "path": "packages/enso.context/0.1.3.zip",
+          "sha256": "0a6bb13e14751c74ebb44cc09ab6ff6012f6bb8e158f08063c1220c68efafc8f",
+          "size": 54384,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -132,7 +151,12 @@
         "notes"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.example.notes.svg",
-      "latest": "1.0.2",
+      "readme": {
+        "path": "packages/enso.example.notes/1.0.3.readme.md",
+        "sha256": "13d1953a0743e9ffe041419534afce5580706d83189cb3c812ded3967e63c45b",
+        "size": 618
+      },
+      "latest": "1.0.3",
       "versions": [
         {
           "version": "1.0.0",
@@ -166,6 +190,17 @@
           "sha256": "1fad8fcfe7185ac123f6c5024577908e87369cf46bd23c086a457d941868d3c6",
           "size": 33220,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "1.0.3",
+          "permissions": [
+            "ui.view",
+            "composer.draft"
+          ],
+          "path": "packages/enso.example.notes/1.0.3.zip",
+          "sha256": "37f0f872ef6cb511e90fcbb06f155e56022e07a89e9e6fce31518111595a9797",
+          "size": 33932,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -179,6 +214,11 @@
         "dark"
       ],
       "icon": "https://raw.githubusercontent.com/J3n5en/enso-plugins/main/packages/enso.example.sagefocus/assets/icon.svg",
+      "readme": {
+        "path": "packages/enso.example.sagefocus/1.0.3.readme.md",
+        "sha256": "36c52770d526d1963ee8f55f8ac821a1081ddc840fcb3738913efae0092a5c13",
+        "size": 2944
+      },
       "latest": "1.0.3",
       "versions": [
         {
@@ -201,7 +241,12 @@
         "tools"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.example.wordstats.svg",
-      "latest": "1.0.2",
+      "readme": {
+        "path": "packages/enso.example.wordstats/1.0.3.readme.md",
+        "sha256": "60e182c85b46fd0cacda8936da221c539ac7df39494cb4a74e4d8070afe798df",
+        "size": 1049
+      },
+      "latest": "1.0.3",
       "versions": [
         {
           "version": "1.0.0",
@@ -238,6 +283,18 @@
           "sha256": "75d82be1dd29eea4a8d1a47c90e7957f733a098fd48a2214d2bb293861c2bd98",
           "size": 7713,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "1.0.3",
+          "permissions": [
+            "agent.tool",
+            "fs.read",
+            "ui.slot"
+          ],
+          "path": "packages/enso.example.wordstats/1.0.3.zip",
+          "sha256": "37dc283869035c645ab758a44522ef98f832e7982bff8d2fc8ae5ea8cb1a8912",
+          "size": 8856,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -251,6 +308,11 @@
         "reading"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.fanqie.svg",
+      "readme": {
+        "path": "packages/enso.fanqie/0.1.2.readme.md",
+        "sha256": "971664ef9109e34a2b78f327b8df9778f1423687a18f5dd133adba1b115c08f6",
+        "size": 4999
+      },
       "latest": "0.1.2",
       "versions": [
         {
@@ -295,7 +357,12 @@
         "productivity"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.github.svg",
-      "latest": "0.1.0",
+      "readme": {
+        "path": "packages/enso.github/0.1.1.readme.md",
+        "sha256": "8d58a656adcaf46a4ed8673a644cd61944c90ec508944712da3c489c6f29835a",
+        "size": 1750
+      },
+      "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -312,6 +379,22 @@
           "sha256": "e045b37a42c8b8f1feee8310066a1c90c6abffd03848b39faa88b915deefb0f3",
           "size": 54276,
           "publishedAt": "2026-11-03T05:51:45.162Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.github/0.1.1.zip",
+          "sha256": "b43f51766510c5439b9a818223366bd53b660559b568c628519d7817aa6bd35a",
+          "size": 56120,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -325,6 +408,11 @@
         "video"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.hongguo.svg",
+      "readme": {
+        "path": "packages/enso.hongguo/0.2.10.readme.md",
+        "sha256": "9e927354736161aa1c8090153ea035c13c4ebbb105febffaaa084af2f298636c",
+        "size": 6898
+      },
       "latest": "0.2.10",
       "versions": [
         {
@@ -409,7 +497,12 @@
         "productivity"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.kanban.svg",
-      "latest": "1.0.2",
+      "readme": {
+        "path": "packages/enso.kanban/1.0.3.readme.md",
+        "sha256": "3bb3d476b2bc99e56a7a37fa1ae3794c3626401142ebd45da1982c3a4b4f39d0",
+        "size": 1724
+      },
+      "latest": "1.0.3",
       "versions": [
         {
           "version": "1.0.0",
@@ -458,6 +551,22 @@
           "sha256": "777a390c2ab29fa6ccdd3fa0c73242a7de523a9c6032adcc8b8ad29db1dde1df",
           "size": 70392,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "1.0.3",
+          "permissions": [
+            "ui.view",
+            "agent.tool",
+            "agent.inject",
+            "composer.draft",
+            "session.read",
+            "session.focus",
+            "session.create"
+          ],
+          "path": "packages/enso.kanban/1.0.3.zip",
+          "sha256": "96a07aa9dfc0450dac3cf74afaeca6765cde8724787c798b31f9b7f88070b65a",
+          "size": 72210,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -470,6 +579,11 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.lulu.svg",
+      "readme": {
+        "path": "packages/enso.lulu/0.1.0.readme.md",
+        "sha256": "fc0600fe4f2f9c06f6bccbf79d86fa2ce7c15124e0972c65907262a0e742635d",
+        "size": 3643
+      },
       "latest": "0.1.0",
       "versions": [
         {
@@ -495,6 +609,11 @@
         "ui"
       ],
       "icon": "https://raw.githubusercontent.com/J3n5en/enso-plugins/main/packages/enso.monokaipro/assets/icon.svg",
+      "readme": {
+        "path": "packages/enso.monokaipro/1.0.0.readme.md",
+        "sha256": "67517ed2d07a733ff26cb4b66dc325c69e33cac8a8ae2c0fc6101656e37b2796",
+        "size": 660
+      },
       "latest": "1.0.0",
       "versions": [
         {
@@ -516,6 +635,11 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.nailong.svg",
+      "readme": {
+        "path": "packages/enso.nailong/0.1.5.readme.md",
+        "sha256": "b39b5da1f3005c5729b3e701547c01c64d514851293ea3acd8b187e4dbe3b1dc",
+        "size": 2156
+      },
       "latest": "0.1.5",
       "versions": [
         {
@@ -584,6 +708,11 @@
         "theme"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.naiwa.svg",
+      "readme": {
+        "path": "packages/enso.naiwa/0.1.2.readme.md",
+        "sha256": "85734b877184023f12c9cf6b4c22600507fa9ce16120b609fbc127251257e808",
+        "size": 4019
+      },
       "latest": "0.1.2",
       "versions": [
         {
@@ -634,6 +763,11 @@
       ],
       "homepage": "https://github.com/cursor/plugins/tree/main/pstack",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.pstack.svg",
+      "readme": {
+        "path": "packages/enso.pstack/0.3.3.readme.md",
+        "sha256": "44b87b4a992de68cb9325aa0cfd749bcef62c3ba2f16dc5c180e9f83554153a5",
+        "size": 28586
+      },
       "latest": "0.3.3",
       "versions": [
         {
@@ -734,7 +868,12 @@
         "automation"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.scheduler.svg",
-      "latest": "1.0.2",
+      "readme": {
+        "path": "packages/enso.scheduler/1.0.3.readme.md",
+        "sha256": "543b08ecb724e7c539b2cf17cd4fefd22c00870983a6c7c5235ecf68d12c59df",
+        "size": 1392
+      },
+      "latest": "1.0.3",
       "versions": [
         {
           "version": "1.0.0",
@@ -774,6 +913,19 @@
           "sha256": "37b9ab66e0346f0e954eb358c074de7622a7b7c0a4ba46728a8a2ba89f91a705",
           "size": 63076,
           "publishedAt": "2026-11-03T02:38:21.078Z"
+        },
+        {
+          "version": "1.0.3",
+          "permissions": [
+            "ui.view",
+            "process.background",
+            "agent.inject",
+            "ui.notify"
+          ],
+          "path": "packages/enso.scheduler/1.0.3.zip",
+          "sha256": "19f06be44e4455d928da4a6afbb2586048ff77e6e5e339aad217651c5ddf1120",
+          "size": 64562,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -787,7 +939,12 @@
         "chat"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.telegram.svg",
-      "latest": "0.3.0",
+      "readme": {
+        "path": "packages/enso.telegram/0.3.1.readme.md",
+        "sha256": "dacdc1b222c796cb63a674cdf2bebeb8ec78e828ee7ae254868103b0e036a7a7",
+        "size": 3177
+      },
+      "latest": "0.3.1",
       "versions": [
         {
           "version": "0.2.0",
@@ -866,6 +1023,27 @@
           "sha256": "2a2cd5ee9e1de7224f11ee6956bb2a049d7894213854b13b23e719b4c706f585",
           "size": 79243,
           "publishedAt": "2026-11-03T14:45:04.303Z"
+        },
+        {
+          "version": "0.3.1",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.observe",
+            "agent.inject",
+            "session.read",
+            "session.create",
+            "process.background",
+            "net.fetch",
+            "ui.view",
+            "ui.openExternal"
+          ],
+          "path": "packages/enso.telegram/0.3.1.zip",
+          "sha256": "38482bd30fe4a29cf99dba7da88e851b7a1f732b3502df3245fc477a7cc121ce",
+          "size": 82514,
+          "publishedAt": "2026-11-07T12:01:21.782Z"
         }
       ]
     },
@@ -879,6 +1057,11 @@
         "telegram"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.tgclient.svg",
+      "readme": {
+        "path": "packages/enso.tgclient/0.1.1.readme.md",
+        "sha256": "b1544bd8577b2df1830dfc19cdae8784ea45b89b16013f808faa3b2dd70fa3fd",
+        "size": 3137
+      },
       "latest": "0.1.1",
       "versions": [
         {
@@ -929,6 +1112,11 @@
         "translate"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.translate.svg",
+      "readme": {
+        "path": "packages/enso.translate/0.1.1.readme.md",
+        "sha256": "a7183965d8f309ad12eee05c36ee16ca145fb2b079cc1230707eab2194a92294",
+        "size": 2280
+      },
       "latest": "0.1.1",
       "versions": [
         {
@@ -971,6 +1159,11 @@
       ],
       "homepage": "https://github.com/Small-tailqwq/dsh-deep-whale",
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.whalemaid.svg",
+      "readme": {
+        "path": "packages/enso.whalemaid/0.1.1.readme.md",
+        "sha256": "fe27463c71e8faac1b57d1c6104c072f0445934707c4115bf52495c409832226",
+        "size": 2498
+      },
       "latest": "0.1.1",
       "versions": [
         {
@@ -1009,6 +1202,11 @@
       ],
       "homepage": "https://github.com/xiamuwnagwang/enso-yce",
       "icon": "https://cdn.jsdelivr.net/gh/xiamuwnagwang/enso-yce@907b2a26275c8de77277b2e807ca9fdf08967e8e/icon.svg",
+      "readme": {
+        "path": "packages/yce.enhance/0.1.1.readme.md",
+        "sha256": "04e61c3ff67707a84081ca7ce0701e9029b1cf0832f6f8bb4086f28c70051f5c",
+        "size": 4770
+      },
       "latest": "0.1.1",
       "versions": [
         {
