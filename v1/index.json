@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T11:03:41.637Z",
-  "sequence": 54,
+  "generatedAt": "2026-11-07T11:06:31.858Z",
+  "sequence": 55,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -251,7 +251,7 @@
         "reading"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.fanqie.svg",
-      "latest": "0.1.1",
+      "latest": "0.1.2",
       "versions": [
         {
           "version": "0.1.0",
@@ -272,6 +272,16 @@
           "sha256": "dce68127b8a9541e888ae6de1af44d24c98765dd4aa9a2d1a3850d557c44dc2d",
           "size": 157952,
           "publishedAt": "2026-11-04T03:04:56.311Z"
+        },
+        {
+          "version": "0.1.2",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.fanqie/0.1.2.zip",
+          "sha256": "ab1c6db5e80207ee764c02d4af38318a00daddef458f9cefac8017ef2ef2262f",
+          "size": 158666,
+          "publishedAt": "2026-11-07T11:06:31.858Z"
         }
       ]
     },
