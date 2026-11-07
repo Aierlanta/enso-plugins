@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-06T15:10:04.900Z",
-  "sequence": 53,
+  "generatedAt": "2026-11-07T11:03:41.637Z",
+  "sequence": 54,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -315,7 +315,7 @@
         "video"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.hongguo.svg",
-      "latest": "0.2.9",
+      "latest": "0.2.10",
       "versions": [
         {
           "version": "0.2.4",
@@ -376,6 +376,16 @@
           "sha256": "c6761307d1eba78d6d4bdd31942334e08b645e67412c75f0a0536da0e146c886",
           "size": 7778755,
           "publishedAt": "2026-11-03T05:46:28.304Z"
+        },
+        {
+          "version": "0.2.10",
+          "permissions": [
+            "ui.view"
+          ],
+          "path": "packages/enso.hongguo/0.2.10.zip",
+          "sha256": "7982fd236ed81b27eff0dcc6da699ecad4579e676587adf341401b422efc1d4c",
+          "size": 7779459,
+          "publishedAt": "2026-11-07T11:03:41.637Z"
         }
       ]
     },
