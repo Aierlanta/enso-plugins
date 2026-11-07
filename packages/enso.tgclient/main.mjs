@@ -310,7 +310,16 @@ function createApp(enso) {
   const lists = { client: null, filters: null, main: null, archive: null, done: null, extra: null, at: 0, stale: false, flood: 0, refreshing: null };
   // 有变化只打标记，下次取列表时在后台刷新第一页，不再整表重拉
   const dirty = () => (lists.stale = true);
-  const watch = { chat: null, visible: false, at: 0 };
+  // 侧栏当前打开的对话：poll 时顺带上报，切换对话时 focus 立即上报
+  const watch = { chat: null, topic: null, visible: false, at: 0, last: null };
+  const sidebarLive = () => Date.now() - watch.at < POLL_MS + 10_000;
+  function setFocus(args) {
+    watch.chat = args.active ? String(args.active) : null;
+    watch.topic = (watch.chat && Number(args.topic)) || null;
+    watch.visible = args.visible !== false;
+    watch.at = Date.now();
+    if (watch.chat) watch.last = { chat: watch.chat, topic: watch.topic, at: watch.at };
+  }
 
   const push = (ev) => {
     events.push({ ...ev, seq: ++seq });
@@ -461,7 +470,7 @@ function createApp(enso) {
     const cfg = await enso.config.get();
     if (cfg.notify === false || m.out) return;
     const chat = idOf(m.chatId);
-    if (watch.chat === chat && watch.visible && Date.now() - watch.at < POLL_MS + 10_000) return;
+    if (watch.chat === chat && watch.visible && sidebarLive()) return;
     const c = entities.get(chat);
     if (mutedNow(chat, c)) return;
     const sender = m.sender ?? (await m.getSender().catch(() => null));
@@ -700,10 +709,13 @@ function createApp(enso) {
     return view();
   });
 
+  handle('focus', async (args) => {
+    setFocus(args);
+    return { ok: true };
+  });
+
   handle('poll', async (args, ctx) => {
-    watch.chat = args.active ? String(args.active) : null;
-    watch.visible = args.visible !== false;
-    watch.at = Date.now();
+    setFocus(args);
     if (account.session && (state.status === 'ready' || state.status === 'offline')) {
       const cfg = await enso.config.get();
       if (String(cfg.proxy ?? '') !== proxyUsed) {
@@ -1570,9 +1582,16 @@ function createApp(enso) {
     return c;
   }
 
+  // 不填 chat（或填 current）就用侧栏当前打开的对话
+  const isCurrent = (ref) => /^(|current|当前)$/i.test(String(ref ?? '').trim());
+  function currentChat() {
+    if (!sidebarLive()) throw new Error('Telegram 侧栏没有打开，拿不到当前对话，请指定 chat');
+    if (!watch.chat) throw new Error('侧栏里当前没有打开任何对话，请指定 chat');
+    return watch.chat;
+  }
+  const topicArg = (args) => args.topic ?? (isCurrent(args.chat) ? watch.topic : null);
   async function chatOf(c, ref) {
-    const s = String(ref ?? '').trim();
-    if (!s) throw new Error('缺少 chat');
+    const s = isCurrent(ref) ? currentChat() : String(ref).trim();
     if (/^(me|self|saved|收藏夹)$/i.test(s)) return { id: state.me.id, title: '收藏夹', entity: entities.get(state.me.id) ?? keep(await c.getMe()) };
     const user = s.match(/^(?:@|(?:https?:\/\/)?t\.me\/)([A-Za-z]\w{3,31})\/?$/)?.[1];
     if (user) {
@@ -1682,23 +1701,45 @@ function createApp(enso) {
     return { chats: [...out.values()].slice(0, limit) };
   });
 
-  tool('tg_get_messages', async (args) => {
-    const c = await agentClient();
-    const chat = await chatOf(c, args.chat);
-    const limit = Math.min(Math.max(Number(args.limit) || 30, 1), 100);
-    const topic = Number(args.topic) || 0;
-    const list = topic
-      ? await topicHistory(c, chat.id, topic, limit, Number(args.before) || 0)
-      : await c.getMessages(chat.entity, { limit, ...(args.before ? { offsetId: Number(args.before) } : {}) });
+  async function readChat(c, chat, { limit, before, topic }) {
+    topic = Number(topic) || 0;
+    const list = !limit
+      ? []
+      : topic
+        ? await topicHistory(c, chat.id, topic, limit, Number(before) || 0)
+        : await c.getMessages(chat.entity, { limit, ...(before ? { offsetId: Number(before) } : {}) });
     const messages = [];
     for (const m of list) messages.unshift(await msgBrief(m));
     const d = known().find((x) => idOf(x.id) === chat.id);
     return {
       chat: { id: chat.id, title: chat.title, type: kindOf(chat.entity), ...(d?.unreadCount ? { unread: d.unreadCount } : {}) },
-      messages,
       ...(topic ? { topic: { id: topic, title: await topicName(c, chat.id, topic) } } : {}),
-      ...(list.length >= limit ? { olderBefore: list.at(-1).id } : {}),
+      messages,
+      ...(limit && list.length >= limit ? { olderBefore: list.at(-1).id } : {}),
     };
+  }
+
+  tool('tg_get_messages', async (args) => {
+    const c = await agentClient();
+    const chat = await chatOf(c, args.chat);
+    return readChat(c, chat, { limit: Math.min(Math.max(Number(args.limit) || 30, 1), 100), before: args.before, topic: topicArg(args) });
+  });
+
+  tool('tg_current_chat', async (args) => {
+    const c = await agentClient();
+    const live = sidebarLive();
+    if (!live || !watch.chat) {
+      const l = watch.last;
+      const e = l && entities.get(l.chat);
+      return {
+        open: false,
+        reason: live ? '侧栏开着，但没有打开任何对话' : 'Telegram 侧栏没有打开',
+        ...(l ? { lastOpened: { id: l.chat, title: e?.self ? '收藏夹' : nameOf(e), ...(l.topic ? { topic: l.topic } : {}), at: when(Math.floor(l.at / 1000)) } } : {}),
+      };
+    }
+    const chat = await chatOf(c, watch.chat);
+    const limit = Math.min(Math.max(Number(args.limit ?? 10) || 0, 0), 50);
+    return { open: true, visible: watch.visible, ...(await readChat(c, chat, { limit, topic: watch.topic })) };
   });
 
   tool('tg_list_topics', async (args) => {
@@ -1730,7 +1771,7 @@ function createApp(enso) {
     const text = String(args.text ?? '');
     if (!text.trim()) throw new Error('消息不能为空');
     const chat = await chatOf(c, args.chat);
-    const m = await c.sendMessage(chat.entity, { message: text, ...replyArgs(args.topic, args.replyTo) });
+    const m = await c.sendMessage(chat.entity, { message: text, ...replyArgs(topicArg(args), args.replyTo) });
     dirty();
     push({ type: 'message', chat: chat.id, message: await pack(m) });
     return { ok: true, chat: { id: chat.id, title: chat.title }, id: m.id, at: when(m.date) };

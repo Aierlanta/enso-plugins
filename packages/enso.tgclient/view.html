@@ -344,7 +344,7 @@
       // 宿主拒绝的调用根本没执行，可以放心重试：限速就退避重排队，熔断就整体冷却到解除再继续
       let coolUntil = 0, coolTold = 0;
       // 没连上时不去碰数据接口：失败会累计到宿主的熔断里，连坏 5 次整个插件停 30 秒
-      const ANY_STATE = new Set(['state', 'poll', 'login', 'code', 'password', 'cancel', 'logout', 'reconnect', 'open', 'watches', 'unwatch']);
+      const ANY_STATE = new Set(['state', 'poll', 'focus', 'login', 'code', 'password', 'cancel', 'logout', 'reconnect', 'open', 'watches', 'unwatch']);
       async function call(method, args) {
         if (!ANY_STATE.has(method) && S.st && S.st.status !== 'ready') throw new Error(S.st.status === 'offline' ? '正在重连 Telegram…' : '还没连上 Telegram');
         for (let tries = 0; ; tries++) {
@@ -579,7 +579,9 @@
       async function loop() {
         for (;;) {
           try {
-            const r = await call('poll', { cursor: S.cursor, active: S.chat?.id ?? null, visible: document.visibilityState === 'visible' });
+            const f = focusInfo();
+            focusKey = JSON.stringify(f);
+            const r = await call('poll', { cursor: S.cursor, ...f });
             if (r.reset) {
               S.cursor = r.cursor;
               applyState(r);
@@ -787,6 +789,21 @@
         }
         renderPanel();
       }
+      // 当前打开的对话（给 agent 工具 tg_current_chat 用）：变化后立刻告诉插件，不等下一次 poll
+      const focusInfo = () => {
+        const open = !!S.chat && (document.body.classList.contains('open') || matchMedia('(min-width: 640px)').matches);
+        return { active: open ? S.chat.id : null, topic: open && S.topic ? S.topic : null, visible: document.visibilityState === 'visible' };
+      };
+      let focusKey = '', focusTimer;
+      function reportFocus() {
+        clearTimeout(focusTimer);
+        focusTimer = setTimeout(() => {
+          const f = focusInfo(), k = JSON.stringify(f);
+          if (k === focusKey) return;
+          focusKey = k;
+          call('focus', f).catch(() => (focusKey = ''));
+        }, 200);
+      }
       async function openChat(id, keep) {
         const d = S.dialogs.find((x) => x.id === id) ?? S.chat;
         if (!d) return;
@@ -798,6 +815,7 @@
         if (switching || !keep) { S.reply = null; S.files = []; S.msgs = []; S.edit = null; closePicker(); chatShell(d); }
         if (switching || !keep) { closeCtx(); loadSendAs(d); }
         document.body.classList.add('open');
+        reportFocus();
         renderDialogs();
         if (!S.msgs.length) {
           const c = store.get(`tg:cache:h:${ckey()}`);
@@ -828,6 +846,7 @@
         $('topics').addEventListener('scroll', nearTopicEnd, { passive: true });
         syncWatchBtns();
         document.body.classList.add('open');
+        reportFocus();
         renderDialogs();
         renderTopics();
         return loadTopics(true);
@@ -1840,6 +1859,7 @@
         $('lightbox').innerHTML = '';
       });
       document.addEventListener('visibilitychange', () => {
+        reportFocus();
         if (document.visibilityState === 'visible' && S.chat?.unread) markRead();
       });
       let logoutArmed = false;
@@ -1881,7 +1901,7 @@
           case 'reconnect': return call('reconnect').then((r) => applyState(r, true)).catch(fail);
           case 'cancel': return call('cancel').then((r) => applyState(r, true)).catch(fail);
           case 'dialogs': return loadDialogs();
-          case 'back': document.body.classList.remove('open'); return;
+          case 'back': document.body.classList.remove('open'); reportFocus(); return;
           case 'attach': return $('file').click();
           case 'reply': S.reply = id; S.files = []; renderTray(); $('input')?.focus(); return;
           case 'copy': return copyText(S.msgs.find((x) => x.id === id)?.text ?? '');

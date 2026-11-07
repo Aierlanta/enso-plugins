@@ -24,7 +24,7 @@
 - 机器人：内联按钮（回调、链接、切换内联、复制）、回复键盘、空聊天一键「开始」
 - 媒体：图片、贴纸、动图、语音、视频（≤50MB 侧栏内播放）、文件下载到「下载」文件夹
 - 发送图片和文件（≤20MB），支持粘贴图片
-- Agent 工具：`tg_list_chats` 列出聊天、`tg_search_chats` 搜索聊天/联系人/公开群和频道、`tg_list_topics` 列出论坛群的话题、`tg_get_messages` 查看聊天记录、`tg_search_messages` 搜索消息（单个聊天或全部）、`tg_send_message` 以本人身份发消息、`tg_mark_read` 标为已读、`tg_wait_messages` 等新消息（长轮询，带 cursor 不漏消息）、`tg_watch` / `tg_unwatch` 订阅新消息（攒几秒投递到会话并自动开始新一轮，需在插件设置里打开「允许向任意运行中的会话发送消息」；侧栏顶部的眼睛图标列出所有订阅，可查看投递情况并取消）；聊天可用 id、@用户名或名称指定，需先在侧栏登录
+- Agent 工具：`tg_current_chat` 获取侧栏当前打开的对话和最近消息、`tg_list_chats` 列出聊天、`tg_search_chats` 搜索聊天/联系人/公开群和频道、`tg_list_topics` 列出论坛群的话题、`tg_get_messages` 查看聊天记录、`tg_search_messages` 搜索消息（单个聊天或全部）、`tg_send_message` 以本人身份发消息、`tg_mark_read` 标为已读、`tg_wait_messages` 等新消息（长轮询，带 cursor 不漏消息）、`tg_watch` / `tg_unwatch` 订阅新消息（攒几秒投递到会话并自动开始新一轮，需在插件设置里打开「允许向任意运行中的会话发送消息」；侧栏顶部的眼睛图标列出所有订阅，可查看投递情况并取消）；聊天可用 id、@用户名或名称指定，不填则用侧栏当前打开的对话（论坛群里还会沿用当前话题），需先在侧栏登录
 
 ## 开发
 
