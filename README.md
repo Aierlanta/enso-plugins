@@ -71,6 +71,7 @@ out/v1/                   本地构建产物，不提交
 索引由客户端解析（`schemaVersion: 1`）：
 
 - `path` 相对于 `v1/`，例如 `packages/<id>/<version>.zip`。
+- 插件目录里有 `README.md` 时，插件记录带 `readme: { path, sha256, size }`，`path` 为 `packages/<id>/<version>.readme.md`，最大 256KB。README 同时在 zip 里，改 README 要升版本。
 - `sequence` 每次发布加 1，用来拒绝回滚。
 
 ## 贡献插件
@@ -162,7 +163,7 @@ PR 合并到 `main` 后，`.github/workflows/publish.yml` 依次执行：
 
 1. 若已有 `dist` 分支，先取出其中的 `v1/`，保留历史 zip 和索引。
 2. `build` + `sign`。带 `package-lock.json` 的插件会先执行 `npm ci --omit=dev`，依赖打进 zip，不提交 `node_modules`。
-3. 把 `out/v1` 提交并推到 `dist`：`v1/index.json`、`v1/index.json.sig`、`v1/packages/<id>/<version>.zip`。
+3. 把 `out/v1` 提交并推到 `dist`：`v1/index.json`、`v1/index.json.sig`、`v1/packages/<id>/<version>.zip` 与 `<version>.readme.md`。
 
 客户端内置公钥，源可以是 Worker、jsDelivr 或 GitHub raw，但内容必须对得上同一份签名。
 
@@ -207,7 +208,7 @@ cd worker && npx wrangler deploy
 | --- | --- |
 | `GET /` | 首页静态资源（`web/dist`），响应头见 `web/public/_headers` |
 | `GET /v1/index.json`、`/v1/index.json.sig` | `cache-control: public, max-age=300` |
-| `GET /v1/packages/<id>/<version>.zip` | 一年 immutable，带 ETag；路径按 id 与 semver 校验 |
+| `GET /v1/packages/<id>/<version>.zip`、`<version>.readme.md` | 一年 immutable，带 ETag；路径按 id 与 semver 校验；README 为 `text/markdown; charset=utf-8` |
 | `GET /v1/icon?url=` | 只代理 `https` 图片，不转发请求头，最大 1 MB；200 缓存一天，404 缓存五分钟，5xx 不缓存 |
 | 其他 `/v1/*` | 404 |
 

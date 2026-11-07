@@ -122,6 +122,36 @@ test('build 合并历史版本，同版本内容不同则失败', async () => {
   }
 });
 
+test('README 作为独立文件发布并登记在插件记录上', async () => {
+  const root = await tempRoot();
+  try {
+    const readme = '# Notes\n\n用法说明\n';
+    await writePlugin(root, { id: 'enso.example.notes', version: '1.0.0' }, { files: { 'README.md': readme } });
+    await writePlugin(root, { id: 'enso.example.wordstats', version: '1.0.0' });
+    const built = await buildRepo(root, { ...process.env, ENSO_INDEX_TIME: NOW });
+    const [notes, wordstats] = built.index.plugins;
+    assert.equal(notes.readme.path, 'packages/enso.example.notes/1.0.0.readme.md');
+    const bytes = await readFile(join(root, 'out/v1', notes.readme.path));
+    assert.equal(bytes.toString('utf8'), readme);
+    assert.equal(notes.readme.size, Buffer.byteLength(readme));
+    assert.equal(notes.readme.sha256, createHash('sha256').update(readme).digest('hex'));
+    assert.equal('readme' in wordstats, false);
+    assert.equal('readme' in notes.versions[0], false);
+
+    await rm(join(root, 'packages/enso.example.notes'), { recursive: true });
+    await rm(join(root, 'registry/meta/enso.example.notes.json'));
+    const kept = await buildRepo(root, { ...process.env, ENSO_INDEX_TIME: '2026-11-03T00:00:00.000Z' });
+    assert.deepEqual(kept.index.plugins[0].readme, notes.readme);
+
+    await writePlugin(root, { id: 'enso.example.big', version: '1.0.0' }, { files: { 'README.md': 'x'.repeat(256 * 1024 + 1) } });
+    await assert.rejects(() => buildRepo(root, { ...process.env, ENSO_INDEX_TIME: NOW }), /README\.md 超过 256KB/);
+    const validated = await validateRepo(root, { catalog: false });
+    assert.match(validated.errors.join('\n'), /enso\.example\.big: README\.md 超过 256KB/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('同一内容的索引与 zip 可复现', async () => {
   const left = await tempRoot();
   const right = await tempRoot();

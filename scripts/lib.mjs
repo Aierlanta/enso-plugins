@@ -12,6 +12,7 @@ export const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za
 export const ENGINE_RE = /^>=(\d+)\.(\d+)\.(\d+)$/;
 export const MAX_FILES = 5000;
 export const MAX_BYTES = 200 * 1024 * 1024;
+export const MAX_README = 256 * 1024;
 const PATH_RE = /^[A-Za-z0-9._/-]+$/;
 
 export function knownOptions(argv, names) {
@@ -302,6 +303,7 @@ export async function readPackages(root) {
     const metaPath = join(root, 'registry/meta', `${id}.json`);
     const metaParsed = parseMeta(existsSync(metaPath) ? await readFile(metaPath, 'utf8') : null);
     const inspected = await inspectDir(dir);
+    if (inspected.files.some((file) => file.name === 'README.md' && file.size > MAX_README)) inspected.errors.push('README.md 超过 256KB');
     const pluginErrors = [...parsed.errors, ...metaParsed.errors, ...inspected.errors].map((error) => `${id}: ${error}`);
     errors.push(...pluginErrors);
     if (parsed.manifest && pluginErrors.length === 0) {
@@ -493,7 +495,19 @@ function sortVersions(versions) {
   return [...versions].sort((a, b) => compareSemver(a.version, b.version));
 }
 
-function pluginRecord({ id, name, description, tier, tags, homepage, icon, versions }) {
+function validReadme(raw) {
+  return (
+    typeof raw?.path === 'string' &&
+    PATH_RE.test(raw.path) &&
+    !raw.path.split('/').includes('..') &&
+    /^[0-9a-f]{64}$/.test(raw.sha256) &&
+    Number.isSafeInteger(raw.size) &&
+    raw.size > 0 &&
+    raw.size <= MAX_README
+  );
+}
+
+function pluginRecord({ id, name, description, tier, tags, homepage, icon, readme, versions }) {
   const record = {
     id,
     name: String(name).slice(0, 60),
@@ -503,6 +517,7 @@ function pluginRecord({ id, name, description, tier, tags, homepage, icon, versi
   };
   if (typeof homepage === 'string' && homepage.trim()) record.homepage = homepage;
   if (typeof icon === 'string' && icon.trim()) record.icon = icon;
+  if (validReadme(readme)) record.readme = { path: readme.path, sha256: readme.sha256, size: readme.size };
   record.latest = latestOf(versions);
   record.versions = sortVersions(versions);
   return record;
@@ -552,6 +567,15 @@ export async function buildRepo(root, env = process.env) {
     const version = plugin.manifest.version;
     const path = `packages/${plugin.id}/${version}.zip`;
     if (!PATH_RE.test(path) || path.split('/').includes('..')) throw new Error(`${plugin.id}: 包路径不合法`);
+    const readmeData = files.find((file) => file.name === 'README.md')?.data;
+    const readme = readmeData?.length
+      ? {
+          path: `packages/${plugin.id}/${version}.readme.md`,
+          sha256: createHash('sha256').update(readmeData).digest('hex'),
+          size: readmeData.length,
+          data: readmeData,
+        }
+      : undefined;
     const oldVersions = (previousPlugins.get(plugin.id)?.versions ?? []).map(normalizeVersion);
     const existing = oldVersions.find((item) => item.version === version);
     if (existing && (existing.sha256 !== sha256 || existing.size !== zip.length || existing.path !== path)) {
@@ -571,12 +595,13 @@ export async function buildRepo(root, env = process.env) {
             publishedAt: now,
           },
         ];
-    staged.push({ plugin, zip, path, versions });
+    staged.push({ plugin, zip, path, readme, versions });
   }
   for (const item of staged) {
     const dest = join(root, 'out/v1', item.path);
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, item.zip);
+    if (item.readme) await writeFile(join(root, 'out/v1', item.readme.path), item.readme.data);
   }
   const seen = new Set(staged.map((item) => item.plugin.id));
   const plugins = staged.map((item) =>
@@ -588,6 +613,7 @@ export async function buildRepo(root, env = process.env) {
       tags: item.plugin.meta.tags,
       homepage: item.plugin.meta.homepage,
       icon: item.plugin.meta.icon,
+      readme: item.readme,
       versions: item.versions,
     }),
   );
@@ -603,6 +629,7 @@ export async function buildRepo(root, env = process.env) {
         tags: plugin.tags,
         homepage: plugin.homepage,
         icon: plugin.icon,
+        readme: plugin.readme,
         versions,
       }),
     );

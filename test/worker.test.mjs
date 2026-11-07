@@ -26,6 +26,7 @@ test('索引、包和非法路径', async () => {
     ['v1/index.json', Buffer.from('{"schemaVersion":1}')],
     ['v1/index.json.sig', Buffer.from('sig')],
     ['v1/packages/enso.example.notes/1.0.0.zip', Buffer.from('PK')],
+    ['v1/packages/enso.example.notes/1.0.0.readme.md', Buffer.from('# Notes')],
   ]);
   const { env, keys } = bucket(files);
   const index = await handle(new Request('https://plugins.example/v1/index.json'), env, ctx);
@@ -39,6 +40,12 @@ test('索引、包和非法路径', async () => {
   assert.equal(zip.headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.equal(zip.headers.get('content-type'), 'application/zip');
 
+  const readme = await handle(new Request('https://plugins.example/v1/packages/enso.example.notes/1.0.0.readme.md'), env, ctx);
+  assert.equal(readme.status, 200);
+  assert.equal(readme.headers.get('content-type'), 'text/markdown; charset=utf-8');
+  assert.equal(readme.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(await readme.text(), '# Notes');
+
   const missing = await handle(new Request('https://plugins.example/v1/packages/enso.example.notes/9.9.9.zip'), env, ctx);
   assert.equal(missing.status, 404);
   assert.equal(missing.headers.get('cache-control'), 'no-store');
@@ -47,6 +54,8 @@ test('索引、包和非法路径', async () => {
     '/v1/packages/../secret.zip',
     '/v1/packages/enso.example.notes/%2e%2e/%2e%2e/secret.zip',
     '/v1/packages/enso.example.notes/1.0.0.zip/../../index.json',
+    '/v1/packages/enso.example.notes/1.0.0.md',
+    '/v1/packages/enso.example.notes/README.md',
     '/v1/nope',
   ]) {
     const before = keys.length;

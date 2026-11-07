@@ -14,9 +14,9 @@ function packageKey(pathname) {
     return null;
   }
   if (decoded.includes('\\') || decoded.split('/').includes('..')) return null;
-  const match = /^\/v1\/packages\/([a-z][a-z0-9]*(?:\.[a-z0-9]+)+)\/([^/]+)\.zip$/.exec(decoded);
+  const match = /^\/v1\/packages\/([a-z][a-z0-9]*(?:\.[a-z0-9]+)+)\/([^/]+)\.(zip|readme\.md)$/.exec(decoded);
   if (!match || match[1].length > 40 || !ID_RE.test(match[1]) || !SEMVER_RE.test(match[2])) return null;
-  return `v1/packages/${match[1]}/${match[2]}.zip`;
+  return `v1/packages/${match[1]}/${match[2]}.${match[3]}`;
 }
 
 async function fromBucket(env, key, cacheControl, contentType) {
@@ -32,7 +32,7 @@ async function fromBucket(env, key, cacheControl, contentType) {
 async function fromOrigin(env, key, ttl) {
   if (!env.ORIGIN) return null;
   try {
-    const response = await fetch(new URL(key, env.ORIGIN), key.endsWith('.zip') ? { cf: { cacheEverything: true, cacheTtl: ttl } } : { cache: 'no-store' });
+    const response = await fetch(new URL(key, env.ORIGIN), key.startsWith('v1/packages/') ? { cf: { cacheEverything: true, cacheTtl: ttl } } : { cache: 'no-store' });
     return response.ok ? new Uint8Array(await response.arrayBuffer()) : null;
   } catch {
     return null;
@@ -84,16 +84,17 @@ async function isRetiredPackage(env, key) {
   return !ids.has(match[1]);
 }
 
-/** 包不可变：R2 没有时从源站取一次并写入 R2 */
+/** 包与 README 按版本不可变：R2 没有时从源站取一次并写入 R2 */
 async function packageFile(env, ctx, key) {
   const cacheControl = 'public, max-age=31536000, immutable';
+  const contentType = key.endsWith('.zip') ? 'application/zip' : 'text/markdown; charset=utf-8';
   if (await isRetiredPackage(env, key)) return text(404, 'not found', { 'cache-control': 'public, max-age=300' });
-  const cached = await fromBucket(env, key, cacheControl, 'application/zip');
+  const cached = await fromBucket(env, key, cacheControl, contentType);
   if (cached.status !== 404) return cached;
   const bytes = await fromOrigin(env, key, 86400);
   if (!bytes) return cached;
   if (env.BUCKET) ctx?.waitUntil(env.BUCKET.put(key, bytes).catch(() => {}));
-  return new Response(bytes, { headers: { 'content-type': 'application/zip', 'cache-control': cacheControl } });
+  return new Response(bytes, { headers: { 'content-type': contentType, 'cache-control': cacheControl } });
 }
 
 function allowedIconUrl(url) {
