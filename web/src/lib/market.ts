@@ -18,6 +18,7 @@ export type Plugin = {
   tags: string[];
   homepage?: string;
   icon?: string;
+  readme?: { path: string; sha256: string; size: number };
   latest: string;
   versions: Version[];
 };
@@ -56,13 +57,19 @@ export function latestVersion(plugin: Plugin): Version | undefined {
 
 const PACKAGE_ORIGIN = 'https://enso-plugins.j3.do';
 
+const safePath = (path: string | undefined) => (path && !path.startsWith('/') && !path.split('/').includes('..') ? path : null);
+
 /** 唤起本机 EnsoCode 安装最新版 zip。路径必须是索引里的相对路径。 */
 export function installLink(plugin: Plugin): string | null {
-  const version = latestVersion(plugin);
-  const path = version?.path;
-  if (!path || path.startsWith('/') || path.split('/').includes('..')) return null;
+  const path = safePath(latestVersion(plugin)?.path);
+  if (!path) return null;
   const zip = `${PACKAGE_ORIGIN}/v1/${path}`;
   return `enso://install-plugin?url=${encodeURIComponent(zip)}`;
+}
+
+export function readmeUrl(plugin: Plugin): string | null {
+  const path = safePath(plugin.readme?.path);
+  return path ? `/v1/${path}` : null;
 }
 
 /** 远程图标统一经 Worker 代理，CSP 只放行同源图片 */

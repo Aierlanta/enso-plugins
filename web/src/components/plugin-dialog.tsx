@@ -9,8 +9,10 @@ import { PluginIcon } from '@/components/plugin-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatSize, installLink, latestVersion, PERMISSION_LABELS, timeAgo, type Plugin } from '@/lib/market';
+import { formatSize, installLink, latestVersion, PERMISSION_LABELS, readmeUrl, timeAgo, type Plugin } from '@/lib/market';
 import { easeOut, spring } from '@/lib/motion';
+
+const PluginReadme = React.lazy(() => import('@/components/plugin-readme'));
 
 export type Origin = { x: number; y: number };
 
@@ -117,6 +119,7 @@ function DialogBody({ plugin }: { plugin: Plugin }) {
   const versions = [...plugin.versions].reverse();
   const homepage = /^https:\/\//.test(plugin.homepage ?? '') ? plugin.homepage : null;
   const install = installLink(plugin);
+  const readme = readmeUrl(plugin);
 
   return (
     <>
@@ -169,6 +172,14 @@ function DialogBody({ plugin }: { plugin: Plugin }) {
             )}
           </ol>
         </Section>
+
+        {readme && (
+          <Section title="使用说明">
+            <React.Suspense fallback={null}>
+              <PluginReadme url={readme} />
+            </React.Suspense>
+          </Section>
+        )}
 
         {perms.length > 0 && (
           <Section title={`权限 · ${perms.length}`}>
