@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "enso.github",
   "name": "GitHub",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icon": "icon.svg",
   "description": "在侧栏查看、回复、关闭和重开当前项目的 GitHub issue 与 PR；会话里的 agent 也能调用。支持设备码登录，已登录的 gh CLI 可直接复用。",
   "engines": {
