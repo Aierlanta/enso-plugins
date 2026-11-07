@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T11:06:31.858Z",
-  "sequence": 55,
+  "generatedAt": "2026-11-07T11:09:41.797Z",
+  "sequence": 56,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -879,7 +879,7 @@
         "telegram"
       ],
       "icon": "https://cdn.jsdelivr.net/gh/J3n5en/enso-plugins@main/registry/icons/enso.tgclient.svg",
-      "latest": "0.1.0",
+      "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.0",
@@ -898,6 +898,24 @@
           "sha256": "dec177fd831e59567bf180c0071f9badf5ff8b7dd01453a6327deb5a3d5f31ec",
           "size": 1308642,
           "publishedAt": "2026-11-06T15:10:04.900Z"
+        },
+        {
+          "version": "0.1.1",
+          "engines": {
+            "enso": ">=0.2.14"
+          },
+          "permissions": [
+            "agent.tool",
+            "agent.inject",
+            "ui.view",
+            "ui.notify",
+            "ui.openExternal",
+            "process.background"
+          ],
+          "path": "packages/enso.tgclient/0.1.1.zip",
+          "sha256": "97287fc76983fcba43ca42a504be8d7882136879ec5dd0181f8a7bdd90ba39c5",
+          "size": 1312602,
+          "publishedAt": "2026-11-07T11:09:41.797Z"
         }
       ]
     },
