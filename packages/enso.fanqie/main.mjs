@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readdir, readFile, rename, rm, stat, utimes, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { FanqieClient, normalizeBook } from './openfanqie/index.js';
 import { PATHS } from './openfanqie/protocol/app.js';
 
@@ -217,8 +217,11 @@ export function activate(enso) {
   });
 
   const which = (name) => {
-    const dirs = [...(process.env.PATH ?? '').split(':'), '/opt/homebrew/bin', '/usr/local/bin', '/usr/bin'];
-    for (const dir of dirs) if (dir && existsSync(join(dir, name))) return join(dir, name);
+    const win = process.platform === 'win32';
+    const file = win ? `${name}.exe` : name;
+    const winget = win && process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Links') : '';
+    const dirs = [...(process.env.PATH ?? process.env.Path ?? '').split(delimiter), ...(win ? [winget] : ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin'])];
+    for (const dir of dirs) if (dir && existsSync(join(dir, file))) return join(dir, file);
     return null;
   };
 
@@ -231,10 +234,18 @@ export function activate(enso) {
       child.on('close', (code) => (code === 0 ? resolve() : reject(new Error(err.trim() || `退出码 ${code}`))));
     });
 
-  // 封面是 HEIC，Chromium 解不了：macOS 用 sips 转 JPEG，其它系统有 ffmpeg 就用 ffmpeg
+  // 封面是 HEIC，Chromium 解不了：优先取不签名 CDN 的 webp（novel-pic-r 没有这份，仍走 sips / ffmpeg）
+  const webp = (url) => {
+    const m = url.match(/^https?:\/\/[^/]+\/novel-pic\/([0-9a-f]+)~/);
+    return m && `https://p6-novel.byteimg.com/novel-pic/${m[1]}~tplv-resize:240:0.webp`;
+  };
   const toJpeg = async (url, signal) => {
-    const res = await fetch(url, { signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const get = (u) => fetch(u, { signal }).catch(() => null);
+    const alt = webp(url);
+    const candidates = alt ? [alt, url] : [url];
+    let res;
+    for (let i = 0; i < 2 && !res?.ok; i++) for (const u of candidates) if ((res = await get(u))?.ok) break;
+    if (!res?.ok) throw new Error(`HTTP ${res?.status ?? 'fail'}`);
     const src = Buffer.from(await res.arrayBuffer());
     const type = res.headers.get('content-type') ?? '';
     if (/image\/(jpeg|png|webp|gif)/.test(type)) return { mime: type.split(';')[0], data: src };

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "enso.fanqie",
   "name": "番茄小说",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "icon": "icon.svg",
   "description": "在侧栏里浏览、搜索并阅读番茄免费小说（基于 openfanqie 匿名 SDK）。仅供学习研究。",
   "main": "main.mjs",
