@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T08:01:45.063Z",
-  "sequence": 59,
+  "generatedAt": "2026-11-08T15:53:29.016Z",
+  "sequence": 60,
   "plugins": [
     {
       "id": "dsh.bce",
@@ -63,6 +63,44 @@
           "sha256": "f3ab3f21e3ae9d4182904468ab1ddf8d9bcaf2578821db383241fb7a0b06e9ec",
           "size": 43146,
           "publishedAt": "2026-11-05T05:58:04.027Z"
+        }
+      ]
+    },
+    {
+      "id": "enso.bugbot",
+      "name": "Bugbot Review",
+      "description": "移植自 Cursor review-bugbot 与 Agent Review：本地 Git diff 组装（自动识别默认基准分支、剔除 linguist-generated 文件、合并 .cursor/BUGBOT.md 规则与最小改动行数门禁）、只读 bugbot 审查子代理、/review-bugbot 技能以及侧栏 Findings 面板与一键 Fix in Chat。",
+      "tier": "official",
+      "tags": [
+        "review",
+        "bugbot",
+        "git",
+        "code-quality",
+        "subagent"
+      ],
+      "icon": "registry/icons/enso.bugbot.svg",
+      "readme": {
+        "path": "packages/enso.bugbot/0.1.0.readme.md",
+        "sha256": "b38bb52faa6e9fd48d8f2314fdf9068d6ccf0f8d10fc00bb3c4de50c29adbacd",
+        "size": 1454
+      },
+      "latest": "0.1.0",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "engines": {
+            "enso": ">=0.3.0"
+          },
+          "permissions": [
+            "agent.tool",
+            "ui.view",
+            "ui.slot",
+            "composer.draft"
+          ],
+          "path": "packages/enso.bugbot/0.1.0.zip",
+          "sha256": "d404397d97b26064be53ca5e67d2cfb96743e6d98f5e8502089d7e9a8eb4ef24",
+          "size": 85587,
+          "publishedAt": "2026-11-08T15:53:29.016Z"
         }
       ]
     },
