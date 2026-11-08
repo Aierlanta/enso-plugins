@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.bugbot",
+  "name": "Bugbot Review",
+  "version": "0.1.0",
+  "description": "移植自 Cursor review-bugbot 与 Agent Review：本地 Git diff 组装（自动识别默认基准分支、剔除 linguist-generated 文件、合并 .cursor/BUGBOT.md 规则与最小改动行数门禁）、只读 bugbot 审查子代理、/review-bugbot 技能以及侧栏 Findings 面板与一键 Fix in Chat。",
+  "icon": "icon.svg",
+  "engines": {
+    "enso": ">=0.3.0"
+  },
+  "main": "main.mjs",
+  "renderer": "ui.js",
+  "permissions": [
+    "agent.tool",
+    "ui.view",
+    "ui.slot",
+    "composer.draft"
+  ],
+  "contributes": {
+    "skills": [
+      "skills/review-bugbot"
+    ],
+    "agentTypes": [
+      {
+        "name": "bugbot",
+        "description": "Specialized readonly subagent for finding bugs in local code changes (branch changes against merge-base, uncommitted working-tree changes, or natural language change summaries).",
+        "systemPrompt": "prompts/bugbot-subagent.md",
+        "tools": "readonly",
+        "modelMode": "agent_pick"
+      }
+    ],
+    "commands": [
+      {
+        "id": "review",
+        "title": "Run Bugbot Review",
+        "description": "Insert /skill:review-bugbot into the composer to review current code changes with the Bugbot subagent"
+      }
+    ],
+    "views": [
+      {
+        "id": "findings",
+        "title": "Bugbot",
+        "entry": "bugbot.html"
+      }
+    ],
+    "methods": [
+      {
+        "name": "getSnapshot",
+        "timeoutMs": 5000
+      },
+      {
+        "name": "dismissFinding",
+        "timeoutMs": 5000
+      },
+      {
+        "name": "fixInChat",
+        "timeoutMs": 10000
+      },
+      {
+        "name": "fixAllInChat",
+        "timeoutMs": 10000
+      },
+      {
+        "name": "promptReviewInChat",
+        "timeoutMs": 5000
+      },
+      {
+        "name": "clearFindings",
+        "timeoutMs": 5000
+      },
+      {
+        "name": "deleteFinding",
+        "timeoutMs": 5000
+      }
+    ],
+    "agentTools": [
+      {
+        "name": "bugbot_prepare",
+        "description": "Prepare local Git diff context, .cursor/BUGBOT.md repository rules, and the canonical Bugbot subagent prompt before launching the readonly bugbot subagent.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "branch_changes",
+                "uncommitted_changes",
+                "natural_language"
+              ],
+              "description": "Diff mode: branch_changes (merge-base against default branch + dirty working tree), uncommitted_changes (staged + unstaged + untracked vs HEAD), or natural_language."
+            },
+            "baseBranch": {
+              "type": "string",
+              "description": "Optional explicit base branch when mode is branch_changes."
+            },
+            "changeDescription": {
+              "type": "string",
+              "description": "Per-file summary when mode is natural_language."
+            },
+            "customInstructions": {
+              "type": "string",
+              "description": "Optional extra focus instructions from the user."
+            },
+            "includeUntracked": {
+              "type": "boolean",
+              "description": "Include untracked files in the review context (default true)."
+            },
+            "minChangedLines": {
+              "type": "number",
+              "description": "Minimum changed lines threshold before running review (default 10)."
+            }
+          }
+        }
+      },
+      {
+        "name": "bugbot_report",
+        "description": "Record Bugbot review findings into the Bugbot sidebar panel and format the canonical severity-sorted findings table.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "runId": {
+              "type": "string",
+              "description": "Run ID returned by bugbot_prepare (optional)."
+            },
+            "rawText": {
+              "type": "string",
+              "description": "Raw output text from the bugbot subagent (Markdown table or <answer><bug> XML) to parse into findings."
+            },
+            "findings": {
+              "type": "array",
+              "description": "Optional structured findings list if already parsed.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "severity": {
+                    "type": "string",
+                    "enum": [
+                      "high",
+                      "medium",
+                      "low"
+                    ]
+                  },
+                  "file": {
+                    "type": "string"
+                  },
+                  "startLine": {
+                    "type": "number"
+                  },
+                  "endLine": {
+                    "type": "number"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "description"
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

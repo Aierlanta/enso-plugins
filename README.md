@@ -31,6 +31,7 @@ EnsoCode 官方插件市场的源仓库 · [浏览插件](https://enso-plugins.j
 | 插件 | id | 版本 | 来源 | 介绍 |
 | --- | --- | --- | --- | --- |
 | [BCE Prompt Enhance](https://github.com/linqiu919/dsh-bce) | `dsh.bce` | 0.1.5 | 社区 · [`linqiu919/dsh-bce`](https://github.com/linqiu919/dsh-bce) | Better Context Engine 提示词增强：增量索引项目，精准补全代码上下文，让提问更清楚、回答更准确。 |
+| Bugbot Review | `enso.bugbot` | 0.1.0 | 官方 | 移植自 Cursor review-bugbot 与 Agent Review：本地 Git diff 组装（自动识别默认基准分支、剔除 linguist-generated 文件、合并 .cursor/BUGBOT.md 规则与最小改动行数门禁）、只读 bugbot 审查子代理、/review-bugbot 技能以及侧栏 Findings 面板与一键 Fix in Chat。 |
 | Context Window | `enso.context` | 0.1.3 | 官方 | 侧栏里看当前会话的上下文窗口：各部分占多少、还剩多少、提示词缓存命中率。 |
 | Notes | `enso.example.notes` | 1.0.3 | 官方 | 侧栏里的便签：存在插件自己的数据目录，可一键插入输入框。 |
 | Sage Focus · 鼠尾草·专注（仅深色模式） | `enso.example.sagefocus` | 1.0.3 | 社区 | 仅在深色模式下生效，浅色模式沿用 Enso 默认配色。低饱和暖灰绿主题，不修改编辑器语法高亮或终端配色。 |

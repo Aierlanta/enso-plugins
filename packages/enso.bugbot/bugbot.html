@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Bugbot Review</title>
+  <link rel="stylesheet" href="enso-ui.css" />
+  <style>
+    body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100vh;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .meta-card {
+      padding: 8px 10px;
+      font-size: 11.5px;
+      color: var(--muted-foreground);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .finding-card {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .finding-card.dismissed {
+      opacity: 0.52;
+    }
+    .finding-card.fixed {
+      opacity: 0.72;
+    }
+    .finding-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .loc {
+      font: 11px/1.3 var(--font-mono);
+      color: var(--muted-foreground);
+      word-break: break-all;
+    }
+    .desc {
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-wrap">
+      <span>Bugbot Review</span>
+      <span id="total-badge" class="ui-badge">0</span>
+    </div>
+    <div style="display:flex;gap:4px">
+      <button id="refresh-btn" class="ui-btn ui-btn--outline ui-btn--sm" data-tip="刷新审查结果">刷新</button>
+      <button id="clear-btn" class="ui-btn ui-btn--outline ui-btn--sm" data-tip="清空当前记录">清空</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div id="mode-seg" class="ui-seg" role="tablist" aria-label="Diff 范围">
+      <button type="button" data-mode="branch_changes" aria-selected="true">分支改动</button>
+      <button type="button" data-mode="uncommitted_changes" aria-selected="false">未提交改动</button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button id="run-btn" class="ui-btn ui-btn--primary ui-btn--sm">发起审查</button>
+      <button id="fix-all-btn" class="ui-btn ui-btn--outline ui-btn--sm" disabled>全部修复</button>
+    </div>
+  </div>
+
+  <div id="meta" class="ui-card meta-card">尚未运行本地 Bugbot 审查。</div>
+  <div id="list" class="findings-list"></div>
+
+  <script src="enso-ui.js"></script>
+  <script>
+    const listEl = document.getElementById('list');
+    const metaEl = document.getElementById('meta');
+    const totalBadgeEl = document.getElementById('total-badge');
+    const fixAllBtn = document.getElementById('fix-all-btn');
+    const modeSeg = document.getElementById('mode-seg');
+    let selectedMode = 'branch_changes';
+
+    function selectMode(btn) {
+      for (const other of modeSeg.querySelectorAll('button[data-mode]')) {
+        other.setAttribute('aria-selected', other === btn ? 'true' : 'false');
+      }
+      selectedMode = btn.dataset.mode || 'branch_changes';
+      window.ensoUI?.seg(modeSeg);
+    }
+
+    if (window.ensoUI) window.ensoUI.tooltip();
+    for (const btn of modeSeg.querySelectorAll('button[data-mode]')) {
+      btn.addEventListener('click', () => selectMode(btn));
+    }
+    window.ensoUI?.seg(modeSeg);
+
+    function badgeClassForSeverity(sev) {
+      if (sev === 'high') return 'ui-badge ui-badge--destructive';
+      if (sev === 'medium') return 'ui-badge ui-badge--warning';
+      return 'ui-badge';
+    }
+
+    function renderSnapshot(snap) {
+      const findings = Array.isArray(snap && snap.findings) ? snap.findings : [];
+      const active = findings.filter((f) => !f.dismissed && !f.fixed);
+      totalBadgeEl.textContent = String(active.length);
+      fixAllBtn.disabled = active.length === 0;
+
+      const metaParts = [];
+      if (snap && snap.status && snap.status !== 'idle') {
+        metaParts.push('状态: ' + snap.status + (snap.effectiveMode ? ' (' + snap.effectiveMode + ')' : ''));
+      }
+      if (snap && typeof snap.changedLines === 'number' && snap.changedLines > 0) {
+        metaParts.push('变更: ' + snap.changedLines + ' 行 · ' + ((snap.changedFiles || []).length) + ' 个文件');
+      }
+      if (snap && Array.isArray(snap.rulesLoaded) && snap.rulesLoaded.length > 0) {
+        metaParts.push('规则: ' + snap.rulesLoaded.join(', '));
+      }
+      metaEl.textContent = metaParts.length > 0
+        ? metaParts.join(' ｜ ')
+        : '点击「发起审查」或在输入框执行 /skill:review-bugbot。';
+
+      listEl.textContent = '';
+      if (findings.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'ui-empty';
+        empty.textContent = snap && snap.status === 'completed'
+          ? 'Bugbot found no bugs'
+          : '暂无 Bugbot findings。';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      for (const f of findings) {
+        const card = document.createElement('div');
+        card.className =
+          'ui-card finding-card' + (f.dismissed ? ' dismissed' : '') + (f.fixed ? ' fixed' : '');
+
+        const top = document.createElement('div');
+        top.className = 'finding-top';
+
+        const badge = document.createElement('span');
+        badge.className = badgeClassForSeverity(f.severity);
+        badge.textContent = f.fixed ? 'FIXED' : String(f.severity || 'medium').toUpperCase();
+
+        const loc = document.createElement('span');
+        loc.className = 'loc';
+        loc.textContent = f.endLine && f.endLine > f.startLine
+          ? f.file + ':' + f.startLine + '-' + f.endLine
+          : f.file + ':' + (f.startLine || 1);
+
+        top.appendChild(badge);
+        top.appendChild(loc);
+
+        const desc = document.createElement('div');
+        desc.className = 'desc';
+        desc.textContent = f.description || '';
+
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'ui-btn ui-btn--outline ui-btn--sm';
+        dismissBtn.textContent = f.dismissed ? '恢复' : '忽略';
+        dismissBtn.onclick = async () => {
+          const updated = await enso.call('dismissFinding', { id: f.id, dismissed: !f.dismissed });
+          showSnapshot(updated);
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'ui-btn ui-btn--outline ui-btn--sm';
+        deleteBtn.textContent = '删除';
+        deleteBtn.onclick = async () => {
+          const updated = await enso.call('deleteFinding', { id: f.id });
+          showSnapshot(updated);
+        };
+
+        const fixBtn = document.createElement('button');
+        fixBtn.className = 'ui-btn ui-btn--primary ui-btn--sm';
+        fixBtn.textContent = f.fixed ? '已修复' : 'Fix in Chat';
+        fixBtn.disabled = !!f.fixed;
+        if (!f.fixed) {
+          fixBtn.onclick = async () => {
+            const result = await enso.call('fixInChat', { id: f.id });
+            if (result && result.snapshot) showSnapshot(result.snapshot);
+          };
+        }
+
+        actions.appendChild(dismissBtn);
+        actions.appendChild(deleteBtn);
+        actions.appendChild(fixBtn);
+
+        card.appendChild(top);
+        card.appendChild(desc);
+        card.appendChild(actions);
+        listEl.appendChild(card);
+      }
+
+      if (window.ensoUI) {
+        window.ensoUI.stagger(listEl);
+      }
+    }
+
+    async function refresh() {
+      const seq = ++renderSeq;
+      try {
+        const snap = await enso.call('getSnapshot', {});
+        if (seq !== renderSeq) return;
+        if (snap && snap.sessionId) boundSession = snap.sessionId;
+        renderSnapshot(snap);
+      } catch (error) {
+        if (seq !== renderSeq) return;
+        metaEl.textContent =
+          '读取审查结果失败：' + (error instanceof Error ? error.message : String(error));
+      }
+    }
+
+    let renderSeq = 0;
+    let boundSession = null;
+    function showSnapshot(snap) {
+      renderSeq += 1;
+      if (snap && snap.sessionId) boundSession = snap.sessionId;
+      renderSnapshot(snap);
+    }
+
+    document.getElementById('refresh-btn').onclick = refresh;
+    document.getElementById('run-btn').onclick = async () => {
+      await enso.call('promptReviewInChat', { mode: selectedMode });
+    };
+    document.getElementById('fix-all-btn').onclick = async () => {
+      const result = await enso.call('fixAllInChat', {});
+      if (result && result.snapshot) showSnapshot(result.snapshot);
+    };
+    document.getElementById('clear-btn').onclick = async () => {
+      const snap = await enso.call('clearFindings', {});
+      showSnapshot(snap);
+    };
+
+    refresh();
+    if (typeof enso.on === 'function') {
+      enso.on('snapshot', (snap) => {
+        if (!snap || typeof snap !== 'object') return;
+        if (!boundSession || snap.sessionId !== boundSession) return;
+        showSnapshot(snap);
+      });
+    }
+  </script>
+</body>
+</html>
