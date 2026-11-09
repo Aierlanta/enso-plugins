@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "id": "enso.bridge",
+  "name": "Session Bridge",
+  "version": "1.0.0",
+  "icon": "icon.svg",
+  "description": "跨会话桥：同项目的多个会话可在侧栏群聊室中互相提问、委托与回传结论。",
+  "main": "main.mjs",
+  "resident": true,
+  "permissions": [
+    "ui.view",
+    "process.background",
+    "agent.tool",
+    "agent.inject",
+    "agent.observe",
+    "session.read",
+    "session.focus"
+  ],
+  "contributes": {
+    "views": [
+      {
+        "id": "bridge",
+        "title": "会话桥",
+        "entry": "bridge.html"
+      }
+    ],
+    "events": [
+      { "event": "agent_end" },
+      { "event": "session_status" }
+    ],
+    "agentTools": [
+      {
+        "name": "bridge_sessions",
+        "description": "List sessions in the current project (prioritizing running and recent sessions) so you can pick target sessions for cross-session questions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to return (default 15, max 100)"
+            },
+            "activeOnly": {
+              "type": "boolean",
+              "description": "Only return currently running/busy sessions or sessions that participated in the bridge room (default false)"
+            },
+            "query": {
+              "type": "string",
+              "description": "Optional keyword to filter sessions by title or id"
+            }
+          }
+        }
+      },
+      {
+        "name": "bridge_ask",
+        "description": "Ask one or more sessions in the same project a question via the Session Bridge group chat. Opens the Session Bridge side panel and either waits for their replies (wait=true, default) or delivers them back asynchronously.",
+        "timeoutMs": 300000,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "targets": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Target session IDs or title keywords (from bridge_sessions)"
+            },
+            "question": {
+              "type": "string",
+              "description": "Question or request to send to the target sessions"
+            },
+            "wait": {
+              "type": "boolean",
+              "description": "Wait for all target sessions to reply and return their answers directly (default true)"
+            }
+          },
+          "required": ["targets", "question"]
+        }
+      },
+      {
+        "name": "bridge_reply",
+        "description": "Send an explicit reply back to a cross-session question in the Session Bridge group chat.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "requestId": {
+              "type": "string",
+              "description": "Optional request ID from the incoming bridge question; defaults to the latest pending question for this session"
+            },
+            "reply": {
+              "type": "string",
+              "description": "Concise answer or conclusion to send back"
+            }
+          },
+          "required": ["reply"]
+        }
+      },
+      {
+        "name": "bridge_history",
+        "description": "Read recent cross-session group chat messages in the current project.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Max messages to return (default 20, max 100)"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

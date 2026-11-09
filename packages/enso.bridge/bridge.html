@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="enso-ui.css" />
+    <style>
+      :where(button) {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        padding: 0;
+      }
+      svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: var(--background);
+      }
+
+      /* 顶栏：仅保留会话桥标题与刷新/清空 */
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in oklch, var(--background) 86%, transparent);
+        backdrop-filter: blur(12px);
+        flex: none;
+      }
+      .group-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        color: #fff;
+        flex: none;
+        box-shadow: var(--shadow-xs);
+      }
+      .group-avatar svg {
+        width: 15px;
+        height: 15px;
+      }
+      .head-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .head-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .head-sub {
+        font-size: 11px;
+        color: var(--muted-foreground);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .badge-count {
+        font: 500 10.5px/1 var(--font-mono);
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--brand) 14%, transparent);
+        color: var(--brand);
+      }
+
+      .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: inline-grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        flex: none;
+        box-shadow: var(--shadow-xs);
+        transition:
+          transform var(--dur-1) var(--ease-out),
+          box-shadow var(--dur-1) var(--ease-out);
+      }
+      button.avatar:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--brand) 55%, transparent);
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex: none;
+        background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+      }
+      .status-dot.running {
+        background: var(--success);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--success) 25%, transparent);
+        animation: pulse 1.5s var(--ease-out) infinite;
+      }
+      .status-dot.waiting {
+        background: var(--warning);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--warning) 25%, transparent);
+      }
+      .status-dot.error {
+        background: var(--destructive);
+      }
+      @keyframes pulse {
+        50% {
+          box-shadow: 0 0 0 5px color-mix(in oklch, var(--success) 0%, transparent);
+        }
+      }
+
+      /* 消息流 */
+      .timeline {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .empty-state {
+        margin: auto;
+        max-width: 260px;
+        text-align: center;
+        padding: 24px 16px;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-lg);
+        background: color-mix(in oklch, var(--muted) 35%, transparent);
+      }
+      .empty-state h2 {
+        margin: 8px 0 4px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .empty-state p {
+        margin: 0;
+        font-size: 11.5px;
+        color: var(--muted-foreground);
+        line-height: 1.55;
+      }
+
+      .msg-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        animation: ui-fade-in var(--dur-2) var(--ease-out);
+      }
+      .msg-row.flash .msg-bubble {
+        box-shadow: 0 0 0 2px var(--brand);
+      }
+      .msg-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .msg-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        font-size: 11.5px;
+        line-height: 1.3;
+      }
+      .sender-name {
+        font-weight: 600;
+        color: var(--foreground);
+        cursor: pointer;
+      }
+      .sender-name:hover {
+        color: var(--brand);
+        text-decoration: underline;
+      }
+      .arrow {
+        color: var(--muted-foreground);
+        font-size: 11px;
+      }
+      .mention-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 500;
+        background: color-mix(in oklch, var(--brand) 13%, transparent);
+        color: var(--brand);
+        cursor: pointer;
+        transition: background-color var(--dur-1) var(--ease-out);
+      }
+      .mention-chip:hover {
+        background: color-mix(in oklch, var(--brand) 22%, transparent);
+      }
+      .mention-chip.replied {
+        background: color-mix(in oklch, var(--success) 14%, transparent);
+        color: var(--success);
+      }
+      .mention-chip.failed {
+        background: color-mix(in oklch, var(--destructive) 14%, transparent);
+        color: var(--destructive);
+      }
+      .msg-time {
+        margin-left: auto;
+        font: 400 10.5px/1 var(--font-mono);
+        color: var(--muted-foreground);
+      }
+
+      .msg-bubble {
+        position: relative;
+        padding: 9px 11px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background: var(--card);
+        box-shadow: var(--shadow-xs);
+        font-size: 12.5px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        transition: box-shadow var(--dur-2) var(--ease-out);
+      }
+      .msg-row.is-question .msg-bubble {
+        background: color-mix(in oklch, var(--brand) 5%, var(--card));
+        border-color: color-mix(in oklch, var(--brand) 24%, var(--border));
+      }
+      .quote-bar {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 6px;
+        padding: 4px 7px;
+        border-left: 2.5px solid var(--brand);
+        border-radius: 2px var(--radius-sm) var(--radius-sm) 2px;
+        background: color-mix(in oklch, var(--foreground) 5%, transparent);
+        font-size: 11px;
+        color: var(--muted-foreground);
+        cursor: pointer;
+      }
+      .quote-bar:hover {
+        color: var(--foreground);
+        background: color-mix(in oklch, var(--foreground) 8%, transparent);
+      }
+
+      .delegations {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 3px;
+      }
+      .delegation-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 8px;
+        border-radius: var(--radius-sm);
+        border: 1px dashed color-mix(in oklch, var(--warning) 45%, var(--border));
+        background: color-mix(in oklch, var(--warning) 7%, transparent);
+        font-size: 11.5px;
+      }
+      .delegation-row.failed {
+        border-color: color-mix(in oklch, var(--destructive) 45%, var(--border));
+        background: color-mix(in oklch, var(--destructive) 7%, transparent);
+        color: var(--destructive);
+      }
+      .delegation-row .del-text {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .toasts {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 16px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
+      }
+      .toast {
+        padding: 7px 11px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--popover);
+        box-shadow: var(--shadow-lg);
+        font-size: 12px;
+        pointer-events: auto;
+      }
+      .toast.error {
+        color: var(--destructive);
+        border-color: color-mix(in oklch, var(--destructive) 40%, var(--border));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="group-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 8h10M7 12h6m-8 8 3.5-3H19a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2v3z" />
+          </svg>
+        </div>
+        <div class="head-main">
+          <div class="head-title">
+            <span>会话桥</span>
+            <span id="msgCount" class="badge-count">0 条</span>
+          </div>
+          <div id="headSub" class="head-sub">点击头像或会话名可直接跳转到对应对话</div>
+        </div>
+        <button id="refreshBtn" class="ui-btn ui-btn--icon ui-btn--sm" data-tip="刷新消息">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+          </svg>
+        </button>
+        <button id="clearBtn" class="ui-btn ui-btn--icon ui-btn--sm" data-tip="清空本会话记录">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          </svg>
+        </button>
+      </header>
+
+      <main id="timeline" class="timeline"></main>
+    </div>
+
+    <div id="toasts" class="toasts"></div>
+
+    <script src="enso-ui.js"></script>
+    <script>
+      (() => {
+        window.ensoUI?.tooltip?.();
+        const PALETTE = [
+          'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          'linear-gradient(135deg, #10b981, #047857)',
+          'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+          'linear-gradient(135deg, #f59e0b, #b45309)',
+          'linear-gradient(135deg, #ec4899, #be185d)',
+          'linear-gradient(135deg, #06b6d4, #0e7490)',
+        ];
+
+        const state = {
+          current: null,
+          sessions: [],
+          messages: [],
+        };
+
+        const elTimeline = document.getElementById('timeline');
+        const elCount = document.getElementById('msgCount');
+        const elSub = document.getElementById('headSub');
+        const elToasts = document.getElementById('toasts');
+
+        function hashColor(id) {
+          if (!id) return 'linear-gradient(135deg, #64748b, #334155)';
+          let h = 0;
+          for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+          return PALETTE[Math.abs(h) % PALETTE.length];
+        }
+
+        function avatarChar(title, id) {
+          const clean = String(title ?? '').trim();
+          return clean ? Array.from(clean)[0].toUpperCase() : String(id ?? '?').slice(0, 1).toUpperCase();
+        }
+
+        function formatTime(ts) {
+          if (!ts) return '';
+          try {
+            return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          } catch {
+            return '';
+          }
+        }
+
+        function toast(msg, isError = false) {
+          const div = document.createElement('div');
+          div.className = `toast${isError ? ' error' : ''}`;
+          div.textContent = msg;
+          elToasts.append(div);
+          setTimeout(() => div.remove(), 4200);
+        }
+
+        function sessionTitle(id, fallback) {
+          const found = state.sessions.find((s) => s.id === id);
+          return found?.title || fallback || `会话 ${String(id ?? '').slice(0, 6)}`;
+        }
+
+        function sessionState(id) {
+          const found = state.sessions.find((s) => s.id === id);
+          return found?.state || 'idle';
+        }
+
+        async function focusSession(sessionId) {
+          if (!sessionId) return;
+          try {
+            await window.enso.call('focus', { sessionId });
+          } catch (err) {
+            toast(err?.message || '无法切换到该会话', true);
+          }
+        }
+
+        async function abortSession(sessionId) {
+          if (!sessionId) return;
+          try {
+            await window.enso.call('abort', { sessionId });
+            toast('已发送中止指令');
+          } catch (err) {
+            toast(err?.message || '无法中止该会话', true);
+          }
+        }
+
+        function filterForCurrentSession(messages) {
+          const selfId = state.current;
+          if (!selfId) return messages;
+          const qMap = new Map();
+          for (const m of messages) {
+            if (m?.kind === 'question' && m.id) qMap.set(m.id, m);
+          }
+          const belongs = (m) => {
+            if (!m) return false;
+            if (Array.isArray(m.clearedBy) && m.clearedBy.includes(selfId)) return false;
+            if (m.kind === 'question') {
+              return (
+                m.fromId === selfId ||
+                (Array.isArray(m.targets) && m.targets.some((t) => t?.id === selfId))
+              );
+            }
+            if (m.kind === 'reply') {
+              if (m.fromId === selfId || m.toId === selfId) return true;
+              const parent = m.requestId ? qMap.get(m.requestId) : null;
+              if (parent) return belongs(parent);
+            }
+            return false;
+          };
+          return messages.filter(belongs);
+        }
+
+        function renderHeader() {
+          elCount.textContent = `${state.messages.length} 条`;
+          let pendingTargets = 0;
+          for (const m of state.messages) {
+            if (m.kind === 'question' && Array.isArray(m.targets)) {
+              for (const t of m.targets) {
+                if (t.status === 'pending') pendingTargets++;
+              }
+            }
+          }
+          elSub.textContent =
+            pendingTargets > 0
+              ? `正在等待 ${pendingTargets} 个会话回复…`
+              : '点击头像或会话名可直接跳转到对应对话';
+        }
+
+        function scrollToMessage(msgId) {
+          const node = elTimeline.querySelector(`[data-msg-id="${CSS.escape(msgId)}"]`);
+          if (!node) return;
+          node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          node.classList.add('flash');
+          setTimeout(() => node.classList.remove('flash'), 1200);
+        }
+
+        function renderTimeline(stickBottom = true) {
+          const wasAtBottom =
+            elTimeline.scrollHeight - elTimeline.scrollTop - elTimeline.clientHeight < 48;
+          elTimeline.replaceChildren();
+
+          if (state.messages.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.innerHTML = `
+              <div class="group-avatar" style="margin: 0 auto; width: 34px; height: 34px; border-radius: 10px;">
+                <svg viewBox="0 0 24 24"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l.586-.586Z"/></svg>
+              </div>
+              <h2>暂无跨会话记录</h2>
+              <p>当本会话的 Agent 调用 <code>bridge_ask</code> 向其他会话提问，或收到其他会话的提问时，问答将展示在这里。</p>
+            `;
+            elTimeline.append(empty);
+            return;
+          }
+
+          const questionMap = new Map(
+            state.messages.filter((m) => m.kind === 'question').map((m) => [m.id, m])
+          );
+
+          for (const msg of state.messages) {
+            const row = document.createElement('div');
+            row.className = `msg-row ${msg.kind === 'question' ? 'is-question' : 'is-reply'}`;
+            row.dataset.msgId = msg.id;
+
+            const senderSessionId = msg.fromId && msg.fromId !== 'user' ? msg.fromId : null;
+            const fromDisplay = sessionTitle(msg.fromId, msg.fromTitle);
+
+            const av = document.createElement('button');
+            av.type = 'button';
+            av.className = 'avatar';
+            av.style.background = hashColor(msg.fromId);
+            av.textContent = avatarChar(fromDisplay, msg.fromId);
+            if (senderSessionId) {
+              av.dataset.tip = `点击跳转到会话「${fromDisplay}」`;
+              av.onclick = () => focusSession(senderSessionId);
+            } else {
+              av.style.cursor = 'default';
+            }
+
+            const col = document.createElement('div');
+            col.className = 'msg-col';
+
+            const meta = document.createElement('div');
+            meta.className = 'msg-meta';
+
+            const sender = document.createElement('button');
+            sender.type = 'button';
+            sender.className = 'sender-name';
+            sender.textContent = fromDisplay;
+            if (senderSessionId) {
+              sender.dataset.tip = `点击跳转到会话「${fromDisplay}」`;
+              sender.onclick = () => focusSession(senderSessionId);
+            } else {
+              sender.style.cursor = 'default';
+            }
+            meta.append(sender);
+
+            if (msg.kind === 'question') {
+              const arrow = document.createElement('span');
+              arrow.className = 'arrow';
+              arrow.textContent = '→';
+              meta.append(arrow);
+
+              for (const t of msg.targets || []) {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = `mention-chip ${t.status || 'pending'}`;
+                const tTitle = sessionTitle(t.id, t.title);
+                const prefix = t.status === 'replied' ? '✓ ' : t.status === 'failed' ? '✕ ' : '@';
+                chip.textContent = `${prefix}${tTitle}`;
+                chip.dataset.tip = `点击跳转到会话「${tTitle}」`;
+                chip.onclick = () => focusSession(t.id);
+                meta.append(chip);
+              }
+            } else {
+              if (msg.toId && msg.toId !== 'user') {
+                const arrow = document.createElement('span');
+                arrow.className = 'arrow';
+                arrow.textContent = '→';
+                const toChip = document.createElement('button');
+                toChip.type = 'button';
+                toChip.className = 'mention-chip';
+                const toTitle = sessionTitle(msg.toId, msg.toTitle);
+                toChip.textContent = `@${toTitle}`;
+                toChip.dataset.tip = `点击跳转到会话「${toTitle}」`;
+                toChip.onclick = () => focusSession(msg.toId);
+                meta.append(arrow, toChip);
+              }
+              const replyTag = document.createElement('span');
+              replyTag.className = 'mention-chip replied';
+              replyTag.style.cursor = 'default';
+              replyTag.textContent = msg.via === 'tool' ? '✓ 主动回传' : '✓ 自动回复';
+              meta.append(replyTag);
+            }
+
+            const time = document.createElement('span');
+            time.className = 'msg-time';
+            time.textContent = formatTime(msg.createdAt);
+            meta.append(time);
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+
+            if (msg.kind === 'reply' && msg.requestId) {
+              const originQ = questionMap.get(msg.requestId);
+              const quote = document.createElement('div');
+              quote.className = 'quote-bar';
+              const qSender = originQ
+                ? sessionTitle(originQ.fromId, originQ.fromTitle)
+                : msg.toTitle || '提问';
+              const qSnippet = originQ
+                ? originQ.text.slice(0, 46) + (originQ.text.length > 46 ? '…' : '')
+                : `#${msg.requestId}`;
+              quote.textContent = `↩ 回复 ${qSender}：${qSnippet}`;
+              quote.onclick = () => scrollToMessage(msg.requestId);
+              bubble.append(quote);
+            }
+
+            const bodyText = document.createElement('div');
+            bodyText.textContent = msg.text;
+            bubble.append(bodyText);
+
+            col.append(meta, bubble);
+
+            if (msg.kind === 'question' && Array.isArray(msg.targets)) {
+              const activeTargets = msg.targets.filter(
+                (t) => t.status === 'pending' || t.status === 'failed'
+              );
+              if (activeTargets.length > 0) {
+                const dels = document.createElement('div');
+                dels.className = 'delegations';
+                for (const t of activeTargets) {
+                  const dRow = document.createElement('div');
+                  dRow.className = `delegation-row ${t.status === 'failed' ? 'failed' : ''}`;
+                  const tTitle = sessionTitle(t.id, t.title);
+                  const liveState = sessionState(t.id);
+
+                  if (t.status === 'failed') {
+                    const txt = document.createElement('span');
+                    txt.className = 'del-text';
+                    txt.textContent = `${tTitle}：${t.error || '发送失败'}`;
+                    dRow.append(txt);
+                  } else {
+                    const dot = document.createElement('span');
+                    dot.className = `status-dot ${liveState === 'idle' ? 'running' : liveState}`;
+                    const txt = document.createElement('span');
+                    txt.className = 'del-text';
+                    txt.textContent =
+                      liveState === 'waiting'
+                        ? `${tTitle} 正在等待审批或提问确认…`
+                        : `${tTitle} 正在思考与处理提问…`;
+
+                    const jumpBtn = document.createElement('button');
+                    jumpBtn.type = 'button';
+                    jumpBtn.className = 'ui-btn ui-btn--sm';
+                    jumpBtn.style.height = '20px';
+                    jumpBtn.style.padding = '0 6px';
+                    jumpBtn.style.fontSize = '11px';
+                    jumpBtn.textContent = '查看会话';
+                    jumpBtn.onclick = () => focusSession(t.id);
+
+                    const abortBtn = document.createElement('button');
+                    abortBtn.type = 'button';
+                    abortBtn.className = 'ui-btn ui-btn--sm danger';
+                    abortBtn.style.height = '20px';
+                    abortBtn.style.padding = '0 6px';
+                    abortBtn.style.fontSize = '11px';
+                    abortBtn.textContent = '中止';
+                    abortBtn.onclick = () => abortSession(t.id);
+
+                    dRow.append(dot, txt, jumpBtn, abortBtn);
+                  }
+                  dels.append(dRow);
+                }
+                col.append(dels);
+              }
+            }
+
+            row.append(av, col);
+            elTimeline.append(row);
+          }
+
+          if (stickBottom || wasAtBottom) {
+            requestAnimationFrame(() => {
+              elTimeline.scrollTop = elTimeline.scrollHeight;
+            });
+          }
+        }
+
+        function renderAll(stickBottom = false) {
+          renderHeader();
+          renderTimeline(stickBottom);
+        }
+
+        async function refreshSnapshot(stickBottom = false) {
+          try {
+            const snap = await window.enso.call('snapshot');
+            if (!snap) return;
+            state.current = snap.current;
+            state.sessions = Array.isArray(snap.sessions) ? snap.sessions : [];
+            state.messages = Array.isArray(snap.messages) ? snap.messages : [];
+            renderAll(stickBottom);
+          } catch (err) {
+            toast(err?.message || '读取会话桥状态失败', true);
+          }
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', () => void refreshSnapshot(false));
+        document.getElementById('clearBtn').addEventListener('click', async () => {
+          try {
+            const snap = await window.enso.call('clear');
+            if (snap) {
+              state.messages = Array.isArray(snap.messages) ? snap.messages : [];
+              renderAll(false);
+            }
+          } catch (err) {
+            toast(err?.message || '清空失败', true);
+          }
+        });
+
+        window.enso.on('room', (data) => {
+          if (Array.isArray(data?.messages)) {
+            state.messages = filterForCurrentSession(data.messages);
+            renderHeader();
+            renderTimeline(true);
+          }
+        });
+
+        window.enso.on('status', (data) => {
+          if (!data?.sessionId) return;
+          const found = state.sessions.find((s) => s.id === data.sessionId);
+          if (found) {
+            found.state = data.state;
+            renderHeader();
+            renderTimeline(false);
+          } else {
+            void refreshSnapshot(false);
+          }
+        });
+
+        void refreshSnapshot(true);
+      })();
+    </script>
+  </body>
+</html>
