@@ -115,6 +115,9 @@
           <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input id="q" class="ui-input" type="search" placeholder="搜索短剧，回车" />
         </label>
+        <button id="refresh" class="ui-btn ui-btn--icon" type="button" data-tip="换一批" aria-label="换一批">
+          <svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9 9.7 9.7 0 0 1-6.7-2.7L3 16" /><path d="M3 21v-5h5" /><path d="M3 12a9 9 0 0 1 9-9 9.7 9.7 0 0 1 6.7 2.7L21 8" /><path d="M16 3h5v5" /></svg>
+        </button>
       </div>
       <div id="recent" hidden>
         <div class="head">
@@ -244,10 +247,20 @@
       }
 
       // ---------- home ----------
-      let feed = { method: 'discover', q: '', cursor: '', seen: new Set(), token: 0 };
+      const SHOWN_MAX = 500;
+      const loadShown = () => store.get('shown', []);
+      function noteShown(ids) {
+        if (!ids.length) return;
+        const drop = new Set(ids);
+        store.set('shown', [...ids].reverse().concat(loadShown().filter((id) => !drop.has(id))).slice(0, SHOWN_MAX));
+      }
+      let feed = { method: 'discover', q: '', cursor: '', seen: new Set(), blocked: new Set(), token: 0 };
       async function loadFeed(reset) {
         if (reset) {
-          feed = { method: feed.method, q: feed.q, cursor: '', seen: new Set(), token: feed.token + 1 };
+          const blocked = feed.method === 'discover'
+            ? new Set(loadShown().concat(loadHistory().map((r) => r.id)))
+            : new Set();
+          feed = { method: feed.method, q: feed.q, cursor: '', seen: new Set(), blocked, token: feed.token + 1 };
           $('grid').replaceChildren();
         }
         const token = feed.token;
@@ -258,17 +271,31 @@
         $('grid').after(status);
         const start = $('grid').children.length;
         try {
-          const page = await call(feed.method, { q: feed.q, cursor: feed.cursor || undefined });
-          if (token !== feed.token) return;
-          for (const s of page.items) {
-            if (feed.seen.has(s.id)) continue;
-            feed.seen.add(s.id);
-            $('grid').append(card(s, s.count ? `${s.count}集` : ''));
+          let hasMore = false;
+          let added = 0;
+          const discover = feed.method === 'discover';
+          for (let pulls = 0; pulls < (discover ? 5 : 1); pulls++) {
+            const page = await call(feed.method, { q: feed.q, cursor: feed.cursor || undefined });
+            if (token !== feed.token) return;
+            const ids = [];
+            for (const s of page.items) {
+              if (feed.seen.has(s.id) || feed.blocked.has(s.id)) continue;
+              feed.seen.add(s.id);
+              ids.push(s.id);
+              $('grid').append(card(s, s.count ? `${s.count}集` : ''));
+            }
+            if (discover) noteShown(ids);
+            added += ids.length;
+            feed.cursor = page.cursor;
+            hasMore = !!page.hasMore;
+            if (!hasMore || added >= 9) break;
           }
+          if (token !== feed.token) return;
           [...$('grid').children].slice(start).forEach((el, i) => el.style.setProperty('--i', i));
-          feed.cursor = page.cursor;
-          $('more').hidden = !page.hasMore;
-          if (!$('grid').children.length) $('homeError').textContent = feed.q ? '没有搜到结果' : '没有内容';
+          $('more').hidden = !hasMore;
+          if (!$('grid').children.length) {
+            $('homeError').textContent = feed.method === 'discover' ? '这一批都看过了，点右上角换一批' : '没有搜到结果';
+          }
         } catch (e) {
           if (token === feed.token) { $('homeError').className = 'error'; $('homeError').textContent = e.message; $('more').hidden = false; }
         } finally {
@@ -425,14 +452,18 @@
         renderRecent();
         loadFeed(true);
       });
-      $('reset').onclick = () => {
-        if (!$('history').hidden) return show(false);
+      const showFeed = () => {
         $('q').value = '';
         feed.method = 'discover';
         feed.q = '';
         renderRecent();
         loadFeed(true);
       };
+      $('reset').onclick = () => {
+        if (!$('history').hidden) return show(false);
+        showFeed();
+      };
+      $('refresh').onclick = showFeed;
       $('more').onclick = () => loadFeed(false);
 
       // ---------- detail / player ----------
