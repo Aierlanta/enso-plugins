@@ -1,0 +1,126 @@
+{
+  "light": {
+    "canvas": "#fbefd2",
+    "surface": "#fffdf7",
+    "sunken": "#fef5e1",
+    "border": "#f1dfbc",
+    "borderStrong": "#e3c28c",
+    "text": "#332214",
+    "textMuted": "#66513e",
+    "textSubtle": "#9f8b75",
+    "accent": "#1a4fd6"
+  },
+  "dark": {
+    "canvas": "#30241a",
+    "surface": "#382b21",
+    "sunken": "#2c2017",
+    "border": "#4e3f32",
+    "borderStrong": "#715c49",
+    "text": "#f6f1e7",
+    "textMuted": "#d3c9b9",
+    "textSubtle": "#a89984",
+    "accent": "#5a98fb"
+  },
+  "assets": {
+    "canvas-pattern": {
+      "src": "assets/canvas-honey-light.svg",
+      "still": "assets/canvas-honey-light.svg",
+      "dark": "assets/canvas-honey-dark.svg",
+      "states": {
+        "running": "assets/canvas-honey-running.svg",
+        "waiting": "assets/canvas-honey-waiting.svg",
+        "error": "assets/canvas-honey-error.svg"
+      }
+    },
+    "sidebar-footer": {
+      "src": "assets/sidebar-footer.webp",
+      "still": "assets/sidebar-footer.webp",
+      "dark": "assets/sidebar-footer-dark.webp",
+      "states": {
+        "running": "assets/sidebar-footer-running.webp",
+        "waiting": "assets/sidebar-footer-waiting.webp",
+        "error": "assets/sidebar-footer-error.webp"
+      }
+    },
+    "empty-main": {
+      "src": "assets/empty-main.webp",
+      "still": "assets/empty-main.webp",
+      "dark": "assets/empty-main-dark.webp",
+      "states": {
+        "running": "assets/empty-main-running.webp",
+        "waiting": "assets/empty-main-waiting.webp",
+        "error": "assets/empty-main-error.webp"
+      }
+    },
+    "welcome": {
+      "src": "assets/welcome.webp",
+      "still": "assets/welcome.webp",
+      "dark": "assets/welcome.webp",
+      "states": {
+        "running": "assets/welcome-running.webp",
+        "waiting": "assets/welcome-waiting.webp",
+        "error": "assets/welcome-error.webp"
+      }
+    },
+    "composer-peek": {
+      "src": "assets/composer-peek.webp",
+      "still": "assets/composer-peek.webp",
+      "dark": "assets/composer-peek.webp",
+      "states": {
+        "running": "assets/composer-peek-running.webp",
+        "waiting": "assets/composer-peek-waiting.webp",
+        "error": "assets/composer-peek-error.webp"
+      }
+    },
+    "thinking": {
+      "src": "assets/thinking.webp",
+      "still": "assets/thinking-still.webp",
+      "dark": "assets/thinking.webp",
+      "states": {
+        "running": "assets/thinking-running.webp",
+        "waiting": "assets/thinking-waiting.webp",
+        "error": "assets/thinking-error.webp"
+      }
+    },
+    "code-corner": {
+      "src": "assets/code-corner.webp",
+      "still": "assets/code-corner.webp",
+      "dark": "assets/code-corner.webp",
+      "states": {
+        "running": "assets/code-corner-running.webp",
+        "waiting": "assets/code-corner-waiting.webp",
+        "error": "assets/code-corner-error.webp"
+      }
+    },
+    "todo-corner": {
+      "src": "assets/todo-corner.webp",
+      "still": "assets/todo-corner.webp",
+      "dark": "assets/todo-corner.webp",
+      "states": {
+        "running": "assets/todo-corner-running.webp",
+        "waiting": "assets/todo-corner-waiting.webp",
+        "error": "assets/todo-corner-error.webp"
+      }
+    },
+    "status-icon": {
+      "src": "assets/status-icon.webp",
+      "still": "assets/status-icon.webp",
+      "dark": "assets/status-icon.webp",
+      "states": {
+        "running": "assets/status-icon-running.webp",
+        "waiting": "assets/status-icon-waiting.webp",
+        "error": "assets/status-icon-error.webp"
+      }
+    },
+    "panel-corner": {
+      "src": "assets/panel-corner.webp",
+      "still": "assets/panel-corner.webp",
+      "dark": "assets/panel-corner.webp",
+      "states": {
+        "running": "assets/panel-corner-running.webp",
+        "waiting": "assets/panel-corner-waiting.webp",
+        "error": "assets/panel-corner-error.webp"
+      }
+    }
+  }
+}

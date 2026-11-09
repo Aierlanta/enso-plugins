@@ -1,13 +1,14 @@
 # 爱丽丝的茶会
 
-蓝白格纹配白蕾丝的茶会主题，作者 Alice Aierlanta。插件里有两个主题：
+蓝白格纹配白蕾丝的茶会主题，作者 Alice Aierlanta。插件里有三个主题：
 
 | 主题                | 主题键                                   | 说明                                                       |
 | ------------------- | ---------------------------------------- | ---------------------------------------------------------- |
 | 爱丽丝的茶会        | `aierlanta.alicetheme/alicetheme`        | 不透明的格纹底，主区两侧摆着白兔、茶壶、点心架和玫瑰       |
+| 爱丽丝的茶会 · 蜂蜜 | `aierlanta.alicetheme/alicetheme-honey`  | 同一套装饰换成奶油黄底和蜂蜜色格纹，深色是可可棕           |
 | 爱丽丝的茶会 · 花园 | `aierlanta.alicetheme/alicetheme-garden` | 同一套配色和装饰，另带花园壁纸，面板半透明地叠在壁纸上     |
 
-需要 EnsoCode 0.3.3 以上：插画写在主题 JSON 的 `assets` 素材槽位里，花园壁纸写在 `background` 里。格纹、花边、摆件和 Alice 的位置在 `themes/alicetheme.css`（花园版是 `themes/alicetheme-garden.css`），安装或更新时要同意「修改界面样式」。`permissions` 是空数组。
+需要 EnsoCode 0.3.3 以上：插画写在主题 JSON 的 `assets` 素材槽位里，花园壁纸写在 `background` 里。格纹、花边、摆件和 Alice 的位置在 `themes/alicetheme.css`（蜂蜜版是 `themes/alicetheme-honey.css`，花园版是 `themes/alicetheme-garden.css`），安装或更新时要同意「修改界面样式」。`permissions` 是空数组。
 
 侧栏按钮、分组标签、会话行、节点切换器和审批卡的小装饰要用到控件级锚点（`sidebar-toggle`、`session-row`、`approval` 等）。EnsoCode 还没有这些锚点时，这几处保持默认样式，其余装饰不受影响。
 
@@ -32,6 +33,10 @@
 | 用户消息的浅蓝气泡                                                         | `message-user`                                                      | 纯 CSS                                                  |
 
 所有插画都是静态图，没有动效。
+
+## 蜂蜜
+
+只换底色：窗口和侧栏是奶油黄，主区是蜂蜜色格纹，蕾丝描边、用户气泡、选中行和顶栏格纹带都跟着变暖；深色是可可棕。插画、兔子书签和「允许」等按钮保留宝蓝，跟 Alice 的蓝裙子呼应。
 
 ## 窗口大小
 
